@@ -1,4 +1,4 @@
-package com.hanghae.theham.domain.chat.entity;
+package com.hanghae.theham.domain.rental.entity;
 
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.global.entity.Timestamped;
@@ -11,28 +11,24 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
-@Table(name = "chat_tbl")
-public class Chat extends Timestamped {
+@Table(name = "rental_like_tbl")
+public class RentalLike extends Timestamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String content;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
-    private Member sender;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id")
-    private Member receiver;
+    @JoinColumn(name = "rental_id")
+    private Rental rental;
 
     @Builder
-    public Chat(String content, Member sender, Member receiver) {
-        this.content = content;
-        this.sender = sender;
-        this.receiver = receiver;
+    public RentalLike(Member member, Rental rental) {
+        this.member = member;
+        this.rental = rental;
     }
 }
