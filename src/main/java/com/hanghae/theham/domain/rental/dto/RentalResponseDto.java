@@ -28,6 +28,7 @@ public class RentalResponseDto {
     public static class RentalReadResponseDto {
 
         private final String nickname;
+        private final String profileUrl;
         private final String category;
         private final String title;
         private final String content;
@@ -37,6 +38,7 @@ public class RentalResponseDto {
 
         public RentalReadResponseDto(Rental rental, List<RentalImageReadResponseDto> rentalImageList) {
             this.nickname = rental.getMember().getNickname();
+            this.profileUrl = rental.getMember().getProfileUrl();
             this.category = rental.getCategory().getValue();
             this.title = rental.getTitle();
             this.content = rental.getContent();
