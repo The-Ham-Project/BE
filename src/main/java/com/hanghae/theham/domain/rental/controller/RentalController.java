@@ -7,6 +7,7 @@ import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponse
 import com.hanghae.theham.domain.rental.service.RentalService;
 import com.hanghae.theham.global.dto.ResponseDto;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +24,7 @@ public class RentalController implements RentalControllerDocs {
         this.rentalService = rentalService;
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(value = "/rentals", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseDto<RentalCreateResponseDto> createRental(
             @RequestPart @Valid RentalCreateRequestDto requestDto,
@@ -38,5 +40,14 @@ public class RentalController implements RentalControllerDocs {
     ) {
         RentalReadResponseDto responseDto = rentalService.readRental(rentalId);
         return ResponseDto.success("함께쓰기 게시글 조회 기능", responseDto);
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/rentals/{rentalId}")
+    public void deleteRental(
+            @PathVariable Long rentalId,
+            @RequestParam String email // TODO: 3/31/24 로그인 기능 적용 되면 수정
+    ) {
+        rentalService.deleteRental(email, rentalId);
     }
 }

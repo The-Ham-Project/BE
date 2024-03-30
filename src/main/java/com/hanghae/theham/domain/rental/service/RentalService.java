@@ -140,4 +140,22 @@ public class RentalService {
 
         return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
     }
+
+    @Transactional
+    public void deleteRental(String email, Long rentalId) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
+            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
+            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
+        });
+        Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {
+            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
+            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
+        });
+        if (!member.equals(rental.getMember())) {
+            log.error("게시글 작성자 정보가 일치하지 않습니다. 회원: {}, 작성자: {}", member, rental.getMember());
+            throw new BadRequestException(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage());
+        }
+
+        rentalRepository.delete(rental);
+    }
 }
