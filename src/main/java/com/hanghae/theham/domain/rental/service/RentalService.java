@@ -5,8 +5,10 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
+import com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
@@ -124,5 +126,18 @@ public class RentalService {
                 .imageUrl(imageUrl)
                 .build();
         rentalImageRepository.save(rentalImage);
+    }
+
+    public RentalReadResponseDto readRental(Long rentalId) {
+        Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {
+            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
+            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
+        });
+
+        List<RentalImageReadResponseDto> rentalImageReadResponseDtoList = rentalImageRepository.findAllByRental(rental).stream()
+                .map(RentalImageReadResponseDto::new)
+                .toList();
+
+        return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
     }
 }
