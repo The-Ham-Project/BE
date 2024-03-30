@@ -1,4 +1,49 @@
 package com.hanghae.theham.domain.rental.dto;
 
+import com.hanghae.theham.domain.member.entity.Member;
+import com.hanghae.theham.domain.rental.entity.Rental;
+import com.hanghae.theham.domain.rental.entity.type.CategoryType;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.Getter;
+
 public class RentalRequestDto {
+
+    @Getter
+    public static class RentalCreateRequestDto {
+
+        // TODO: 3/30/24 로그인 추가 되면 삭제
+        private String email;
+
+        @Schema(description = "제목", example = "스프링부트 책 필요하신분~")
+        @NotBlank(message = "제목을 입력해주세요")
+        private String title;
+
+        @Schema(description = "카테고리", example = "BOOK")
+        private CategoryType category;
+
+        @Schema(description = "내용", example = "필요하신분 무료로 나눔해드립니다.")
+        @NotBlank(message = "내용을 입력해주세요.")
+        private String content;
+
+        @Schema(description = "대여비", example = "0")
+        @PositiveOrZero(message = "금액 범위를 다시 한번 확인해주세요.")
+        private Long rentalFee;
+
+        @Schema(description = "보증금", example = "0")
+        @PositiveOrZero(message = "금액 범위를 다시 한번 확인해주세요.")
+        private Long deposit;
+
+        public Rental toEntity(Member member) {
+            return Rental.builder()
+                    .title(this.title)
+                    .category(this.category)
+                    .content(this.content)
+                    .rentalFee(this.rentalFee)
+                    .deposit(this.deposit)
+                    .member(member)
+                    .build();
+        }
+    }
 }
