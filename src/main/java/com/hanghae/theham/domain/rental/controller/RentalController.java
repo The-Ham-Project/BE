@@ -1,8 +1,8 @@
 package com.hanghae.theham.domain.rental.controller;
 
 import com.hanghae.theham.domain.rental.controller.docs.RentalControllerDocs;
-import com.hanghae.theham.domain.rental.dto.RentalRequestDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.CreateRentalResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
 import com.hanghae.theham.domain.rental.service.RentalService;
 import com.hanghae.theham.global.dto.ResponseDto;
 import jakarta.validation.Valid;
@@ -26,11 +26,11 @@ public class RentalController implements RentalControllerDocs {
     }
 
     @PostMapping(value = "/rentals", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseDto<CreateRentalResponseDto> createRental(
-            @RequestPart @Valid RentalRequestDto.RentalCreateRequestDto requestDto,
+    public ResponseDto<RentalCreateResponseDto> createRental(
+            @RequestPart @Valid RentalCreateRequestDto requestDto,
             @RequestPart(required = false) List<MultipartFile> multipartFileList
     ) {
-        CreateRentalResponseDto responseDto = rentalService.createRental(requestDto, multipartFileList);
+        RentalCreateResponseDto responseDto = rentalService.createRental(requestDto, multipartFileList);
         return ResponseDto.success("함께쓰기 게시글 작성 기능", responseDto);
     }
 }

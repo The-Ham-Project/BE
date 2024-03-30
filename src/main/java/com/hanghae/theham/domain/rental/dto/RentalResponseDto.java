@@ -9,14 +9,14 @@ import java.time.LocalDateTime;
 public class RentalResponseDto {
 
     @Getter
-    public static class CreateRentalResponseDto {
+    public static class RentalCreateResponseDto {
 
         private final Long id;
 
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private final LocalDateTime createdAt;
 
-        public CreateRentalResponseDto(Rental rental) {
+        public RentalCreateResponseDto(Rental rental) {
             this.id = rental.getId();
             this.createdAt = rental.getCreatedAt();
         }
