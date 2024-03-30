@@ -27,6 +27,7 @@ public class SecurityConfig {
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/ping").permitAll()
+                        .requestMatchers("/login/**").permitAll()
                         .anyRequest().authenticated()
         );
         return http.build();

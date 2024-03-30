@@ -20,8 +20,8 @@ public class Member {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
+//    @Column(nullable = false)
+//    private String password;
 
     @Column(unique = true, nullable = false)
     private String nickname;
@@ -31,12 +31,12 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RoleType role;
+    private RoleType role = RoleType.ROLE_USER;
 
     @Builder
-    public Member(String email, String password, String nickname, String profileUrl, RoleType role) {
+    public Member(String email, String nickname, String profileUrl, RoleType role) {
         this.email = email;
-        this.password = password;
+//        this.password = password;
         this.nickname = nickname;
         this.profileUrl = profileUrl;
         this.role = role;
