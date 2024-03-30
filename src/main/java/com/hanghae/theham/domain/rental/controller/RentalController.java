@@ -1,7 +1,7 @@
 package com.hanghae.theham.domain.rental.controller;
 
 import com.hanghae.theham.domain.rental.controller.docs.RentalControllerDocs;
-import com.hanghae.theham.domain.rental.dto.RentalRequestDto.CreateRentalRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.CreateRentalResponseDto;
 import com.hanghae.theham.domain.rental.service.RentalService;
 import com.hanghae.theham.global.dto.ResponseDto;
@@ -27,7 +27,7 @@ public class RentalController implements RentalControllerDocs {
 
     @PostMapping(value = "/rentals", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseDto<CreateRentalResponseDto> createRental(
-            @RequestPart @Valid CreateRentalRequestDto requestDto,
+            @RequestPart @Valid RentalRequestDto.RentalCreateRequestDto requestDto,
             @RequestPart(required = false) List<MultipartFile> multipartFileList
     ) {
         CreateRentalResponseDto responseDto = rentalService.createRental(requestDto, multipartFileList);

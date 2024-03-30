@@ -11,7 +11,7 @@ import lombok.Getter;
 public class RentalRequestDto {
 
     @Getter
-    public static class CreateRentalRequestDto {
+    public static class RentalCreateRequestDto {
 
         // TODO: 3/30/24 로그인 추가 되면 삭제
         private String email;

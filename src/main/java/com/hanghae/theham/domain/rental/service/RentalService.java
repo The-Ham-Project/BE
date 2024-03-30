@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
-import com.hanghae.theham.domain.rental.dto.RentalRequestDto.CreateRentalRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.CreateRentalResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
@@ -53,7 +53,7 @@ public class RentalService {
     }
 
     @Transactional
-    public CreateRentalResponseDto createRental(CreateRentalRequestDto requestDto, List<MultipartFile> multipartFileList) {
+    public CreateRentalResponseDto createRental(RentalCreateRequestDto requestDto, List<MultipartFile> multipartFileList) {
         // 회원 정보 검증
         Member member = memberRepository.findByEmail(requestDto.getEmail()).orElseThrow(() -> {
             log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", requestDto.getEmail());
