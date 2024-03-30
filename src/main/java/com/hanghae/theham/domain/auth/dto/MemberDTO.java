@@ -9,4 +9,5 @@ public class MemberDTO {
     private String id;
     private String email;
     private String nickname;
+    private String profileUrl;
 }
