@@ -27,6 +27,10 @@ public class SecurityConfig {
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/ping").permitAll()
+
+                        // TODO: 3/30/24 로그인 추가 되면 제거
+                        .requestMatchers("/api/v1/rentals/**").permitAll()
+
                         .anyRequest().authenticated()
         );
         return http.build();

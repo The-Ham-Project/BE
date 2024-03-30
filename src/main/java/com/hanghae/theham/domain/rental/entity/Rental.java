@@ -26,7 +26,7 @@ public class Rental extends Timestamped {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
     @Column
@@ -35,21 +35,17 @@ public class Rental extends Timestamped {
     @Column
     private long deposit;
 
-    @Column
-    private Boolean isWanted;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
     @Builder
-    public Rental(CategoryType category, String title, String content, long rentalFee, long deposit, Boolean isWanted, Member member) {
+    public Rental(CategoryType category, String title, String content, long rentalFee, long deposit, Member member) {
         this.category = category;
         this.title = title;
         this.content = content;
         this.rentalFee = rentalFee;
         this.deposit = deposit;
-        this.isWanted = isWanted;
         this.member = member;
     }
 }
