@@ -56,4 +56,12 @@ public class Rental extends Timestamped {
         this.isDeleted = isDeleted;
         this.member = member;
     }
+
+    public void update(String title, CategoryType category, String content, Long rentalFee, Long deposit) {
+        this.title = title;
+        this.category = category;
+        this.content = content;
+        this.rentalFee = rentalFee;
+        this.deposit = deposit;
+    }
 }

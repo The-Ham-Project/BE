@@ -2,8 +2,10 @@ package com.hanghae.theham.domain.rental.controller;
 
 import com.hanghae.theham.domain.rental.controller.docs.RentalControllerDocs;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
 import com.hanghae.theham.domain.rental.service.RentalService;
 import com.hanghae.theham.global.dto.ResponseDto;
 import jakarta.validation.Valid;
@@ -40,6 +42,16 @@ public class RentalController implements RentalControllerDocs {
     ) {
         RentalReadResponseDto responseDto = rentalService.readRental(rentalId);
         return ResponseDto.success("함께쓰기 게시글 조회 기능", responseDto);
+    }
+
+    @PutMapping(value = "/rentals/{rentalId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseDto<RentalUpdateResponseDto> updateRental(
+            @PathVariable Long rentalId,
+            @RequestPart @Valid RentalUpdateRequestDto requestDto,
+            @RequestPart(required = false) List<MultipartFile> multipartFileList
+    ) {
+        RentalUpdateResponseDto responseDto = rentalService.updateRental(rentalId, requestDto, multipartFileList);
+        return ResponseDto.success("함께쓰기 게시글 수정 기능", responseDto);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

@@ -1,8 +1,10 @@
 package com.hanghae.theham.domain.rental.controller.docs;
 
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
 import com.hanghae.theham.global.dto.ResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +28,13 @@ public interface RentalControllerDocs {
     @Operation(summary = "함께쓰기 게시글 조회 기능", description = "함께쓰기 게시글을 조회할 수 있는 API")
     ResponseDto<RentalReadResponseDto> readRental(
             @PathVariable Long rentalId
+    );
+
+    @Operation(summary = "함께쓰기 게시글 수정 기능", description = "함께쓰기 게시글을 수정할 수 있는 API")
+    ResponseDto<RentalUpdateResponseDto> updateRental(
+            @PathVariable Long rentalId,
+            @RequestPart @Valid RentalUpdateRequestDto requestDto,
+            @RequestPart(required = false) List<MultipartFile> multipartFileList
     );
 
     @Operation(summary = "함께쓰기 게시글 삭제 기능", description = "함께쓰기 게시글을 삭제할 수 있는 API")

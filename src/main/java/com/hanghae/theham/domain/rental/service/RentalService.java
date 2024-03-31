@@ -1,14 +1,17 @@
 package com.hanghae.theham.domain.rental.service;
 
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
@@ -23,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -78,6 +83,79 @@ public class RentalService {
         return new RentalCreateResponseDto(rental);
     }
 
+    public RentalReadResponseDto readRental(Long rentalId) {
+        Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {
+            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
+            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
+        });
+
+        List<RentalImageReadResponseDto> rentalImageReadResponseDtoList = rentalImageRepository.findAllByRental(rental).stream()
+                .map(RentalImageReadResponseDto::new)
+                .toList();
+
+        return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
+    }
+
+    @Transactional
+    public RentalUpdateResponseDto updateRental(Long rentalId, RentalUpdateRequestDto requestDto, List<MultipartFile> multipartFileList) {
+        Member member = memberRepository.findByEmail(requestDto.getEmail()).orElseThrow(() -> {
+            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", requestDto.getEmail());
+            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
+        });
+        Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {
+            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
+            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
+        });
+        if (!member.equals(rental.getMember())) {
+            log.error("게시글 작성자 정보가 일치하지 않습니다. 회원: {}, 작성자: {}", member, rental.getMember());
+            throw new BadRequestException(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage());
+        }
+
+        // 기존 이미지 삭제
+        List<RentalImage> existingImages = rentalImageRepository.findAllByRental(rental);
+        existingImages.forEach(image -> {
+            deleteFileFromS3(image.getImageUrl());
+            rentalImageRepository.delete(image);
+        });
+
+        // 새 이미지 파일 검증 및 업로드
+        if (multipartFileList != null && !multipartFileList.isEmpty()) {
+            validateFiles(multipartFileList);
+
+            multipartFileList.forEach(file -> {
+                String imageUrl = uploadFileToS3(file);
+                saveRentalImage(rental, imageUrl);
+            });
+        }
+
+        rental.update(
+                requestDto.getTitle(),
+                requestDto.getCategory(),
+                requestDto.getContent(),
+                requestDto.getRentalFee(),
+                requestDto.getDeposit()
+        );
+        return new RentalUpdateResponseDto(rental);
+    }
+
+    @Transactional
+    public void deleteRental(String email, Long rentalId) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
+            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
+            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
+        });
+        Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {
+            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
+            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
+        });
+        if (!member.equals(rental.getMember())) {
+            log.error("게시글 작성자 정보가 일치하지 않습니다. 회원: {}, 작성자: {}", member, rental.getMember());
+            throw new BadRequestException(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage());
+        }
+
+        rentalRepository.delete(rental);
+    }
+
     private void validateFiles(List<MultipartFile> files) {
         if (files.size() > MAX_IMAGE_UPLOAD_COUNT) {
             throw new BadRequestException(ErrorCode.MAXIMUM_RENTAL_FILE_UPLOAD.getMessage());
@@ -128,34 +206,14 @@ public class RentalService {
         rentalImageRepository.save(rentalImage);
     }
 
-    public RentalReadResponseDto readRental(Long rentalId) {
-        Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {
-            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
-            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
-        });
-
-        List<RentalImageReadResponseDto> rentalImageReadResponseDtoList = rentalImageRepository.findAllByRental(rental).stream()
-                .map(RentalImageReadResponseDto::new)
-                .toList();
-
-        return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
-    }
-
-    @Transactional
-    public void deleteRental(String email, Long rentalId) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
-            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
-            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
-        });
-        Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {
-            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
-            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
-        });
-        if (!member.equals(rental.getMember())) {
-            log.error("게시글 작성자 정보가 일치하지 않습니다. 회원: {}, 작성자: {}", member, rental.getMember());
-            throw new BadRequestException(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage());
+    private void deleteFileFromS3(String imageUrl) {
+        try {
+            URL url = new URL(imageUrl);
+            String key = url.getPath().substring(1); // URL에서 객체 키 추출
+            s3Config.amazonS3Client().deleteObject(new DeleteObjectRequest(bucket, key));
+        } catch (MalformedURLException e) {
+            log.error("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
+            throw new RuntimeException("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
         }
-
-        rentalRepository.delete(rental);
     }
 }

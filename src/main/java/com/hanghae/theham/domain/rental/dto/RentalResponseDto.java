@@ -47,4 +47,22 @@ public class RentalResponseDto {
             this.rentalImageList = rentalImageList;
         }
     }
+
+    @Getter
+    public static class RentalUpdateResponseDto {
+
+        private final String category;
+        private final String title;
+        private final String content;
+        private final long rentalFee;
+        private final long deposit;
+
+        public RentalUpdateResponseDto(Rental rental) {
+            this.category = rental.getCategory().getValue();
+            this.title = rental.getTitle();
+            this.content = rental.getContent();
+            this.rentalFee = rental.getRentalFee();
+            this.deposit = rental.getDeposit();
+        }
+    }
 }
