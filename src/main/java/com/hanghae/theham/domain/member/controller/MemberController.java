@@ -33,9 +33,9 @@ public class MemberController {
 
     @GetMapping("/kakao/callback")
     public void kakaoLogin(
-            @RequestParam String code
+            @RequestParam String code,
+            HttpServletResponse response
     ) throws JsonProcessingException {
-        String token = kakaoService.kakaoLogin(code);
-        log.info("카카오 로그인 액세스 토큰: {}", token);
+        kakaoService.kakaoLogin(code, response);
     }
 }

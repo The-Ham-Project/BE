@@ -3,11 +3,12 @@ package com.hanghae.theham.domain.member.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hanghae.theham.domain.member.dto.AuthResponseDto.KakaoUserInfoDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.KakaoUserInfoDto;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.entity.type.RoleType;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.global.jwt.TokenProvider;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -42,17 +43,23 @@ public class KakaoService {
         this.tokenProvider = tokenProvider;
     }
 
-    public String kakaoLogin(String code) throws JsonProcessingException {
+    public String kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
-        String accessToken = getToken(code);
+        String token = getToken(code);
 
         // 2. 토큰으로 카카오 API 호출 : "액세스 토큰"으로 "카카오 사용자 정보" 가져오기
-        KakaoUserInfoDto kakaoUserInfo = getKakaoUserInfo(accessToken);
+        KakaoUserInfoDto kakaoUserInfo = getKakaoUserInfo(token);
 
         // 3. 필요시에 회원가입
         Member kakaoUser = registerKakaoUserIfNeeded(kakaoUserInfo);
 
-        // 4. JWT 토큰 반환
+        // 4. 로그인 성공
+        String accessToken = tokenProvider.createAccessToken(kakaoUser.getEmail(), kakaoUser.getRole().name());
+        String refreshToken = tokenProvider.createRefreshToken(kakaoUser.getEmail(), kakaoUser.getRole().name());
+
+        response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
+        tokenProvider.addRefreshTokenToCookie(refreshToken, response);
+
         return tokenProvider.createAccessToken(kakaoUser.getEmail(), kakaoUser.getRole().name());
     }
 
@@ -92,7 +99,7 @@ public class KakaoService {
         return jsonNode.get("access_token").asText();
     }
 
-    private KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
+    private KakaoUserInfoDto getKakaoUserInfo(String token) throws JsonProcessingException {
         // 요청 URL 만들기
         URI uri = UriComponentsBuilder
                 .fromUriString("https://kapi.kakao.com")
@@ -103,7 +110,7 @@ public class KakaoService {
 
         // HTTP Header 생성
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + accessToken);
+        headers.add("Authorization", "Bearer " + token);
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
         RequestEntity<MultiValueMap<String, String>> requestEntity = RequestEntity
@@ -119,16 +126,15 @@ public class KakaoService {
 
         JsonNode jsonNode = new ObjectMapper().readTree(response.getBody());
 
-        log.info(jsonNode.asText());
-
         Long id = jsonNode.get("id").asLong();
         String nickname = jsonNode.get("properties")
                 .get("nickname").asText();
+        String profileUrl = jsonNode.get("properties")
+                .get("profile_image").asText();
         String email = jsonNode.get("kakao_account")
                 .get("email").asText();
 
-        log.info("카카오 사용자 정보: " + id + ", " + nickname + ", " + email);
-        return new KakaoUserInfoDto(id, nickname, email);
+        return new KakaoUserInfoDto(id, nickname, email, profileUrl);
     }
 
     private Member registerKakaoUserIfNeeded(KakaoUserInfoDto kakaoUserInfo) {
@@ -140,6 +146,7 @@ public class KakaoService {
             // 카카오 사용자 email 동일한 email 가진 회원이 있는지 확인
             String kakaoEmail = kakaoUserInfo.getEmail();
             Member sameEmailUser = memberRepository.findByEmail(kakaoEmail).orElse(null);
+
             if (sameEmailUser != null) {
                 kakaoUser = sameEmailUser;
                 // 기존 회원정보에 카카오 Id 추가
@@ -157,6 +164,7 @@ public class KakaoService {
                         .email(email)
                         .nickname(kakaoUserInfo.getNickname())
                         .password(encodedPassword)
+                        .profileUrl(kakaoUserInfo.getProfileUrl())
                         .role(RoleType.ROLE_USER)
                         .kakaoId(kakaoId)
                         .build();
