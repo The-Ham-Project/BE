@@ -1,8 +1,22 @@
 package com.hanghae.theham.domain.member.dto;
 
+import com.hanghae.theham.domain.member.entity.Member;
 import lombok.Getter;
 
 public class MemberResponseDto {
+
+    @Getter
+    public static class MemberUpdatePositionResponseDto {
+        private final Long id;
+        private final double latitude;
+        private final double longitude;
+
+        public MemberUpdatePositionResponseDto(Member member) {
+            this.id = member.getId();
+            this.latitude = member.getLatitude();
+            this.longitude = member.getLongitude();
+        }
+    }
 
     @Getter
     public static class KakaoUserInfoDto {

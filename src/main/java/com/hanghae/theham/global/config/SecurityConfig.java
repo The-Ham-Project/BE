@@ -59,7 +59,10 @@ public class SecurityConfig {
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/ping").permitAll()
+
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/members/position").authenticated()
                         .requestMatchers("/api/v1/members/**").permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/api/v1/rentals/{rentalId}").permitAll()
                         .anyRequest().authenticated()
         );

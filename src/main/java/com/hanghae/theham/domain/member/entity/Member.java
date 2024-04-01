@@ -34,6 +34,12 @@ public class Member {
     private RoleType role = RoleType.ROLE_USER;
 
     @Column
+    private double latitude; // 위도
+
+    @Column
+    private double longitude; // 경도
+
+    @Column
     private Long kakaoId;
 
     @Column
@@ -43,12 +49,14 @@ public class Member {
     private String naverId;
 
     @Builder
-    public Member(String email, String password, String nickname, String profileUrl, RoleType role, Long kakaoId, String googleId, String naverId) {
+    public Member(String email, String password, String nickname, String profileUrl, RoleType role, double latitude, double longitude, Long kakaoId, String googleId, String naverId) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.profileUrl = profileUrl;
         this.role = role;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.kakaoId = kakaoId;
         this.googleId = googleId;
         this.naverId = naverId;
@@ -67,5 +75,10 @@ public class Member {
     public Member naverIdUpdate(String naverId) {
         this.naverId = naverId;
         return this;
+    }
+
+    public void updatePosition(double latitude, double longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 }
