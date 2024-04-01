@@ -20,8 +20,8 @@ public class Member {
     @Column(unique = true, nullable = false)
     private String email;
 
-//    @Column(nullable = false)
-//    private String password;
+    @Column(nullable = false)
+    private String password;
 
     @Column(unique = true, nullable = false)
     private String nickname;
@@ -33,12 +33,21 @@ public class Member {
     @Column(nullable = false)
     private RoleType role = RoleType.ROLE_USER;
 
+    @Column
+    private Long kakaoId;
+
     @Builder
-    public Member(String email, String nickname, String profileUrl, RoleType role) {
+    public Member(String email, String password, String nickname, String profileUrl, RoleType role, Long kakaoId) {
         this.email = email;
-//        this.password = password;
+        this.password = password;
         this.nickname = nickname;
         this.profileUrl = profileUrl;
         this.role = role;
+        this.kakaoId = kakaoId;
+    }
+
+    public Member kakaoIdUpdate(Long kakaoId) {
+        this.kakaoId = kakaoId;
+        return this;
     }
 }

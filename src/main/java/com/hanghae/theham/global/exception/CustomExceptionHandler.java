@@ -29,6 +29,13 @@ public class CustomExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(TokenException.class)
+    public ResponseDto<?> handleTokenException(TokenException e) {
+        log.error("handleTokenException", e);
+        return ResponseDto.fail(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseDto<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         Map<String, String> errorMap = new HashMap<>();

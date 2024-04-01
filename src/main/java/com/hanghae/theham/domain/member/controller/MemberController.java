@@ -1,9 +1,41 @@
 package com.hanghae.theham.domain.member.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.hanghae.theham.domain.member.service.AuthService;
+import com.hanghae.theham.domain.member.service.KakaoService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/api/v1")
+@Slf4j
+@RequestMapping("/api/v1/members")
 @RestController
 public class MemberController {
+
+    private final AuthService authService;
+    private final KakaoService kakaoService;
+
+    public MemberController(AuthService authService, KakaoService kakaoService) {
+        this.authService = authService;
+        this.kakaoService = kakaoService;
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/reissue")
+    public void reissue(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        authService.reissue(request, response);
+    }
+
+    @GetMapping("/kakao/callback")
+    public void kakaoLogin(
+            @RequestParam String code
+    ) throws JsonProcessingException {
+        String token = kakaoService.kakaoLogin(code);
+        log.info("카카오 로그인 액세스 토큰: {}", token);
+    }
 }
