@@ -20,6 +20,12 @@ public interface MemberControllerDocs {
             HttpServletResponse response
     );
 
+    @Operation(summary = "회원 로그아웃 기능", description = "로그아웃할 수 있는 API")
+    void logout(
+            HttpServletRequest request,
+            HttpServletResponse response
+    );
+
     @Operation(summary = "카카오 로그인 기능", description = "카카오 로그인할 수 있는 API")
     ResponseDto<KakaoUserInfoDto> kakaoLogin(
             @RequestParam String code,

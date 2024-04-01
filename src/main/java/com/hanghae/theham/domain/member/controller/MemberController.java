@@ -42,6 +42,15 @@ public class MemberController implements MemberControllerDocs {
         authService.reissue(request, response);
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/logout")
+    public void logout(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        authService.logout(request, response);
+    }
+
     @GetMapping("/kakao/callback")
     public ResponseDto<KakaoUserInfoDto> kakaoLogin(
             @RequestParam String code,
