@@ -1,6 +1,7 @@
 package com.hanghae.theham.domain.member.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.hanghae.theham.domain.member.controller.docs.MemberControllerDocs;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.GoogleUserInfoDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.KakaoUserInfoDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.NaverUserInfoDto;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RequestMapping("/api/v1/members")
 @RestController
-public class MemberController {
+public class MemberController implements MemberControllerDocs {
 
     private final AuthService authService;
     private final KakaoService kakaoService;

@@ -60,10 +60,14 @@ public class RentalService {
     }
 
     @Transactional
-    public RentalCreateResponseDto createRental(RentalCreateRequestDto requestDto, List<MultipartFile> multipartFileList) {
+    public RentalCreateResponseDto createRental(
+            String email,
+            RentalCreateRequestDto requestDto,
+            List<MultipartFile> multipartFileList
+    ) {
         // 회원 정보 검증
-        Member member = memberRepository.findByEmail(requestDto.getEmail()).orElseThrow(() -> {
-            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", requestDto.getEmail());
+        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
+            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
             return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
         });
 
@@ -97,9 +101,9 @@ public class RentalService {
     }
 
     @Transactional
-    public RentalUpdateResponseDto updateRental(Long rentalId, RentalUpdateRequestDto requestDto, List<MultipartFile> multipartFileList) {
-        Member member = memberRepository.findByEmail(requestDto.getEmail()).orElseThrow(() -> {
-            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", requestDto.getEmail());
+    public RentalUpdateResponseDto updateRental(String email, Long rentalId, RentalUpdateRequestDto requestDto, List<MultipartFile> multipartFileList) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
+            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
             return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
         });
         Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {

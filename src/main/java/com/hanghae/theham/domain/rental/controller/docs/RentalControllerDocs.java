@@ -6,11 +6,12 @@ import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateRespon
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
 import com.hanghae.theham.global.dto.ResponseDto;
+import com.hanghae.theham.global.security.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +22,7 @@ public interface RentalControllerDocs {
 
     @Operation(summary = "함께쓰기 게시글 등록 기능", description = "함께쓰기 게시글을 등록할 수 있는 API")
     ResponseDto<RentalCreateResponseDto> createRental(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestPart @Valid RentalCreateRequestDto requestDto,
             @RequestPart(required = false) List<MultipartFile> multipartFileList
     );
@@ -32,6 +34,7 @@ public interface RentalControllerDocs {
 
     @Operation(summary = "함께쓰기 게시글 수정 기능", description = "함께쓰기 게시글을 수정할 수 있는 API")
     ResponseDto<RentalUpdateResponseDto> updateRental(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long rentalId,
             @RequestPart @Valid RentalUpdateRequestDto requestDto,
             @RequestPart(required = false) List<MultipartFile> multipartFileList
@@ -39,7 +42,7 @@ public interface RentalControllerDocs {
 
     @Operation(summary = "함께쓰기 게시글 삭제 기능", description = "함께쓰기 게시글을 삭제할 수 있는 API")
     void deleteRental(
-            @PathVariable Long rentalId,
-            @RequestParam String email // TODO: 3/31/24 로그인 기능 적용 되면 수정
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long rentalId
     );
 }

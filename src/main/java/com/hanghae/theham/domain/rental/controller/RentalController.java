@@ -8,9 +8,11 @@ import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponse
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
 import com.hanghae.theham.domain.rental.service.RentalService;
 import com.hanghae.theham.global.dto.ResponseDto;
+import com.hanghae.theham.global.security.UserDetailsImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,10 +31,11 @@ public class RentalController implements RentalControllerDocs {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(value = "/rentals", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseDto<RentalCreateResponseDto> createRental(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestPart @Valid RentalCreateRequestDto requestDto,
             @RequestPart(required = false) List<MultipartFile> multipartFileList
     ) {
-        RentalCreateResponseDto responseDto = rentalService.createRental(requestDto, multipartFileList);
+        RentalCreateResponseDto responseDto = rentalService.createRental(userDetails.getUsername(), requestDto, multipartFileList);
         return ResponseDto.success("함께쓰기 게시글 작성 기능", responseDto);
     }
 
@@ -46,20 +49,21 @@ public class RentalController implements RentalControllerDocs {
 
     @PutMapping(value = "/rentals/{rentalId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseDto<RentalUpdateResponseDto> updateRental(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long rentalId,
             @RequestPart @Valid RentalUpdateRequestDto requestDto,
             @RequestPart(required = false) List<MultipartFile> multipartFileList
     ) {
-        RentalUpdateResponseDto responseDto = rentalService.updateRental(rentalId, requestDto, multipartFileList);
+        RentalUpdateResponseDto responseDto = rentalService.updateRental(userDetails.getUsername(), rentalId, requestDto, multipartFileList);
         return ResponseDto.success("함께쓰기 게시글 수정 기능", responseDto);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/rentals/{rentalId}")
     public void deleteRental(
-            @PathVariable Long rentalId,
-            @RequestParam String email // TODO: 3/31/24 로그인 기능 적용 되면 수정
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long rentalId
     ) {
-        rentalService.deleteRental(email, rentalId);
+        rentalService.deleteRental(userDetails.getUsername(), rentalId);
     }
 }

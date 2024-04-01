@@ -8,12 +8,17 @@ import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.entity.type.RoleType;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.global.jwt.TokenProvider;
+import com.hanghae.theham.global.security.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -66,6 +71,7 @@ public class GoogleService {
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
         tokenProvider.addRefreshTokenToCookie(refreshToken, response);
 
+        forceLogin(googleUser);
         return googleUserInfoDto;
     }
 
@@ -160,5 +166,11 @@ public class GoogleService {
             memberRepository.save(googleUser);
         }
         return googleUser;
+    }
+
+    private void forceLogin(Member googleUser) {
+        UserDetails userDetails = new UserDetailsImpl(googleUser);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }
