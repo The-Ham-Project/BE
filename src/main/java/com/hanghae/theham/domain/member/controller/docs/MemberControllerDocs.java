@@ -1,0 +1,40 @@
+package com.hanghae.theham.domain.member.controller.docs;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.GoogleUserInfoDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.KakaoUserInfoDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.NaverUserInfoDto;
+import com.hanghae.theham.global.dto.ResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.bind.annotation.RequestParam;
+
+@Tag(name = "members", description = "회원 관련 API")
+public interface MemberControllerDocs {
+
+    @Operation(summary = "회원 토큰 재발행 기능", description = "회원의 토큰을 재발행할 수 있는 API")
+    void reissue(
+            HttpServletRequest request,
+            HttpServletResponse response
+    );
+
+    @Operation(summary = "카카오 로그인 기능", description = "카카오 로그인할 수 있는 API")
+    ResponseDto<KakaoUserInfoDto> kakaoLogin(
+            @RequestParam String code,
+            HttpServletResponse response
+    ) throws JsonProcessingException;
+
+    @Operation(summary = "구글 로그인 기능", description = "구글 로그인할 수 있는 API")
+    ResponseDto<GoogleUserInfoDto> googleLogin(
+            @RequestParam String code,
+            HttpServletResponse response
+    ) throws JsonProcessingException;
+
+    @Operation(summary = "네이버 로그인 기능", description = "네이버 로그인할 수 있는 API")
+    ResponseDto<NaverUserInfoDto> naverLogin(
+            @RequestParam String code,
+            HttpServletResponse response
+    ) throws JsonProcessingException;
+}

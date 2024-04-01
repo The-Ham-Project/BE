@@ -13,9 +13,6 @@ public class RentalRequestDto {
     @Getter
     public static class RentalCreateRequestDto {
 
-        // TODO: 3/30/24 로그인 추가 되면 삭제
-        private String email;
-
         @Schema(description = "제목", example = "스프링부트 책 필요하신분~")
         @NotBlank(message = "제목을 입력해주세요")
         private String title;
@@ -49,9 +46,6 @@ public class RentalRequestDto {
 
     @Getter
     public static class RentalUpdateRequestDto {
-
-        // TODO: 3/30/24 로그인 추가 되면 삭제
-        private String email;
 
         @Schema(description = "제목", example = "스프링부트 책 필요하신분~")
         @NotBlank(message = "제목을 입력해주세요")
