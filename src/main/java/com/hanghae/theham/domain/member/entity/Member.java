@@ -39,8 +39,11 @@ public class Member {
     @Column
     private String googleId;
 
+    @Column
+    private String naverId;
+
     @Builder
-    public Member(String email, String password, String nickname, String profileUrl, RoleType role, Long kakaoId, String googleId) {
+    public Member(String email, String password, String nickname, String profileUrl, RoleType role, Long kakaoId, String googleId, String naverId) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
@@ -48,6 +51,7 @@ public class Member {
         this.role = role;
         this.kakaoId = kakaoId;
         this.googleId = googleId;
+        this.naverId = naverId;
     }
 
     public Member kakaoIdUpdate(Long kakaoId) {
@@ -57,6 +61,11 @@ public class Member {
 
     public Member googleIdUpdate(String googleId) {
         this.googleId = googleId;
+        return this;
+    }
+
+    public Member naverIdUpdate(String naverId) {
+        this.naverId = naverId;
         return this;
     }
 }
