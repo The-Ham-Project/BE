@@ -3,7 +3,7 @@ package com.hanghae.theham.domain.member.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.KakaoUserInfoDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.GoogleUserInfoDto;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.entity.type.RoleType;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
@@ -26,51 +26,53 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class KakaoService {
+public class GoogleService {
 
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
     private final RestTemplate restTemplate;
     private final TokenProvider tokenProvider;
 
-    @Value("${kakao.client-id}")
+    @Value("${google.client-id}")
     private String clientId;
 
-    @Value("${kakao.redirect-uri}")
+    @Value("${google.client-secret}")
+    private String clientSecret;
+
+    @Value("${google.redirect-uri}")
     private String redirectUri;
 
-    public KakaoService(PasswordEncoder passwordEncoder, MemberRepository memberRepository, RestTemplate restTemplate, TokenProvider tokenProvider) {
+    public GoogleService(PasswordEncoder passwordEncoder, MemberRepository memberRepository, RestTemplate restTemplate, TokenProvider tokenProvider) {
         this.passwordEncoder = passwordEncoder;
         this.memberRepository = memberRepository;
         this.restTemplate = restTemplate;
         this.tokenProvider = tokenProvider;
     }
 
-    public KakaoUserInfoDto kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
+    public GoogleUserInfoDto googleLogin(String code, HttpServletResponse response) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String token = getToken(code);
 
-        // 2. 토큰으로 카카오 API 호출 : "액세스 토큰"으로 "카카오 사용자 정보" 가져오기
-        KakaoUserInfoDto kakaoUserInfo = getKakaoUserInfo(token);
+        // 2. 토큰으로 구글 API 호출 : "액세스 토큰"으로 "구글 사용자 정보" 가져오기
+        GoogleUserInfoDto googleUserInfoDto = getGoogleUserInfo(token);
 
         // 3. 필요시에 회원가입
-        Member kakaoUser = registerKakaoUserIfNeeded(kakaoUserInfo);
+        Member googleUser = registerGoogleUserIfNeeded(googleUserInfoDto);
 
         // 4. 로그인 성공
-        String accessToken = tokenProvider.createAccessToken(kakaoUser.getEmail(), kakaoUser.getRole().name());
-        String refreshToken = tokenProvider.createRefreshToken(kakaoUser.getEmail(), kakaoUser.getRole().name());
+        String accessToken = tokenProvider.createAccessToken(googleUser.getEmail(), googleUser.getRole().name());
+        String refreshToken = tokenProvider.createRefreshToken(googleUser.getEmail(), googleUser.getRole().name());
 
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
         tokenProvider.addRefreshTokenToCookie(refreshToken, response);
 
-        return kakaoUserInfo;
+        return googleUserInfoDto;
     }
 
     private String getToken(String code) throws JsonProcessingException {
         // 요청 URL 만들기
         URI uri = UriComponentsBuilder
-                .fromUriString("https://kauth.kakao.com")
-                .path("/oauth/token")
+                .fromUriString("https://oauth2.googleapis.com/token")
                 .encode()
                 .build()
                 .toUri();
@@ -83,6 +85,7 @@ public class KakaoService {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
         body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
         body.add("redirect_uri", redirectUri);
         body.add("code", code);
 
@@ -102,77 +105,60 @@ public class KakaoService {
         return jsonNode.get("access_token").asText();
     }
 
-    private KakaoUserInfoDto getKakaoUserInfo(String token) throws JsonProcessingException {
+    private GoogleUserInfoDto getGoogleUserInfo(String token) throws JsonProcessingException {
         // 요청 URL 만들기
         URI uri = UriComponentsBuilder
-                .fromUriString("https://kapi.kakao.com")
-                .path("/v2/user/me")
+                .fromUriString("https://www.googleapis.com/oauth2/v2/userinfo")
+                .queryParam("access_token", token)
                 .encode()
                 .build()
                 .toUri();
 
-        // HTTP Header 생성
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + token);
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-
-        RequestEntity<MultiValueMap<String, String>> requestEntity = RequestEntity
-                .post(uri)
-                .headers(headers)
-                .body(new LinkedMultiValueMap<>());
-
-        // HTTP 요청 보내기
-        ResponseEntity<String> response = restTemplate.exchange(
-                requestEntity,
-                String.class
-        );
+        ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
 
         JsonNode jsonNode = new ObjectMapper().readTree(response.getBody());
-
-        Long id = jsonNode.get("id").asLong();
+        String id = jsonNode.get("id").asText();
         String nickname = UUID.randomUUID().toString();
-        String profileUrl = jsonNode.get("properties")
-                .get("profile_image").asText();
-        String email = jsonNode.get("kakao_account")
-                .get("email").asText();
+        String email = jsonNode.get("email").asText();
+        String profileUrl = jsonNode.get("picture").asText();
 
-        return new KakaoUserInfoDto(id, nickname, email, profileUrl);
+        return new GoogleUserInfoDto(id, nickname, email, profileUrl);
     }
 
-    private Member registerKakaoUserIfNeeded(KakaoUserInfoDto kakaoUserInfo) {
-        // DB 에 중복된 Kakao Id 가 있는지 확인
-        Long kakaoId = kakaoUserInfo.getId();
-        Member kakaoUser = memberRepository.findByKakaoId(kakaoId).orElse(null);
+    private Member registerGoogleUserIfNeeded(GoogleUserInfoDto googleUserInfoDto) {
+        // DB 에 중복된 Google Id 가 있는지 확인
+        String googleId = googleUserInfoDto.getId();
+        Member googleUser = memberRepository.findByGoogleId(googleId).orElse(null);
 
-        if (kakaoUser == null) {
+        if (googleUser == null) {
             // 카카오 사용자 email 동일한 email 가진 회원이 있는지 확인
-            String kakaoEmail = kakaoUserInfo.getEmail();
-            Member sameEmailUser = memberRepository.findByEmail(kakaoEmail).orElse(null);
+            String googleEmail = googleUserInfoDto.getEmail();
+            Member sameEmailUser = memberRepository.findByEmail(googleEmail).orElse(null);
 
             if (sameEmailUser != null) {
-                kakaoUser = sameEmailUser;
-                // 기존 회원정보에 카카오 Id 추가
-                kakaoUser = kakaoUser.kakaoIdUpdate(kakaoId);
+                googleUser = sameEmailUser;
+                // 기존 회원정보에 구글 Id 추가
+                googleUser = googleUser.googleIdUpdate(googleId);
             } else {
                 // 신규 회원가입
                 // password: random UUID
                 String password = UUID.randomUUID().toString();
                 String encodedPassword = passwordEncoder.encode(password);
 
-                // email: kakao email
-                String email = kakaoUserInfo.getEmail();
+                // email: google email
+                String email = googleUserInfoDto.getEmail();
 
-                kakaoUser = Member.builder()
+                googleUser = Member.builder()
                         .email(email)
-                        .nickname(kakaoUserInfo.getNickname())
+                        .nickname(googleUserInfoDto.getNickname())
                         .password(encodedPassword)
-                        .profileUrl(kakaoUserInfo.getProfileUrl())
+                        .profileUrl(googleUserInfoDto.getProfileUrl())
                         .role(RoleType.ROLE_USER)
-                        .kakaoId(kakaoId)
+                        .googleId(googleId)
                         .build();
             }
-            memberRepository.save(kakaoUser);
+            memberRepository.save(googleUser);
         }
-        return kakaoUser;
+        return googleUser;
     }
 }

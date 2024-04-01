@@ -36,18 +36,27 @@ public class Member {
     @Column
     private Long kakaoId;
 
+    @Column
+    private String googleId;
+
     @Builder
-    public Member(String email, String password, String nickname, String profileUrl, RoleType role, Long kakaoId) {
+    public Member(String email, String password, String nickname, String profileUrl, RoleType role, Long kakaoId, String googleId) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.profileUrl = profileUrl;
         this.role = role;
         this.kakaoId = kakaoId;
+        this.googleId = googleId;
     }
 
     public Member kakaoIdUpdate(Long kakaoId) {
         this.kakaoId = kakaoId;
+        return this;
+    }
+
+    public Member googleIdUpdate(String googleId) {
+        this.googleId = googleId;
         return this;
     }
 }
