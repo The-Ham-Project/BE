@@ -8,11 +8,15 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
 @Table(name = "rental_tbl")
+@SQLDelete(sql = "UPDATE rental_tbl SET is_deleted = true WHERE id = ?")
+@Where(clause = "is_deleted = false")
 public class Rental extends Timestamped {
 
     @Id
@@ -26,7 +30,7 @@ public class Rental extends Timestamped {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
     @Column
@@ -36,20 +40,28 @@ public class Rental extends Timestamped {
     private long deposit;
 
     @Column
-    private Boolean isWanted;
+    private boolean isDeleted = Boolean.FALSE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
     @Builder
-    public Rental(CategoryType category, String title, String content, long rentalFee, long deposit, Boolean isWanted, Member member) {
+    public Rental(CategoryType category, String title, String content, long rentalFee, long deposit, boolean isDeleted, Member member) {
         this.category = category;
         this.title = title;
         this.content = content;
         this.rentalFee = rentalFee;
         this.deposit = deposit;
-        this.isWanted = isWanted;
+        this.isDeleted = isDeleted;
         this.member = member;
+    }
+
+    public void update(String title, CategoryType category, String content, Long rentalFee, Long deposit) {
+        this.title = title;
+        this.category = category;
+        this.content = content;
+        this.rentalFee = rentalFee;
+        this.deposit = deposit;
     }
 }

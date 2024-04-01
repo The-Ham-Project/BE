@@ -28,6 +28,8 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/ping").permitAll()
                         .requestMatchers("/login/**").permitAll()
+                        // TODO: 3/30/24 로그인 추가 되면 제거
+                        .requestMatchers("/api/v1/rentals/**").permitAll()
                         .anyRequest().authenticated()
         );
         return http.build();
