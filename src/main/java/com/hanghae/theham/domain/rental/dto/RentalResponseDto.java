@@ -27,6 +27,7 @@ public class RentalResponseDto {
     @Getter
     public static class RentalReadResponseDto {
 
+        private final Long rentalId;
         private final String nickname;
         private final String profileUrl;
         private final String category;
@@ -39,6 +40,7 @@ public class RentalResponseDto {
         private final List<RentalImageReadResponseDto> rentalImageList;
 
         public RentalReadResponseDto(Rental rental, List<RentalImageReadResponseDto> rentalImageList) {
+            this.rentalId = rental.getId();
             this.nickname = rental.getMember().getNickname();
             this.profileUrl = rental.getMember().getProfileUrl();
             this.category = rental.getCategory().getValue();
