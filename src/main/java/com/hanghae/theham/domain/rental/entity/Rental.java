@@ -42,20 +42,29 @@ public class Rental extends Timestamped {
     @Column
     private boolean isDeleted = Boolean.FALSE;
 
+    @Column
+    private double latitude; // 위도
+
+    @Column
+    private double longitude; // 경도
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
     @Builder
-    public Rental(CategoryType category, String title, String content, long rentalFee, long deposit, boolean isDeleted, Member member) {
+    public Rental(CategoryType category, String title, String content, long rentalFee, long deposit, boolean isDeleted, double latitude, double longitude, Member member) {
         this.category = category;
         this.title = title;
         this.content = content;
         this.rentalFee = rentalFee;
         this.deposit = deposit;
         this.isDeleted = isDeleted;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.member = member;
     }
+
 
     public void update(String title, CategoryType category, String content, Long rentalFee, Long deposit) {
         this.title = title;
