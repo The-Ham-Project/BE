@@ -29,7 +29,7 @@ public class ChatRoom extends Timestamped {
     private Member memberB;
 
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String lastChat;
 
     @Builder

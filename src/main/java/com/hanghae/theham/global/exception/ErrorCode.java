@@ -16,6 +16,11 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN("사용할 수 없는 리프레쉬 토큰입니다."),
     EXPIRED_ACCESS_TOKEN("액세스 토큰이 만료되었습니다."),
     INVALID_ACCESS_TOKEN("사용할 수 없는 액세스 토큰입니다."),
+
+    // chat
+    CHAT_ROOM_ALREADY_EXISTS("채팅방이 이미 존재합니다."),
+    CANNOT_CHAT_WITH_SELF("채팅방을 생성할 수 없습니다."),
+
     ;
 
     private final String message;
