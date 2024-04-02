@@ -57,6 +57,7 @@ public class RentalResponseDto {
     @Getter
     public static class RentalCategoryReadResponseDto {
 
+        private final Long rentalId;
         private final String nickname;
         private final String profileUrl;
         private final String title;
@@ -71,6 +72,7 @@ public class RentalResponseDto {
         private final LocalDateTime createdAt;
 
         public RentalCategoryReadResponseDto(Rental rental, String firstThumbnailUrl) {
+            this.rentalId = rental.getId();
             this.nickname = rental.getMember().getNickname();
             this.profileUrl = rental.getMember().getProfileUrl();
             this.title = rental.getTitle();
