@@ -19,7 +19,6 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final MemberRepository memberRepository;
 
-
     public ChatRoomService(ChatRoomRepository chatRoomRepository, MemberRepository memberRepository) {
         this.chatRoomRepository = chatRoomRepository;
         this.memberRepository = memberRepository;
@@ -27,8 +26,6 @@ public class ChatRoomService {
 
     @Transactional
     public ChatRoomCreateResponseDto createChatRoom(String email, ChatRoomCreateRequestDto requestDto) {
-
-
         // 채팅 요청한 member
         Member requester = memberRepository.findByEmail(email).orElseThrow(() -> {
             log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
@@ -57,8 +54,5 @@ public class ChatRoomService {
                 .build();
 
         return new ChatRoomCreateResponseDto(chatRoomRepository.save(newRoom));
-
     }
-
-
 }
