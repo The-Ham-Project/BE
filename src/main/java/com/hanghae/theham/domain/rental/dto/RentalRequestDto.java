@@ -39,6 +39,8 @@ public class RentalRequestDto {
                     .content(this.content)
                     .rentalFee(this.rentalFee)
                     .deposit(this.deposit)
+                    .latitude(member.getLatitude())
+                    .longitude(member.getLongitude())
                     .member(member)
                     .build();
         }
