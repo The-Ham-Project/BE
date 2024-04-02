@@ -6,6 +6,7 @@ import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatRoomCreateResponse
 import com.hanghae.theham.domain.chat.service.ChatRoomService;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,7 +27,7 @@ public class ChatController implements ChatControllerDocs {
     @PostMapping(value = "/chats")
     public ResponseDto<ChatRoomCreateResponseDto> createChatRoom(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody ChatRoomCreateRequestDto requestDto
+            @RequestBody @Valid ChatRoomCreateRequestDto requestDto
     ) {
         ChatRoomCreateResponseDto responseDto = chatRoomService.createChatRoom(userDetails.getUsername(), requestDto);
 
