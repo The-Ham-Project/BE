@@ -2,18 +2,19 @@ package com.hanghae.theham.domain.member.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.controller.docs.MemberControllerDocs;
+import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.GoogleUserInfoDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.KakaoUserInfoDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.NaverUserInfoDto;
-import com.hanghae.theham.domain.member.service.AuthService;
-import com.hanghae.theham.domain.member.service.GoogleService;
-import com.hanghae.theham.domain.member.service.KakaoService;
-import com.hanghae.theham.domain.member.service.NaverService;
+import com.hanghae.theham.domain.member.service.*;
 import com.hanghae.theham.global.dto.ResponseDto;
+import com.hanghae.theham.global.security.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -22,12 +23,14 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController implements MemberControllerDocs {
 
     private final AuthService authService;
+    private final MemberService memberService;
     private final KakaoService kakaoService;
     private final GoogleService googleService;
     private final NaverService naverService;
 
-    public MemberController(AuthService authService, KakaoService kakaoService, GoogleService googleService, NaverService naverService) {
+    public MemberController(AuthService authService, MemberService memberService, KakaoService kakaoService, GoogleService googleService, NaverService naverService) {
         this.authService = authService;
+        this.memberService = memberService;
         this.kakaoService = kakaoService;
         this.googleService = googleService;
         this.naverService = naverService;
@@ -49,6 +52,15 @@ public class MemberController implements MemberControllerDocs {
             HttpServletResponse response
     ) {
         authService.logout(request, response);
+    }
+
+    @PatchMapping("/position")
+    public ResponseDto<MemberUpdatePositionResponseDto> updatePosition(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestBody MemberUpdatePositionRequestDto requestDto
+    ) {
+        MemberUpdatePositionResponseDto responseDto = memberService.updatePosition(userDetails.getUsername(), requestDto);
+        return ResponseDto.success("회원 좌표 갱신 기능", responseDto);
     }
 
     @GetMapping("/kakao/callback")
