@@ -29,34 +29,34 @@ public class ChatRoomService {
     public ChatRoomCreateResponseDto createChatRoom(String email, ChatRoomCreateRequestDto requestDto) {
 
 
-        // 채팅 요청 시작한 애
+        // 채팅 요청한 member
         Member requester = memberRepository.findByEmail(email).orElseThrow(() -> {
             log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
             return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
         });
 
-        // 채팅 요청 받은 애
+        // 채팅 요청 받은 member
         Member requestedMember = memberRepository.findByNickname(requestDto.getNickname()).orElseThrow(() -> {
             log.error("회원 정보를 찾을 수 없습니다. nickname: {}", requestDto.getNickname());
             return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
         });
 
-        ChatRoom existingRoom = chatRoomRepository.findByMembers(requester, requestedMember);
-
         if(requester == requestedMember){
             throw new BadRequestException(ErrorCode.CANNOT_CHAT_WITH_SELF.getMessage());
         }
 
+        ChatRoom existingRoom = chatRoomRepository.findByMembers(requester, requestedMember);
+
         if (existingRoom != null) {
             throw new BadRequestException(ErrorCode.CHAT_ROOM_ALREADY_EXISTS.getMessage());
         }
+
         ChatRoom newRoom = ChatRoom.builder()
                 .memberA(requester)
                 .memberB(requestedMember)
                 .build();
 
-        newRoom = chatRoomRepository.save(newRoom);
-        return new ChatRoomCreateResponseDto(newRoom);
+        return new ChatRoomCreateResponseDto(chatRoomRepository.save(newRoom));
 
     }
 
