@@ -33,8 +33,8 @@ public class Chat extends Timestamped {
     @JoinColumn(name = "receiver_id")
     private Member receiver;
 
-    @Column(name = "is_read", columnDefinition = "boolean default false")
-    private boolean isRead;
+    @Column(name = "is_read")
+    private boolean isRead = Boolean.FALSE;
 
     @Builder
     public Chat(String content, ChatRoom chatRoom, Member sender, Member receiver, boolean isRead) {
