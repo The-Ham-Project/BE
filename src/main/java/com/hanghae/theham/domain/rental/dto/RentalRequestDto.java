@@ -17,7 +17,7 @@ public class RentalRequestDto {
         @NotBlank(message = "제목을 입력해주세요")
         private String title;
 
-        @Schema(description = "카테고리", example = "ELECTRONIC, HOUSEHOLD, KITCHEN, CLOSET, BOOK, COSMETICS, PLACE, OTHER")
+        @Schema(description = "카테고리", example = "HOUSEHOLD, KITCHEN, CLOSET, ELECTRONIC, BOOK, PLACE, OTHER")
         private CategoryType category;
 
         @Schema(description = "내용", example = "필요하신분 무료로 나눔해드립니다.")

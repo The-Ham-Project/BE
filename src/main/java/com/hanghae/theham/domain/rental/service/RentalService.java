@@ -9,11 +9,13 @@ import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCategoryReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
+import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.config.S3Config;
@@ -21,6 +23,7 @@ import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -98,6 +102,27 @@ public class RentalService {
                 .toList();
 
         return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
+    }
+
+    public List<RentalCategoryReadResponseDto> readRentalList(CategoryType category) {
+        List<Rental> rentalList;
+        if (category == CategoryType.ALL) {
+            Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+            rentalList = rentalRepository.findAll(sort);
+        } else {
+            rentalList = rentalRepository.findAllByCategoryOrderByCreatedAt(category);
+        }
+
+        List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();
+        for (Rental rental : rentalList) {
+            String firstThumbnailUrl = rentalImageRepository.findAllByRental(rental).stream()
+                    .findFirst()
+                    .map(RentalImage::getImageUrl)
+                    .orElse(null);
+
+            responseDtoList.add(new RentalCategoryReadResponseDto(rental, firstThumbnailUrl));
+        }
+        return responseDtoList;
     }
 
     @Transactional
