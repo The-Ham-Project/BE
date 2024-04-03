@@ -57,15 +57,15 @@ public class ChatRoomService {
             throw new BadRequestException(ErrorCode.CANNOT_CHAT_WITH_SELF.getMessage());
         }
 
-        ChatRoom existingChatRoom = chatRoomRepository.findChatRoomByBuyerAndRental(buyer, rental)
-                .orElseGet(() -> {
-                    ChatRoom newRoom = ChatRoom.builder()
-                            .buyer(buyer)
-                            .rental(rental)
-                            .build();
-                    return chatRoomRepository.save(newRoom);
-                });
+        ChatRoom existingChatRoom = chatRoomRepository.findChatRoomByBuyerAndRental(buyer, rental);
+        if (existingChatRoom != null) {
+            throw new BadRequestException(ErrorCode.CHAT_ROOM_ALREADY_EXISTS.getMessage());
+        }
 
-        throw new BadRequestException(ErrorCode.CHAT_ROOM_ALREADY_EXISTS.getMessage());
+        ChatRoom newRoom = ChatRoom.builder()
+                .buyer(buyer)
+                .rental(rental)
+                .build();
+        return new ChatRoomCreateResponseDto(chatRoomRepository.save(newRoom));
     }
 }
