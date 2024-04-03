@@ -47,6 +47,9 @@ dependencies {
 
     // slack
     implementation 'com.github.maricn:logback-slack-appender:1.4.0'
+
+    // websocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
 
 tasks.named('bootBuildImage') {

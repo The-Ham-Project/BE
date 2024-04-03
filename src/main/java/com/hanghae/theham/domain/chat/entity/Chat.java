@@ -18,8 +18,12 @@ public class Chat extends Timestamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id")
+    private ChatRoom chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")
@@ -29,10 +33,16 @@ public class Chat extends Timestamped {
     @JoinColumn(name = "receiver_id")
     private Member receiver;
 
+    @Column(name = "is_read")
+    private boolean isRead = Boolean.FALSE;
+
     @Builder
-    public Chat(String content, Member sender, Member receiver) {
+    public Chat(String content, ChatRoom chatRoom, Member sender, Member receiver, boolean isRead) {
         this.content = content;
+        this.chatRoom = chatRoom;
         this.sender = sender;
         this.receiver = receiver;
+        this.isRead = isRead;
     }
+
 }
