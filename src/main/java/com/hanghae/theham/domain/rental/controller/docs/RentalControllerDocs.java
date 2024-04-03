@@ -12,6 +12,7 @@ import com.hanghae.theham.global.security.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,8 +37,10 @@ public interface RentalControllerDocs {
     );
 
     @Operation(summary = "함께쓰기 카테고리별 게시글 조회 기능", description = "함께쓰기 게시글을 조회할 수 있는 API")
-    ResponseDto<List<RentalCategoryReadResponseDto>> readRentalList(
-            @RequestParam CategoryType category
+    ResponseDto<Slice<RentalCategoryReadResponseDto>> readRentalList(
+            @RequestParam CategoryType category,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
     );
 
     @Operation(summary = "함께쓰기 게시글 수정 기능", description = "함께쓰기 게시글을 수정할 수 있는 API")
