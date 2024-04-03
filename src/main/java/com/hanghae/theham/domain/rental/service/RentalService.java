@@ -106,11 +106,12 @@ public class RentalService {
 
     public Slice<RentalCategoryReadResponseDto> readRentalList(CategoryType category, int page, int size) {
         Slice<Rental> rentalSlice;
+        Pageable pageable = createPageRequest(page, size);
+
         if (category == CategoryType.ALL) {
-            Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, Sort.Direction.DESC, "createdAt");
             rentalSlice = rentalRepository.findSliceBy(pageable);
         } else {
-            rentalSlice = rentalRepository.findAllByCategoryOrderByCreatedAt(category, PageRequest.of(page, size));
+            rentalSlice = rentalRepository.findAllByCategoryOrderByCreatedAt(category, pageable);
         }
 
         List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();
@@ -126,7 +127,7 @@ public class RentalService {
         // 페이징 여부 확인
         boolean hasNestPage = rentalSlice.hasNext();
 
-        return new SliceImpl<>(responseDtoList, PageRequest.of(page, size), hasNestPage);
+        return new SliceImpl<>(responseDtoList, pageable, hasNestPage);
     }
 
     @Transactional
@@ -248,5 +249,9 @@ public class RentalService {
             log.error("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
             throw new RuntimeException("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
         }
+    }
+
+    private Pageable createPageRequest(int page, int size) {
+        return PageRequest.of(Math.max(0, page - 1), size, Sort.Direction.DESC, "createdAt");
     }
 }
