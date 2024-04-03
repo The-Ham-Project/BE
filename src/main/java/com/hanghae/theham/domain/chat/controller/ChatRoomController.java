@@ -1,8 +1,8 @@
 package com.hanghae.theham.domain.chat.controller;
 
-import com.hanghae.theham.domain.chat.controller.docs.ChatControllerDocs;
-import com.hanghae.theham.domain.chat.dto.ChatRequestDto.ChatRoomCreateRequestDto;
-import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatRoomCreateResponseDto;
+import com.hanghae.theham.domain.chat.controller.docs.ChatRoomControllerDocs;
+import com.hanghae.theham.domain.chat.dto.ChatRoomRequestDto.ChatRoomCreateRequestDto;
+import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomCreateResponseDto;
 import com.hanghae.theham.domain.chat.service.ChatRoomService;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
@@ -15,16 +15,16 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j(topic = "chatController")
 @RequestMapping("/api/v1")
 @RestController
-public class ChatController implements ChatControllerDocs {
+public class ChatRoomController implements ChatRoomControllerDocs {
 
     private final ChatRoomService chatRoomService;
 
-    public ChatController(ChatRoomService chatRoomService) {
+    public ChatRoomController(ChatRoomService chatRoomService) {
         this.chatRoomService = chatRoomService;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping(value = "/chats")
+    @PostMapping(value = "/chat-rooms")
     public ResponseDto<ChatRoomCreateResponseDto> createChatRoom(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody @Valid ChatRoomCreateRequestDto requestDto

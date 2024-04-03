@@ -6,7 +6,7 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-public class ChatResponseDto {
+public class ChatRoomResponseDto {
 
     @Getter
     public static class ChatRoomCreateResponseDto {
