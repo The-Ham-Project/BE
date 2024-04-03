@@ -23,7 +23,7 @@ import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -104,17 +104,17 @@ public class RentalService {
         return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
     }
 
-    public List<RentalCategoryReadResponseDto> readRentalList(CategoryType category) {
-        List<Rental> rentalList;
+    public Slice<RentalCategoryReadResponseDto> readRentalList(CategoryType category, int page, int size) {
+        Slice<Rental> rentalSlice;
         if (category == CategoryType.ALL) {
-            Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
-            rentalList = rentalRepository.findAll(sort);
+            Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, Sort.Direction.DESC, "createdAt");
+            rentalSlice = rentalRepository.findSliceBy(pageable);
         } else {
-            rentalList = rentalRepository.findAllByCategoryOrderByCreatedAt(category);
+            rentalSlice = rentalRepository.findAllByCategoryOrderByCreatedAt(category, PageRequest.of(page, size));
         }
 
         List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();
-        for (Rental rental : rentalList) {
+        for (Rental rental : rentalSlice) {
             String firstThumbnailUrl = rentalImageRepository.findAllByRental(rental).stream()
                     .findFirst()
                     .map(RentalImage::getImageUrl)
@@ -122,7 +122,11 @@ public class RentalService {
 
             responseDtoList.add(new RentalCategoryReadResponseDto(rental, firstThumbnailUrl));
         }
-        return responseDtoList;
+
+        // 페이징 여부 확인
+        boolean hasNestPage = rentalSlice.hasNext();
+
+        return new SliceImpl<>(responseDtoList, PageRequest.of(page, size), hasNestPage);
     }
 
     @Transactional

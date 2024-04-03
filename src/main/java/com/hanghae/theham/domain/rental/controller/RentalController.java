@@ -12,6 +12,7 @@ import com.hanghae.theham.domain.rental.service.RentalService;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -50,10 +51,12 @@ public class RentalController implements RentalControllerDocs {
     }
 
     @GetMapping("/rentals")
-    public ResponseDto<List<RentalCategoryReadResponseDto>> readRentalList(
-            @RequestParam CategoryType category
+    public ResponseDto<Slice<RentalCategoryReadResponseDto>> readRentalList(
+            @RequestParam CategoryType category,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        List<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(category);
+        Slice<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(category, page-1, size);
         return ResponseDto.success("함께쓰기 카테고리별 게시글 조회 기능", responseDtoList);
     }
 
