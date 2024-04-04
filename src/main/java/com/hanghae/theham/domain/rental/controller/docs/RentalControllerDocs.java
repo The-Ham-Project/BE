@@ -40,7 +40,8 @@ public interface RentalControllerDocs {
     ResponseDto<Slice<RentalCategoryReadResponseDto>> readRentalList(
             @RequestParam CategoryType category,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
     );
 
     @Operation(summary = "함께쓰기 게시글 수정 기능", description = "함께쓰기 게시글을 수정할 수 있는 API")

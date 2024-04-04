@@ -54,9 +54,10 @@ public class RentalController implements RentalControllerDocs {
     public ResponseDto<Slice<RentalCategoryReadResponseDto>> readRentalList(
             @RequestParam CategoryType category,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        Slice<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(category, page-1, size);
+        Slice<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(category, page-1, size, userDetails.getUsername());
         return ResponseDto.success("함께쓰기 카테고리별 게시글 조회 기능", responseDtoList);
     }
 
