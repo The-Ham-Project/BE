@@ -1,6 +1,7 @@
 package com.hanghae.theham.domain.rental.repository;
 
 import com.hanghae.theham.domain.rental.entity.Rental;
+import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -22,15 +23,21 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
             "SELECT  *, r.distance as distance FROM" +
                     "(SELECT *, ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 as distance FROM rental_tbl) as r " +
                     "WHERE distance < 4 " +
+                    "ORDER BY r.created_at DESC " +
                     "LIMIT :limit OFFSET :page"
-            , nativeQuery = true)
+            , nativeQuery = true
+    )
     Slice<Rental> findAllByDistance(int page, int limit, double userLatitude, double userLongitude);
 
     @Query(value =
             "SELECT  *, r.distance as distance FROM" +
                     "(SELECT *, ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 as distance FROM rental_tbl) as r " +
                     "WHERE distance < 4 AND category=:category " +
+                    "ORDER BY r.created_at DESC " +
                     "LIMIT :limit OFFSET :page"
-            , nativeQuery = true)
+            , nativeQuery = true
+    )
     Slice<Rental> findAllByCategoryAndDistance(String category, int page, int limit, double userLatitude, double userLongitude);
+
+    Slice<Rental> findAllByCategory(CategoryType category);
 }
