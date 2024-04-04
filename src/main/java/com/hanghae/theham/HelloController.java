@@ -11,7 +11,6 @@ public class HelloController {
 
     @GetMapping("/ping")
     public ResponseEntity<String> ping() {
-        log.error("한국어 테스트");
         return ResponseEntity.ok().body("pong");
     }
 }
