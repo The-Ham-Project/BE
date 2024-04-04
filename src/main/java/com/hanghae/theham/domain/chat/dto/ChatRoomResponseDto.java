@@ -24,4 +24,25 @@ public class ChatRoomResponseDto {
             this.createdAt = chatRoom.getCreatedAt();
         }
     }
+
+    @Getter
+    public static class ChatRoomReadResponseDto{
+        private Long chatRoomId;
+
+        private Long toMemberId;
+
+        private String toMemberNickName;
+
+        private String toMemberProfileUrl;
+
+        private String rentalTitle;
+
+        public ChatRoomReadResponseDto(Long chatRoomId, Long toMemberId, String toMemberNickName, String toMemberProfileUrl, String rentalTitle) {
+            this.chatRoomId = chatRoomId;
+            this.toMemberId = toMemberId;
+            this.toMemberNickName = toMemberNickName;
+            this.toMemberProfileUrl = toMemberProfileUrl;
+            this.rentalTitle = rentalTitle;
+        }
+    }
 }

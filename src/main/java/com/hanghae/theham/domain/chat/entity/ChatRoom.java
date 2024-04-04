@@ -41,4 +41,5 @@ public class ChatRoom extends Timestamped {
         this.buyer = buyer;
         this.rental = rental;
     }
+
 }
