@@ -9,6 +9,8 @@ import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalMyListReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCategoryReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
@@ -128,6 +130,30 @@ public class RentalService {
         boolean hasNestPage = rentalSlice.hasNext();
 
         return new SliceImpl<>(responseDtoList, pageable, hasNestPage);
+    }
+
+    public Slice<RentalMyListReadResponseDto> readRentalMyList(String email, int page, int size) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
+            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
+            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
+        });
+
+        Pageable pageable = createPageRequest(page, size);
+        Slice<Rental> rentalSlice = rentalRepository.findByMember(member, pageable);
+
+        List<RentalMyListReadResponseDto> ResponseDtoMyList = new ArrayList<>();
+        for (Rental rental : rentalSlice) {
+            String firstThumbnailUrl = rentalImageRepository.findAllByRental(rental).stream()
+                    .findFirst()
+                    .map(RentalImage::getImageUrl)
+                    .orElse(null);
+
+            ResponseDtoMyList.add(new RentalMyListReadResponseDto(rental, firstThumbnailUrl));
+        }
+
+        boolean hasNestPage = rentalSlice.hasNext();
+
+        return new SliceImpl<>(ResponseDtoMyList, pageable, hasNestPage);
     }
 
     @Transactional
