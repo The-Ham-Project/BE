@@ -3,6 +3,7 @@ package com.hanghae.theham.domain.chat.controller;
 import com.hanghae.theham.domain.chat.controller.docs.ChatRoomControllerDocs;
 import com.hanghae.theham.domain.chat.dto.ChatRoomRequestDto.ChatRoomCreateRequestDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomCreateResponseDto;
+import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomDetailResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomReadResponseDto;
 import com.hanghae.theham.domain.chat.service.ChatRoomService;
 import com.hanghae.theham.global.dto.ResponseDto;
@@ -27,7 +28,7 @@ public class ChatRoomController implements ChatRoomControllerDocs {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping(value = "/chat-rooms")
+    @PostMapping(  "/chat-rooms")
     public ResponseDto<ChatRoomCreateResponseDto> createChatRoom(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody @Valid ChatRoomCreateRequestDto requestDto
@@ -38,11 +39,21 @@ public class ChatRoomController implements ChatRoomControllerDocs {
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping(value = "/chat-rooms")
+    @GetMapping( "/chat-rooms")
     public ResponseDto<List<ChatRoomReadResponseDto>> getChatRoomList(
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ){
-        List<ChatRoomReadResponseDto> chatRoomList = chatRoomService.getChatRoomList(userDetails.getUsername());
-        return ResponseDto.success("회원 자신의 채팅방 목록 조회 기능", chatRoomList);
+        List<ChatRoomReadResponseDto> responseDtoList = chatRoomService.getChatRoomList(userDetails.getUsername());
+        return ResponseDto.success("회원 자신의 채팅방 목록 조회 기능", responseDtoList);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping( "/chat-rooms/{chatRoomId}")
+    public ResponseDto<ChatRoomDetailResponseDto> getChatRoom(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long chatRoomId
+    ){
+        ChatRoomDetailResponseDto responseDto = chatRoomService.getChatRoom(userDetails.getUsername(), chatRoomId);
+        return ResponseDto.success("채팅방 상세 조회 기능", responseDto);
     }
 }
