@@ -6,6 +6,7 @@ import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequest
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCategoryReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalMyListReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import com.hanghae.theham.domain.rental.service.RentalService;
@@ -56,8 +57,18 @@ public class RentalController implements RentalControllerDocs {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Slice<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(category, page-1, size);
+        Slice<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(category, page - 1, size);
         return ResponseDto.success("함께쓰기 카테고리별 게시글 조회 기능", responseDtoList);
+    }
+
+    @GetMapping("/rentals/my/posts")
+    public ResponseDto<Slice<RentalMyListReadResponseDto>> readRentalMyList(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Slice<RentalMyListReadResponseDto> responseDtoMyList = rentalService.readRentalMyList(userDetails.getUsername(), page - 1, size);
+        return ResponseDto.success("함께쓰기 마이페이지 내가 쓴 게시글 조회 기능", responseDtoMyList);
     }
 
     @PutMapping(value = "/rentals/{rentalId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})

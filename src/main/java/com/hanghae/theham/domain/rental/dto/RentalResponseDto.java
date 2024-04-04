@@ -87,6 +87,28 @@ public class RentalResponseDto {
     }
 
     @Getter
+    public static class RentalMyListReadResponseDto {
+
+        private final Long rentalId;
+        private final String profileUrl;
+        private final String title;
+        private final String content;
+        private final long rentalFee;
+        private final long deposit;
+        private final String firstThumbnailUrl;
+
+        public RentalMyListReadResponseDto(Rental rental, String firstThumbnailUrl) {
+            this.rentalId = rental.getId();
+            this.profileUrl = rental.getMember().getProfileUrl();
+            this.title = rental.getTitle();
+            this.content = rental.getContent();
+            this.rentalFee = rental.getRentalFee();
+            this.deposit = rental.getDeposit();
+            this.firstThumbnailUrl = firstThumbnailUrl;
+        }
+    }
+
+    @Getter
     public static class RentalUpdateResponseDto {
 
         private final String category;
