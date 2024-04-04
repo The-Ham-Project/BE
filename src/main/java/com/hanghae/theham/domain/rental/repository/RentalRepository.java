@@ -13,9 +13,7 @@ import java.util.List;
 
 public interface RentalRepository extends JpaRepository<Rental, Long> {
 
-    Slice<Rental> findAllByCategoryOrderByCreatedAt(CategoryType categoryType, Pageable pageable);
-
-    Slice<Rental> findSliceBy(Pageable pageable);
+    Slice<Rental> findAllByCategory(CategoryType category, Pageable pageable);
 
     Slice<Rental> findByMemberOrderByCreatedAt(Member member, Pageable pageable);
 
@@ -46,6 +44,4 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
             , nativeQuery = true
     )
     Slice<Rental> findAllByCategoryAndDistance(String category, int page, int limit, double userLatitude, double userLongitude);
-
-    Slice<Rental> findAllByCategory(CategoryType category);
 }

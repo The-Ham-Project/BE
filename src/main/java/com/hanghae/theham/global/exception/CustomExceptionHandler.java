@@ -36,6 +36,13 @@ public class CustomExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(AwsS3Exception.class)
+    public ResponseDto<?> handleAwsS3Exception(AwsS3Exception e) {
+        log.error("handleAwsS3Exception", e);
+        return ResponseDto.fail(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseDto<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         Map<String, String> errorMap = new HashMap<>();

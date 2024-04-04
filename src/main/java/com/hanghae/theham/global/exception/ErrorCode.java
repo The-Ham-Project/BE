@@ -16,6 +16,8 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN("사용할 수 없는 리프레쉬 토큰입니다."),
     EXPIRED_ACCESS_TOKEN("액세스 토큰이 만료되었습니다."),
     INVALID_ACCESS_TOKEN("사용할 수 없는 액세스 토큰입니다."),
+    S3_UPLOAD_UNKNOWN_ERROR("S3 업로드에 실패했습니다."),
+    S3_DELETE_UNKNOWN_ERROR("S3 이미지 삭제에 실패했습니다."),
 
     // chat
     CHAT_ROOM_ALREADY_EXISTS("채팅방이 이미 존재합니다."),
