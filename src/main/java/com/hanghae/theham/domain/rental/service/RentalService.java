@@ -104,14 +104,14 @@ public class RentalService {
         return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
     }
 
-    public Slice<RentalCategoryReadResponseDto> readRentalList(CategoryType category, int page, int size, String username) {
+    public Slice<RentalCategoryReadResponseDto> readRentalList(CategoryType category, int page, int size, String email) {
         Slice<Rental> rentalSlice;
         Pageable pageable = createPageRequest(page, size);
 
         // 멤버의 위치 가져오기
-        Member member = memberRepository.findByEmail(username)
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    log.error("회원 정보를 찾을 수가 없습니다. 이메일: {}", username);
+                    log.error("회원 정보를 찾을 수가 없습니다. 이메일: {}", email);
                     return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
                 });
         double latitude = member.getLatitude();
