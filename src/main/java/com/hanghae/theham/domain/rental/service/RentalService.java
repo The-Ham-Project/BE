@@ -106,14 +106,28 @@ public class RentalService {
         return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
     }
 
-    public Slice<RentalCategoryReadResponseDto> readRentalList(CategoryType category, int page, int size) {
+    public Slice<RentalCategoryReadResponseDto> readRentalList(CategoryType category, int page, int size, String email) {
         Slice<Rental> rentalSlice;
         Pageable pageable = createPageRequest(page, size);
 
-        if (category == CategoryType.ALL) {
-            rentalSlice = rentalRepository.findSliceBy(pageable);
+        // 멤버의 위치 가져오기
+        Member member = memberRepository.findByEmail(email).orElse(null);
+
+        if (member == null) {
+            if (category == CategoryType.ALL) {
+                rentalSlice = rentalRepository.findAll(pageable);
+            } else {
+                rentalSlice = rentalRepository.findAllByCategory(category);
+            }
         } else {
-            rentalSlice = rentalRepository.findAllByCategoryOrderByCreatedAt(category, pageable);
+            double latitude = member.getLatitude();
+            double longitude = member.getLongitude();
+
+            if (category == CategoryType.ALL) {
+                rentalSlice = rentalRepository.findAllByDistance(pageable.getPageNumber(), pageable.getPageSize(), latitude, longitude);
+            } else {
+                rentalSlice = rentalRepository.findAllByCategoryAndDistance(category.toString(), pageable.getPageNumber(), pageable.getPageSize(), latitude, longitude);
+            }
         }
 
         List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();

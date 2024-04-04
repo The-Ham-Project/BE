@@ -41,7 +41,8 @@ public interface RentalControllerDocs {
     ResponseDto<Slice<RentalCategoryReadResponseDto>> readRentalList(
             @RequestParam CategoryType category,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
     );
 
     @Operation(summary = "함께쓰기 마이페이지 내가 쓴 게시글 조회 기능", description = "함께쓰기 마이페이지 내가 쓴 게시글 조회할 수 있는 API")
