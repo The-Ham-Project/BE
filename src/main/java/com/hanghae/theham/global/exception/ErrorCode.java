@@ -20,7 +20,7 @@ public enum ErrorCode {
     // chat
     CHAT_ROOM_ALREADY_EXISTS("채팅방이 이미 존재합니다."),
     CANNOT_CHAT_WITH_SELF("채팅방을 생성할 수 없습니다."),
-
+    NOT_FOUND_CHAT_ROOM("찾을 수 없는 채팅방 입니다."),
 
     ;
 

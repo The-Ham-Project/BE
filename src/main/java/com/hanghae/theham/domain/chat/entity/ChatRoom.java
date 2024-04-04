@@ -32,6 +32,9 @@ public class ChatRoom extends Timestamped {
     @ManyToOne(fetch = FetchType.LAZY)
     private Rental rental;
 
+    @Column(name="last_chat")
+    private String lastChat;
+
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.REMOVE)
     private List<Chat> chatList = new ArrayList<>();
 
@@ -42,4 +45,7 @@ public class ChatRoom extends Timestamped {
         this.rental = rental;
     }
 
+    public void updateLastChat(String message) {
+        this.lastChat = message;
+    }
 }
