@@ -110,7 +110,10 @@ public class RentalService {
 
         // 멤버의 위치 가져오기
         Member member = memberRepository.findByEmail(username)
-                .orElseThrow(() -> new IllegalArgumentException("No Such User"));
+                .orElseThrow(() -> {
+                    log.error("회원 정보를 찾을 수가 없습니다. 이메일: {}", username);
+                    return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
+                });
         double latitude = member.getLatitude();
         double longitude = member.getLongitude();
 
