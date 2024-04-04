@@ -139,7 +139,7 @@ public class RentalService {
         });
 
         Pageable pageable = createPageRequest(page, size);
-        Slice<Rental> rentalSlice = rentalRepository.findByMember(member, pageable);
+        Slice<Rental> rentalSlice = rentalRepository.findByMemberOrderByCreatedAt(member, pageable);
 
         List<RentalMyListReadResponseDto> ResponseDtoMyList = new ArrayList<>();
         for (Rental rental : rentalSlice) {

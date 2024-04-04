@@ -57,17 +57,17 @@ public class RentalController implements RentalControllerDocs {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Slice<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(category, page-1, size);
+        Slice<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(category, page - 1, size);
         return ResponseDto.success("함께쓰기 카테고리별 게시글 조회 기능", responseDtoList);
     }
 
-    @GetMapping("/rentals/mypage/list")
+    @GetMapping("/rentals/my/posts")
     public ResponseDto<Slice<RentalMyListReadResponseDto>> readRentalMyList(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Slice<RentalMyListReadResponseDto> responseDtoMyList = rentalService.readRentalMyList(userDetails.getUsername(), page-1, size);
+        Slice<RentalMyListReadResponseDto> responseDtoMyList = rentalService.readRentalMyList(userDetails.getUsername(), page - 1, size);
         return ResponseDto.success("함께쓰기 마이페이지 내가 쓴 게시글 조회 기능", responseDtoMyList);
     }
 
