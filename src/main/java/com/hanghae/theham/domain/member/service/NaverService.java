@@ -175,9 +175,14 @@ public class NaverService {
                 // email: naver email
                 String email = naverUserInfoDto.getEmail();
 
+                // 닉네임
+                Integer maxSequence = memberRepository.findMaxNicknameSequence();
+                int nextSequenceNumber = maxSequence != null ? maxSequence + 1 : 1;
+                String nickname = String.format("더함이%03d", nextSequenceNumber);
+
                 naverUser = Member.builder()
                         .email(email)
-                        .nickname(naverUserInfoDto.getNickname())
+                        .nickname(nickname)
                         .password(encodedPassword)
                         .profileUrl(naverUserInfoDto.getProfileUrl())
                         .role(RoleType.ROLE_USER)
