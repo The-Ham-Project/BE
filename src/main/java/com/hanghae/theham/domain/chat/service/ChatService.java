@@ -30,7 +30,7 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage())
                 );
-        Member sender = memberRepository.findById(requestDto.getSenderId())
+        Member sender = memberRepository.findByNickname(requestDto.getNickname())
                 .orElseThrow(() -> new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage())
         );
         chatRoom.updateLastChat(requestDto.getMessage());
