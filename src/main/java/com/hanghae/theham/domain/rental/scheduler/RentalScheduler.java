@@ -6,6 +6,8 @@ import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.config.S3Config;
+import com.hanghae.theham.global.exception.AwsS3Exception;
+import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -59,7 +61,7 @@ public class RentalScheduler {
             s3Config.amazonS3Client().deleteObject(new DeleteObjectRequest(bucket, key));
         } catch (MalformedURLException e) {
             log.error("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
-            throw new RuntimeException("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
+            throw new AwsS3Exception(ErrorCode.S3_DELETE_UNKNOWN_ERROR.getMessage());
         }
     }
 }

@@ -154,9 +154,14 @@ public class GoogleService {
                 // email: google email
                 String email = googleUserInfoDto.getEmail();
 
+                // 닉네임
+                Integer maxSequence = memberRepository.findMaxNicknameSequence();
+                int nextSequenceNumber = maxSequence != null ? maxSequence + 1 : 1;
+                String nickname = String.format("더함이%03d", nextSequenceNumber);
+
                 googleUser = Member.builder()
                         .email(email)
-                        .nickname(googleUserInfoDto.getNickname())
+                        .nickname(nickname)
                         .password(encodedPassword)
                         .profileUrl(googleUserInfoDto.getProfileUrl())
                         .role(RoleType.ROLE_USER)

@@ -168,9 +168,14 @@ public class KakaoService {
                 // email: kakao email
                 String email = kakaoUserInfo.getEmail();
 
+                // 닉네임
+                Integer maxSequence = memberRepository.findMaxNicknameSequence();
+                int nextSequenceNumber = maxSequence != null ? maxSequence + 1 : 1;
+                String nickname = String.format("더함이%03d", nextSequenceNumber);
+
                 kakaoUser = Member.builder()
                         .email(email)
-                        .nickname(kakaoUserInfo.getNickname())
+                        .nickname(nickname)
                         .password(encodedPassword)
                         .profileUrl(kakaoUserInfo.getProfileUrl())
                         .role(RoleType.ROLE_USER)
