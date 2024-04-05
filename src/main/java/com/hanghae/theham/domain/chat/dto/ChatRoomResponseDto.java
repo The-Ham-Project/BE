@@ -2,6 +2,7 @@ package com.hanghae.theham.domain.chat.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hanghae.theham.domain.chat.entity.ChatRoom;
+import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatReadResponseDto;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -30,11 +31,11 @@ public class ChatRoomResponseDto {
     public static class ChatRoomDetailResponseDto{
         private final String toUserNickname; // 상대방 식별
         private final String toUserProfileImage; // 상대방 이미지
-        private final List<ChatResponseDto.ChatReadResponseDto> chatReadResponseDtoList;
+        private final List<ChatReadResponseDto> chatReadResponseDtoList;
 
         public ChatRoomDetailResponseDto(String toUserNickname,
                                          String toUserProfileImage,
-                                         List<ChatResponseDto.ChatReadResponseDto> chatReadResponseDtoList) {
+                                         List<ChatReadResponseDto> chatReadResponseDtoList) {
             this.toUserNickname = toUserNickname;
             this.toUserProfileImage = toUserProfileImage;
             this.chatReadResponseDtoList = chatReadResponseDtoList;
@@ -50,7 +51,6 @@ public class ChatRoomResponseDto {
         private final String lastMessage;
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private final LocalDateTime lastMessageTime;
-
 
         public ChatRoomReadResponseDto(Long chatRoomId,
                                        Long toMemberId,

@@ -38,8 +38,7 @@ public class ChatRoomController implements ChatRoomControllerDocs {
         return ResponseDto.success("채팅 채팅방 생성 기능", responseDto);
     }
 
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping( "/chat-rooms")
+    @GetMapping("/chat-rooms")
     public ResponseDto<List<ChatRoomReadResponseDto>> getChatRoomList(
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ){
@@ -47,8 +46,7 @@ public class ChatRoomController implements ChatRoomControllerDocs {
         return ResponseDto.success("회원 자신의 채팅방 목록 조회 기능", responseDtoList);
     }
 
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping( "/chat-rooms/{chatRoomId}")
+    @GetMapping("/chat-rooms/{chatRoomId}")
     public ResponseDto<ChatRoomDetailResponseDto> getChatRoom(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable Long chatRoomId

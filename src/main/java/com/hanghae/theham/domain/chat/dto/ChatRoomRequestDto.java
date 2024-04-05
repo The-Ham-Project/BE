@@ -16,6 +16,5 @@ public class ChatRoomRequestDto {
         @NotNull(message = "게시글 아이디가 있어야합니다.")
         @Schema(description = "게시글 아이디", example = "3")
         private Long rentalId;
-
     }
 }
