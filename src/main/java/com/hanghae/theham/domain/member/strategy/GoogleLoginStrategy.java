@@ -1,9 +1,9 @@
-package com.hanghae.theham.domain.member.service;
+package com.hanghae.theham.domain.member.strategy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.NaverUserInfoDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.entity.type.RoleType;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
@@ -31,55 +31,56 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class NaverService {
+public class GoogleLoginStrategy implements SocialLoginStrategy {
 
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
     private final RestTemplate restTemplate;
     private final TokenProvider tokenProvider;
 
-    @Value("${naver.client-id}")
-    private String clientId;
+    private final String googleClientId;
+    private final String googleClientSecret;
+    private final String googleRedirectUrl;
 
-    @Value("${naver.client-secret}")
-    private String clientSecret;
-
-    @Value("${naver.redirect-uri}")
-    private String redirectUri;
-
-    public NaverService(PasswordEncoder passwordEncoder, MemberRepository memberRepository, RestTemplate restTemplate, TokenProvider tokenProvider) {
+    public GoogleLoginStrategy(
+            PasswordEncoder passwordEncoder,
+            MemberRepository memberRepository,
+            RestTemplate restTemplate,
+            TokenProvider tokenProvider,
+            @Value("${google.client-id}") String googleClientId,
+            @Value("${google.client-secret}") String googleClientSecret,
+            @Value("${google.redirect-uri}") String googleRedirectUrl
+    ) {
         this.passwordEncoder = passwordEncoder;
         this.memberRepository = memberRepository;
         this.restTemplate = restTemplate;
         this.tokenProvider = tokenProvider;
+        this.googleClientId = googleClientId;
+        this.googleClientSecret = googleClientSecret;
+        this.googleRedirectUrl = googleRedirectUrl;
     }
 
-    public NaverUserInfoDto naverLogin(String code, HttpServletResponse response) throws JsonProcessingException {
-        // 1. "인가 코드"로 "액세스 토큰" 요청
+    @Override
+    public MemberInfoDto socialLogin(String code, HttpServletResponse response) throws JsonProcessingException {
         String token = getToken(code);
+        MemberInfoDto memberInfoDto = getMemberInfo(token);
+        Member googleUser = registerMemberIfNeeded(memberInfoDto);
 
-        // 2. 토큰으로 네이버 API 호출 : "액세스 토큰"으로 "네이버 사용자 정보" 가져오기
-        NaverUserInfoDto naverUserInfoDto = getNaverUserInfo(token);
-
-        // 3. 필요시에 회원가입
-        Member naverUser = registerNaverUserIfNeeded(naverUserInfoDto);
-
-        // 4. 로그인 성공
-        String accessToken = tokenProvider.createAccessToken(naverUser.getEmail(), naverUser.getRole().name());
-        String refreshToken = tokenProvider.createRefreshToken(naverUser.getEmail(), naverUser.getRole().name());
+        String accessToken = tokenProvider.createAccessToken(googleUser.getEmail(), googleUser.getRole().name());
+        String refreshToken = tokenProvider.createRefreshToken(googleUser.getEmail(), googleUser.getRole().name());
 
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
         tokenProvider.addRefreshTokenToCookie(refreshToken, response);
 
-        forceLogin(naverUser);
-        return naverUserInfoDto;
+        forceLogin(googleUser);
+        return memberInfoDto;
     }
 
-    private String getToken(String code) throws JsonProcessingException {
+    @Override
+    public String getToken(String code) throws JsonProcessingException {
         // 요청 URL 만들기
         URI uri = UriComponentsBuilder
-                .fromUriString("https://nid.naver.com/oauth2.0")
-                .path("/token")
+                .fromUriString("https://oauth2.googleapis.com/token")
                 .encode()
                 .build()
                 .toUri();
@@ -91,9 +92,9 @@ public class NaverService {
         // HTTP Body 생성
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
-        body.add("client_id", clientId);
-        body.add("client_secret", clientSecret);
-        body.add("redirect_uri", redirectUri);
+        body.add("client_id", googleClientId);
+        body.add("client_secret", googleClientSecret);
+        body.add("redirect_uri", googleRedirectUrl);
         body.add("code", code);
 
         RequestEntity<MultiValueMap<String, String>> requestEntity = RequestEntity
@@ -112,90 +113,64 @@ public class NaverService {
         return jsonNode.get("access_token").asText();
     }
 
-    private NaverUserInfoDto getNaverUserInfo(String token) throws JsonProcessingException {
+    @Override
+    public MemberInfoDto getMemberInfo(String token) throws JsonProcessingException {
         // 요청 URL 만들기
         URI uri = UriComponentsBuilder
-                .fromUriString("https://openapi.naver.com")
-                .path("/v1/nid/me")
+                .fromUriString("https://www.googleapis.com/oauth2/v2/userinfo")
+                .queryParam("access_token", token)
                 .encode()
                 .build()
                 .toUri();
 
-        // HTTP Header 생성
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + token);
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-
-        RequestEntity<MultiValueMap<String, String>> requestEntity = RequestEntity
-                .post(uri)
-                .headers(headers)
-                .body(new LinkedMultiValueMap<>());
-
-        // HTTP 요청 보내기
-        ResponseEntity<String> response = restTemplate.exchange(
-                requestEntity,
-                String.class
-        );
+        ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
 
         JsonNode jsonNode = new ObjectMapper().readTree(response.getBody());
-        String id = jsonNode.get("response")
-                .get("id")
-                .asText();
-        String nickname = UUID.randomUUID().toString();
-        String profileUrl = jsonNode.get("response")
-                .get("profile_image")
-                .asText();
-        String email = jsonNode.get("response")
-                .get("email")
-                .asText();
+        String id = jsonNode.get("id").asText();
+        String email = jsonNode.get("email").asText();
+        String profileUrl = jsonNode.get("picture").asText();
 
-        return new NaverUserInfoDto(id, nickname, email, profileUrl);
+        return new MemberInfoDto(id, email, profileUrl);
     }
 
-    private Member registerNaverUserIfNeeded(NaverUserInfoDto naverUserInfoDto) {
-        // DB 에 중복된 Naver Id 가 있는지 확인
-        String naverId = naverUserInfoDto.getId();
-        Member naverUser = memberRepository.findByNaverId(naverId).orElse(null);
+    @Override
+    public Member registerMemberIfNeeded(MemberInfoDto memberInfoDto) {
+        String googleId = memberInfoDto.getId();
+        Member googleUser = memberRepository.findByGoogleId(googleId).orElse(null);
 
-        if (naverUser == null) {
-            // 네이버 사용자 email 동일한 email 가진 회원이 있는지 확인
-            String naverEmail = naverUserInfoDto.getEmail();
-            Member sameEmailUser = memberRepository.findByEmail(naverEmail).orElse(null);
+        if (googleUser == null) {
+            String googleEmail = memberInfoDto.getEmail();
+            Member sameEmailUser = memberRepository.findByEmail(googleEmail).orElse(null);
 
             if (sameEmailUser != null) {
-                naverUser = sameEmailUser;
-                // 기존 회원정보에 네이버 Id 추가
-                naverUser = naverUser.naverIdUpdate(naverId);
+                googleUser = sameEmailUser;
+                googleUser = googleUser.googleIdUpdate(googleId);
             } else {
-                // 신규 회원가입
-                // password: random UUID
                 String password = UUID.randomUUID().toString();
                 String encodedPassword = passwordEncoder.encode(password);
-
-                // email: naver email
-                String email = naverUserInfoDto.getEmail();
+                String email = memberInfoDto.getEmail();
 
                 // 닉네임
                 Integer maxSequence = memberRepository.findMaxNicknameSequence();
                 int nextSequenceNumber = maxSequence != null ? maxSequence + 1 : 1;
                 String nickname = String.format("더함이%03d", nextSequenceNumber);
 
-                naverUser = Member.builder()
+                googleUser = Member.builder()
                         .email(email)
                         .nickname(nickname)
                         .password(encodedPassword)
-                        .profileUrl(naverUserInfoDto.getProfileUrl())
+                        .profileUrl(memberInfoDto.getProfileUrl())
                         .role(RoleType.ROLE_USER)
-                        .naverId(naverId)
+                        .googleId(googleId)
                         .build();
             }
-            memberRepository.save(naverUser);
+            memberRepository.save(googleUser);
         }
-        return naverUser;
+        return googleUser;
     }
 
-    private void forceLogin(Member naverUser) {
-        UserDetails userDetails = new UserDetailsImpl(naverUser);
+    private void forceLogin(Member member) {
+        UserDetails userDetails = new UserDetailsImpl(member);
         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }

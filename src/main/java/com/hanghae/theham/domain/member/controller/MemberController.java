@@ -3,11 +3,11 @@ package com.hanghae.theham.domain.member.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.controller.docs.MemberControllerDocs;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.GoogleUserInfoDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.KakaoUserInfoDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.NaverUserInfoDto;
-import com.hanghae.theham.domain.member.service.*;
+import com.hanghae.theham.domain.member.service.AuthService;
+import com.hanghae.theham.domain.member.service.MemberService;
+import com.hanghae.theham.domain.member.service.SocialLoginService;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,16 +24,12 @@ public class MemberController implements MemberControllerDocs {
 
     private final AuthService authService;
     private final MemberService memberService;
-    private final KakaoService kakaoService;
-    private final GoogleService googleService;
-    private final NaverService naverService;
+    private final SocialLoginService socialLoginService;
 
-    public MemberController(AuthService authService, MemberService memberService, KakaoService kakaoService, GoogleService googleService, NaverService naverService) {
+    public MemberController(AuthService authService, MemberService memberService, SocialLoginService socialLoginService) {
         this.authService = authService;
         this.memberService = memberService;
-        this.kakaoService = kakaoService;
-        this.googleService = googleService;
-        this.naverService = naverService;
+        this.socialLoginService = socialLoginService;
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -64,29 +60,29 @@ public class MemberController implements MemberControllerDocs {
     }
 
     @GetMapping("/kakao/callback")
-    public ResponseDto<KakaoUserInfoDto> kakaoLogin(
+    public ResponseDto<MemberInfoDto> kakaoLogin(
             @RequestParam String code,
             HttpServletResponse response
     ) throws JsonProcessingException {
-        KakaoUserInfoDto responseDto = kakaoService.kakaoLogin(code, response);
+        MemberInfoDto responseDto = socialLoginService.login("kakao", code, response);
         return ResponseDto.success("카카오 로그인 기능", responseDto);
     }
 
     @GetMapping("/google/callback")
-    public ResponseDto<GoogleUserInfoDto> googleLogin(
+    public ResponseDto<MemberInfoDto> googleLogin(
             @RequestParam String code,
             HttpServletResponse response
     ) throws JsonProcessingException {
-        GoogleUserInfoDto responseDto = googleService.googleLogin(code, response);
+        MemberInfoDto responseDto = socialLoginService.login("google", code, response);
         return ResponseDto.success("구글 로그인 기능", responseDto);
     }
 
     @GetMapping("/naver/callback")
-    public ResponseDto<NaverUserInfoDto> naverLogin(
+    public ResponseDto<MemberInfoDto> naverLogin(
             @RequestParam String code,
             HttpServletResponse response
     ) throws JsonProcessingException {
-        NaverUserInfoDto responseDto = naverService.naverLogin(code, response);
+        MemberInfoDto responseDto = socialLoginService.login("naver", code, response);
         return ResponseDto.success("네이버 로그인 기능", responseDto);
     }
 }

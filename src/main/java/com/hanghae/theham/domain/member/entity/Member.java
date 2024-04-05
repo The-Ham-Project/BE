@@ -40,7 +40,7 @@ public class Member {
     private double longitude; // 경도
 
     @Column
-    private Long kakaoId;
+    private String kakaoId;
 
     @Column
     private String googleId;
@@ -49,7 +49,7 @@ public class Member {
     private String naverId;
 
     @Builder
-    public Member(String email, String password, String nickname, String profileUrl, RoleType role, double latitude, double longitude, Long kakaoId, String googleId, String naverId) {
+    public Member(String email, String password, String nickname, String profileUrl, RoleType role, double latitude, double longitude, String kakaoId, String googleId, String naverId) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
@@ -62,7 +62,7 @@ public class Member {
         this.naverId = naverId;
     }
 
-    public Member kakaoIdUpdate(Long kakaoId) {
+    public Member kakaoIdUpdate(String kakaoId) {
         this.kakaoId = kakaoId;
         return this;
     }

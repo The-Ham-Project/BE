@@ -2,10 +2,8 @@ package com.hanghae.theham.domain.member.controller.docs;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.GoogleUserInfoDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.KakaoUserInfoDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.NaverUserInfoDto;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,19 +35,19 @@ public interface MemberControllerDocs {
     );
 
     @Operation(summary = "카카오 로그인 기능", description = "카카오 로그인할 수 있는 API")
-    ResponseDto<KakaoUserInfoDto> kakaoLogin(
+    ResponseDto<MemberInfoDto> kakaoLogin(
             @RequestParam String code,
             HttpServletResponse response
     ) throws JsonProcessingException;
 
     @Operation(summary = "구글 로그인 기능", description = "구글 로그인할 수 있는 API")
-    ResponseDto<GoogleUserInfoDto> googleLogin(
+    ResponseDto<MemberInfoDto> googleLogin(
             @RequestParam String code,
             HttpServletResponse response
     ) throws JsonProcessingException;
 
     @Operation(summary = "네이버 로그인 기능", description = "네이버 로그인할 수 있는 API")
-    ResponseDto<NaverUserInfoDto> naverLogin(
+    ResponseDto<MemberInfoDto> naverLogin(
             @RequestParam String code,
             HttpServletResponse response
     ) throws JsonProcessingException;

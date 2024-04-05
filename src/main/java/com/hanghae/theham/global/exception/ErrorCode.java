@@ -18,6 +18,7 @@ public enum ErrorCode {
     INVALID_ACCESS_TOKEN("사용할 수 없는 액세스 토큰입니다."),
     S3_UPLOAD_UNKNOWN_ERROR("S3 업로드에 실패했습니다."),
     S3_DELETE_UNKNOWN_ERROR("S3 이미지 삭제에 실패했습니다."),
+    NOT_FOUND_SOCIAL_LOGIN("찾을 수 없는 소셜 로그인입니다."),
 
     // chat
     CHAT_ROOM_ALREADY_EXISTS("채팅방이 이미 존재합니다."),
