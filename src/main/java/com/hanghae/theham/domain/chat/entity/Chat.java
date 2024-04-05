@@ -19,7 +19,7 @@ public class Chat extends Timestamped {
     private Long id;
 
     @Column(columnDefinition = "TEXT", nullable = false)
-    private String content;
+    private String message;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
@@ -29,20 +29,14 @@ public class Chat extends Timestamped {
     @JoinColumn(name = "sender_id")
     private Member sender;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id")
-    private Member receiver;
-
     @Column(name = "is_read")
     private boolean isRead = Boolean.FALSE;
 
     @Builder
-    public Chat(String content, ChatRoom chatRoom, Member sender, Member receiver, boolean isRead) {
-        this.content = content;
+    public Chat(String message, ChatRoom chatRoom, Member sender, boolean isRead) {
+        this.message = message;
         this.chatRoom = chatRoom;
         this.sender = sender;
-        this.receiver = receiver;
         this.isRead = isRead;
     }
-
 }

@@ -1,7 +1,7 @@
 package com.hanghae.theham.domain.chat.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.hanghae.theham.domain.chat.entity.ChatRoom;
+import com.hanghae.theham.domain.chat.entity.Chat;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -9,16 +9,18 @@ import java.time.LocalDateTime;
 public class ChatResponseDto {
 
     @Getter
-    public static class ChatRoomCreateResponseDto {
-        private final Long id;
-
+    public static class ChatReadResponseDto{ //메세지 반환
+        private Long chatId;
+        private String sender;
+        private String message;
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
-        private final LocalDateTime createdAt;
+        private LocalDateTime createdAt;
 
-        public ChatRoomCreateResponseDto(ChatRoom chatRoom) {
-            this.id = chatRoom.getId();
-            this.createdAt = chatRoom.getCreatedAt();
+        public ChatReadResponseDto(Chat chat) {
+            this.chatId = chat.getId();
+            this.message = chat.getMessage();
+            this.sender = chat.getSender().getNickname();
+            this.createdAt = chat.getCreatedAt();
         }
     }
-
 }

@@ -1,12 +1,16 @@
 package com.hanghae.theham.domain.chat.entity;
 
 import com.hanghae.theham.domain.member.entity.Member;
+import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.global.entity.Timestamped;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -18,21 +22,30 @@ public class ChatRoom extends Timestamped {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_a_id")
-    private Member memberA;
+    @JoinColumn(name = "seller_id")
+    private Member seller;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_b_id")
-    private Member memberB;
+    @JoinColumn(name = "buyer_id")
+    private Member buyer;
 
-    @Column(columnDefinition = "TEXT")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Rental rental;
+
+    @Column(name="last_chat")
     private String lastChat;
 
+    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.REMOVE)
+    private List<Chat> chatList = new ArrayList<>();
+
     @Builder
-    public ChatRoom(Member memberA, Member memberB,  String lastChat) {
-        this.memberA = memberA;
-        this.memberB = memberB;
-        this.lastChat = lastChat;
+    public ChatRoom(Member seller, Member buyer, Rental rental) {
+        this.seller = seller;
+        this.buyer = buyer;
+        this.rental = rental;
     }
 
+    public void updateLastChat(String message) {
+        this.lastChat = message;
+    }
 }

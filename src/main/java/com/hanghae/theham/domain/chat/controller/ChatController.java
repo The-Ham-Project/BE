@@ -1,36 +1,30 @@
 package com.hanghae.theham.domain.chat.controller;
 
 import com.hanghae.theham.domain.chat.controller.docs.ChatControllerDocs;
-import com.hanghae.theham.domain.chat.dto.ChatRequestDto.ChatRoomCreateRequestDto;
-import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatRoomCreateResponseDto;
-import com.hanghae.theham.domain.chat.service.ChatRoomService;
-import com.hanghae.theham.global.dto.ResponseDto;
-import com.hanghae.theham.global.security.UserDetailsImpl;
+import com.hanghae.theham.domain.chat.dto.ChatRequestDto.ChatSendMessageRequestDto;
+import com.hanghae.theham.domain.chat.service.ChatService;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j(topic = "chatController")
-@RequestMapping("/api/v1")
 @RestController
 public class ChatController implements ChatControllerDocs {
 
-    private final ChatRoomService chatRoomService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ChatService chatService;
 
-    public ChatController(ChatRoomService chatRoomService) {
-        this.chatRoomService = chatRoomService;
+    public ChatController(SimpMessagingTemplate messagingTemplate, ChatService chatService) {
+        this.messagingTemplate = messagingTemplate;
+        this.chatService = chatService;
     }
 
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping(value = "/chats")
-    public ResponseDto<ChatRoomCreateResponseDto> createChatRoom(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody @Valid ChatRoomCreateRequestDto requestDto
-    ) {
-        ChatRoomCreateResponseDto responseDto = chatRoomService.createChatRoom(userDetails.getUsername(), requestDto);
-
-        return ResponseDto.success("채팅 채팅방 생성 기능", responseDto);
-    }
+    @MessageMapping("/chat/talk/{roomId}")
+   public void sendMessage(@Valid @Payload ChatSendMessageRequestDto requestDto,
+                           @DestinationVariable Long roomId){
+        chatService.saveMessage(requestDto, roomId);
+        messagingTemplate.convertAndSend("/sub/chat/chatRoom/"+roomId, requestDto);
+   }
 }
