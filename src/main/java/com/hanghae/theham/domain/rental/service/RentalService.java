@@ -9,18 +9,14 @@ import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalMyListReadResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCategoryReadResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.*;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.config.S3Config;
+import com.hanghae.theham.global.exception.AwsS3Exception;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
@@ -72,10 +68,7 @@ public class RentalService {
             List<MultipartFile> multipartFileList
     ) {
         // 회원 정보 검증
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
-            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
-            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
-        });
+        Member member = validateMember(email);
 
         // 함께쓰기 정보 저장
         Rental rental = rentalRepository.save(requestDto.toEntity(member));
@@ -94,10 +87,7 @@ public class RentalService {
     }
 
     public RentalReadResponseDto readRental(Long rentalId) {
-        Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {
-            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
-            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
-        });
+        Rental rental = validateRental(rentalId);
 
         List<RentalImageReadResponseDto> rentalImageReadResponseDtoList = rentalImageRepository.findAllByRental(rental).stream()
                 .map(RentalImageReadResponseDto::new)
@@ -117,7 +107,7 @@ public class RentalService {
             if (category == CategoryType.ALL) {
                 rentalSlice = rentalRepository.findAll(pageable);
             } else {
-                rentalSlice = rentalRepository.findAllByCategory(category);
+                rentalSlice = rentalRepository.findAllByCategory(category, pageable);
             }
         } else {
             double latitude = member.getLatitude();
@@ -147,10 +137,7 @@ public class RentalService {
     }
 
     public Slice<RentalMyListReadResponseDto> readRentalMyList(String email, int page, int size) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
-            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
-            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
-        });
+        Member member = validateMember(email);
 
         Pageable pageable = createPageRequest(page, size);
         Slice<Rental> rentalSlice = rentalRepository.findByMemberOrderByCreatedAt(member, pageable);
@@ -165,6 +152,7 @@ public class RentalService {
             ResponseDtoMyList.add(new RentalMyListReadResponseDto(rental, firstThumbnailUrl));
         }
 
+        // 페이징 여부 확인
         boolean hasNestPage = rentalSlice.hasNext();
 
         return new SliceImpl<>(ResponseDtoMyList, pageable, hasNestPage);
@@ -172,14 +160,9 @@ public class RentalService {
 
     @Transactional
     public RentalUpdateResponseDto updateRental(String email, Long rentalId, RentalUpdateRequestDto requestDto, List<MultipartFile> multipartFileList) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
-            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
-            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
-        });
-        Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {
-            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
-            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
-        });
+        Member member = validateMember(email);
+        Rental rental = validateRental(rentalId);
+
         if (!member.equals(rental.getMember())) {
             log.error("게시글 작성자 정보가 일치하지 않습니다. 회원: {}, 작성자: {}", member, rental.getMember());
             throw new BadRequestException(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage());
@@ -214,20 +197,29 @@ public class RentalService {
 
     @Transactional
     public void deleteRental(String email, Long rentalId) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
-            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
-            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
-        });
-        Rental rental = rentalRepository.findById(rentalId).orElseThrow(() -> {
-            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
-            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
-        });
+        Member member = validateMember(email);
+        Rental rental = validateRental(rentalId);
+
         if (!member.equals(rental.getMember())) {
             log.error("게시글 작성자 정보가 일치하지 않습니다. 회원: {}, 작성자: {}", member, rental.getMember());
             throw new BadRequestException(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage());
         }
 
         rentalRepository.delete(rental);
+    }
+
+    private Member validateMember(String email) {
+        return memberRepository.findByEmail(email).orElseThrow(() -> {
+            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
+            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
+        });
+    }
+
+    private Rental validateRental(Long rentalId) {
+        return rentalRepository.findById(rentalId).orElseThrow(() -> {
+            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. ID: {}", rentalId);
+            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
+        });
     }
 
     private void validateFiles(List<MultipartFile> files) {
@@ -268,7 +260,7 @@ public class RentalService {
             return s3Config.amazonS3Client().getUrl(bucket, key).toString();
         } catch (IOException e) {
             log.error("파일 업로드 중 오류가 발생했습니다.", e);
-            throw new RuntimeException("파일 업로드 중 오류가 발생했습니다.", e);
+            throw new AwsS3Exception(ErrorCode.S3_UPLOAD_UNKNOWN_ERROR.getMessage());
         }
     }
 
@@ -277,6 +269,7 @@ public class RentalService {
                 .rental(rental)
                 .imageUrl(imageUrl)
                 .build();
+
         rentalImageRepository.save(rentalImage);
     }
 
@@ -287,7 +280,7 @@ public class RentalService {
             s3Config.amazonS3Client().deleteObject(new DeleteObjectRequest(bucket, key));
         } catch (MalformedURLException e) {
             log.error("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
-            throw new RuntimeException("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
+            throw new AwsS3Exception(ErrorCode.S3_DELETE_UNKNOWN_ERROR.getMessage());
         }
     }
 
