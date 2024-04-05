@@ -2,6 +2,7 @@ package com.hanghae.theham.domain.rental.controller.docs;
 
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalMyListReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCategoryReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
@@ -39,6 +40,14 @@ public interface RentalControllerDocs {
     @Operation(summary = "함께쓰기 카테고리별 게시글 조회 기능", description = "함께쓰기 게시글을 조회할 수 있는 API")
     ResponseDto<Slice<RentalCategoryReadResponseDto>> readRentalList(
             @RequestParam CategoryType category,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    );
+
+    @Operation(summary = "함께쓰기 마이페이지 내가 쓴 게시글 조회 기능", description = "함께쓰기 마이페이지 내가 쓴 게시글 조회할 수 있는 API")
+    ResponseDto<Slice<RentalMyListReadResponseDto>> readRentalMyList(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     );

@@ -9,6 +9,8 @@ import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalMyListReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCategoryReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
@@ -104,14 +106,28 @@ public class RentalService {
         return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
     }
 
-    public Slice<RentalCategoryReadResponseDto> readRentalList(CategoryType category, int page, int size) {
+    public Slice<RentalCategoryReadResponseDto> readRentalList(CategoryType category, int page, int size, String email) {
         Slice<Rental> rentalSlice;
         Pageable pageable = createPageRequest(page, size);
 
-        if (category == CategoryType.ALL) {
-            rentalSlice = rentalRepository.findSliceBy(pageable);
+        // 멤버의 위치 가져오기
+        Member member = memberRepository.findByEmail(email).orElse(null);
+
+        if (member == null) {
+            if (category == CategoryType.ALL) {
+                rentalSlice = rentalRepository.findAll(pageable);
+            } else {
+                rentalSlice = rentalRepository.findAllByCategory(category);
+            }
         } else {
-            rentalSlice = rentalRepository.findAllByCategoryOrderByCreatedAt(category, pageable);
+            double latitude = member.getLatitude();
+            double longitude = member.getLongitude();
+
+            if (category == CategoryType.ALL) {
+                rentalSlice = rentalRepository.findAllByDistance(pageable.getPageNumber(), pageable.getPageSize(), latitude, longitude);
+            } else {
+                rentalSlice = rentalRepository.findAllByCategoryAndDistance(category.toString(), pageable.getPageNumber(), pageable.getPageSize(), latitude, longitude);
+            }
         }
 
         List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();
@@ -128,6 +144,30 @@ public class RentalService {
         boolean hasNestPage = rentalSlice.hasNext();
 
         return new SliceImpl<>(responseDtoList, pageable, hasNestPage);
+    }
+
+    public Slice<RentalMyListReadResponseDto> readRentalMyList(String email, int page, int size) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
+            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
+            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
+        });
+
+        Pageable pageable = createPageRequest(page, size);
+        Slice<Rental> rentalSlice = rentalRepository.findByMemberOrderByCreatedAt(member, pageable);
+
+        List<RentalMyListReadResponseDto> ResponseDtoMyList = new ArrayList<>();
+        for (Rental rental : rentalSlice) {
+            String firstThumbnailUrl = rentalImageRepository.findAllByRental(rental).stream()
+                    .findFirst()
+                    .map(RentalImage::getImageUrl)
+                    .orElse(null);
+
+            ResponseDtoMyList.add(new RentalMyListReadResponseDto(rental, firstThumbnailUrl));
+        }
+
+        boolean hasNestPage = rentalSlice.hasNext();
+
+        return new SliceImpl<>(ResponseDtoMyList, pageable, hasNestPage);
     }
 
     @Transactional
