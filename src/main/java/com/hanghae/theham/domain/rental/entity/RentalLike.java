@@ -1,7 +1,6 @@
-package com.hanghae.theham.domain.like.entity;
+package com.hanghae.theham.domain.rental.entity;
 
 import com.hanghae.theham.domain.member.entity.Member;
-import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.global.entity.Timestamped;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -12,8 +11,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
-@Table(name = "like_tbl")
-public class Like extends Timestamped {
+@Table(name = "rental_like_tbl")
+public class RentalLike extends Timestamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +27,7 @@ public class Like extends Timestamped {
     private Rental rental;
 
     @Builder
-    public Like(Member member, Rental rental) {
+    public RentalLike(Member member, Rental rental) {
         this.member = member;
         this.rental = rental;
     }

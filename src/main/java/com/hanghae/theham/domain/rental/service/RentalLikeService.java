@@ -1,78 +1,69 @@
-package com.hanghae.theham.domain.like.service;
+package com.hanghae.theham.domain.rental.service;
 
-import com.hanghae.theham.domain.like.dto.LikeResponseDto.*;
-import com.hanghae.theham.domain.like.entity.Like;
-import com.hanghae.theham.domain.like.repository.LikeRepository;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
+import com.hanghae.theham.domain.rental.dto.RentalLikeResponseDto.RentalLikeCheckResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalLikeResponseDto.RentalLikeCreateResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
+import com.hanghae.theham.domain.rental.entity.RentalLike;
+import com.hanghae.theham.domain.rental.repository.RentalLikeRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Slf4j
+@Transactional(readOnly = true)
 @Service
-public class LikeService {
+public class RentalLikeService {
 
-    private final LikeRepository likeRepository;
+    private final RentalLikeRepository rentalLikeRepository;
     private final MemberRepository memberRepository;
     private final RentalRepository rentalRepository;
 
-    public LikeService(LikeRepository likeRepository, MemberRepository memberRepository, RentalRepository rentalRepository) {
-        this.likeRepository = likeRepository;
+    public RentalLikeService(RentalLikeRepository rentalLikeRepository, MemberRepository memberRepository, RentalRepository rentalRepository) {
+        this.rentalLikeRepository = rentalLikeRepository;
         this.memberRepository = memberRepository;
         this.rentalRepository = rentalRepository;
     }
 
     @Transactional
-    public LikeCreateResponseDto createLike(String email, Long rentalId) {
+    public RentalLikeCreateResponseDto createRentalLike(String email, Long rentalId) {
         Member member = validateMember(email);
         Rental rental = findRentalById(rentalId);
 
-        if (likeRepository.existsByMemberAndRental(member, rental)) {
-            throw new BadRequestException(ErrorCode.ALREADY_EXIST_LIKE.getMessage());
+        if (rentalLikeRepository.existsByMemberAndRental(member, rental)) {
+            throw new BadRequestException(ErrorCode.ALREADY_EXIST_RENTAL_LIKE.getMessage());
         }
 
-        Like like = likeRepository.save(Like.builder()
+        RentalLike rentalLike = rentalLikeRepository.save(RentalLike.builder()
                 .member(member)
                 .rental(rental)
                 .build());
 
-        return new LikeCreateResponseDto(like);
+        return new RentalLikeCreateResponseDto(rentalLike);
     }
 
     @Transactional
-    public void deleteLike(String email, Long rentalId) {
+    public void deleteRentalLike(String email, Long rentalId) {
         Member member = validateMember(email);
         Rental rental = findRentalById(rentalId);
 
-        Like like = likeRepository.findByMemberAndRental(member, rental).orElseThrow(() ->
+        RentalLike rentalLike = rentalLikeRepository.findByMemberAndRental(member, rental).orElseThrow(() ->
                 new BadRequestException(ErrorCode.NOT_FOUND_LIKE_ID.getMessage()));
 
-        likeRepository.delete(like);
+        rentalLikeRepository.delete(rentalLike);
     }
 
-    public Slice<LikeReadResponseDto> readLikeList(String email, int page, int size) {
+    public RentalLikeCheckResponseDto checkRentalLike(String email, Long rentalId) {
         Member member = validateMember(email);
+        Rental rental = findRentalById(rentalId);
 
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, Sort.Direction.DESC, "createdAt");
-        Slice<Like> likeListPage = likeRepository.findAllByMemberOrderByCreatedAtDesc(member, pageable);
+        boolean isChecked = rentalLikeRepository.existsByMemberAndRental(member, rental);
 
-        List<LikeReadResponseDto> responseDtoList = likeListPage.getContent().stream()
-                .map(like -> new LikeReadResponseDto(like))
-                .collect(Collectors.toList());
-
-        // 페이징 여부 확인
-        boolean hasNestPage = likeListPage.hasNext();
-
-        return new SliceImpl<>(responseDtoList, pageable, hasNestPage);
+        return new RentalLikeCheckResponseDto(isChecked);
     }
 
     private Member validateMember(String email) {

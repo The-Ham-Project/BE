@@ -19,7 +19,7 @@ public enum ErrorCode {
     S3_UPLOAD_UNKNOWN_ERROR("S3 업로드에 실패했습니다."),
     S3_DELETE_UNKNOWN_ERROR("S3 이미지 삭제에 실패했습니다."),
     NOT_FOUND_SOCIAL_LOGIN("찾을 수 없는 소셜 로그인입니다."),
-    ALREADY_EXIST_LIKE("이미 등록된 좋아요입니다."),
+    ALREADY_EXIST_RENTAL_LIKE("이미 등록된 좋아요입니다."),
     NOT_FOUND_LIKE_ID("찾을 수 없는 좋아요 번호입니다."),
 
     // chat
