@@ -5,6 +5,7 @@ import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -14,5 +15,5 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     Optional<Like> findByMemberAndRental(Member member, Rental rental);
 
-    Page<Like> findAllByMemberOrderByCreatedAtDesc(Member member, Pageable pageable);
+    Slice<Like> findAllByMemberOrderByCreatedAtDesc(Member member, Pageable pageable);
 }

@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "likes", description = "좋아요 관련 API")
-
 public interface LikeControllerDocs {
 
     @Operation(summary = "함께쓰기 좋아요 등록 기능", description = "함께쓰기 게시글에 좋아요를 등록할 수 있는 API")
@@ -27,7 +26,6 @@ public interface LikeControllerDocs {
     );
 
     @Operation(summary = "함께쓰기 좋아요 조회 기능", description = "함께쓰기 게시글에 좋아요를 조회할 수 있는 API")
-
     ResponseDto<Slice<LikeReadResponseDto>> readLikeList(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(defaultValue = "1") int page,

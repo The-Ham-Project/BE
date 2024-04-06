@@ -62,7 +62,7 @@ public class LikeService {
     public Slice<LikeReadResponseDto> readLikeList(String email, int page, int size) {
         Member member = validateMember(email);
 
-        Pageable pageable = PageRequest.of(Math.max(0, page -1), size, Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, Sort.Direction.DESC, "createdAt");
         Slice<Like> likeListPage = likeRepository.findAllByMemberOrderByCreatedAtDesc(member, pageable);
 
         List<LikeReadResponseDto> responseDtoList = likeListPage.getContent().stream()
