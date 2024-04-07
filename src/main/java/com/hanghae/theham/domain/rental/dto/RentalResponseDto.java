@@ -67,6 +67,7 @@ public class RentalResponseDto {
         private final double latitude;
         private final double longitude;
         private final String firstThumbnailUrl;
+        private final String district;
 
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private final LocalDateTime createdAt;
@@ -82,6 +83,7 @@ public class RentalResponseDto {
             this.latitude = rental.getLatitude();
             this.longitude = rental.getLongitude();
             this.firstThumbnailUrl = firstThumbnailUrl;
+            this.district = rental.getDistrict();
             this.createdAt = rental.getCreatedAt();
         }
     }

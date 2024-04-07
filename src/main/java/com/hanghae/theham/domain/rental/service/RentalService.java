@@ -4,6 +4,9 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
@@ -22,12 +25,18 @@ import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,15 +59,20 @@ public class RentalService {
     private final RentalImageRepository rentalImageRepository;
     private final MemberRepository memberRepository;
     private final S3Config s3Config;
+    private final RestTemplate restTemplate;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public RentalService(RentalRepository rentalRepository, RentalImageRepository rentalImageRepository, MemberRepository memberRepository, S3Config s3Config) {
+    @Value("${kakao.client-id}")
+    private String kakaoClientId;
+
+    public RentalService(RentalRepository rentalRepository, RentalImageRepository rentalImageRepository, MemberRepository memberRepository, S3Config s3Config, RestTemplate restTemplate) {
         this.rentalRepository = rentalRepository;
         this.rentalImageRepository = rentalImageRepository;
         this.memberRepository = memberRepository;
         this.s3Config = s3Config;
+        this.restTemplate = restTemplate;
     }
 
     @Transactional
@@ -70,8 +84,51 @@ public class RentalService {
         // 회원 정보 검증
         Member member = validateMember(email);
 
+        // 회원 위치 좌표 검사
+        if (member.getLatitude() == 0.0 || member.getLongitude() == 0.0) {
+            throw new BadRequestException(ErrorCode.INVALID_MEMBER_POSITION.getMessage());
+        }
+
+        // 카카오 지도 API로 지역구 불러오기
+        String district;
+
+        try {
+            URI uri = UriComponentsBuilder
+                    .fromUriString("https://dapi.kakao.com")
+                    .path("/v2/local/geo/coord2address.json")
+                    .queryParam("x", member.getLongitude())
+                    .queryParam("y", member.getLatitude())
+                    .queryParam("input_coord", "WGS84")
+                    .encode()
+                    .build()
+                    .toUri();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "KakaoAK " + kakaoClientId);
+
+            RequestEntity<Void> requestEntity = RequestEntity
+                    .get(uri)
+                    .headers(headers)
+                    .build();
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    requestEntity,
+                    String.class
+            );
+
+            JsonNode jsonNode = new ObjectMapper().readTree(response.getBody());
+            district = jsonNode.path("documents")
+                    .path(0)
+                    .path("address")
+                    .path("region_2depth_name")
+                    .asText();
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
         // 함께쓰기 정보 저장
-        Rental rental = rentalRepository.save(requestDto.toEntity(member));
+        Rental rental = rentalRepository.save(requestDto.toEntity(member, district));
 
         if (multipartFileList != null && !multipartFileList.isEmpty()) {
             // 파일 검증 로직
