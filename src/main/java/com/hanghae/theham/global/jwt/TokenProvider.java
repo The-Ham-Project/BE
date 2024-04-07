@@ -27,7 +27,7 @@ public class TokenProvider {
     public static final String REFRESH_TOKEN_COOKIE = "Refresh-Token";
     public static final String BEARER_PREFIX = "Bearer ";
 
-    private static final long ACCESS_TOKEN_TIME = 60 * 60 * 1000L; // 60분
+    private static final long ACCESS_TOKEN_TIME = 24 * 60 * 60 * 1000L; // 하루(임시)
     private static final long REFRESH_TOKEN_TIME = 7 * 24 * 60 * 60 * 1000L; // 7일
 
     private final SecretKey secretKey;
