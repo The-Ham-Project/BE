@@ -14,12 +14,16 @@ public class RentalResponseDto {
     public static class RentalCreateResponseDto {
 
         private final Long id;
+        private final String title;
+        private final String content;
 
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private final LocalDateTime createdAt;
 
         public RentalCreateResponseDto(Rental rental) {
             this.id = rental.getId();
+            this.title = rental.getTitle();
+            this.content = rental.getContent();
             this.createdAt = rental.getCreatedAt();
         }
     }
