@@ -7,6 +7,7 @@ import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +20,15 @@ import static com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.*;
 import static com.hanghae.theham.domain.rental.dto.RentalResponseDto.*;
 
 @Service
-@RequiredArgsConstructor
 public class RentalSearchService {
     private final RentalRepository rentalRepository;
     private final RentalImageRepository rentalImageRepository;
+
+    @Autowired
+    public RentalSearchService(RentalRepository rentalRepository, RentalImageRepository rentalImageRepository) {
+        this.rentalRepository = rentalRepository;
+        this.rentalImageRepository = rentalImageRepository;
+    }
 
     public List<RentalReadResponseDto> searchRentalList(String searchValue, int page, int size) {
         Slice<Rental> rentalSlice = rentalRepository.findAllWithSearch(searchValue, page, size);
