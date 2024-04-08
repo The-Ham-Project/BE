@@ -1,6 +1,8 @@
 package com.hanghae.theham.global.exception;
 
 import com.hanghae.theham.global.dto.ResponseDto;
+import com.hanghae.theham.global.slack.SlackNotification;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -21,30 +23,34 @@ import java.util.Map;
 @RestControllerAdvice
 public class CustomExceptionHandler {
 
+    @SlackNotification
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(BadRequestException.class)
-    public ResponseDto<?> handleBadRequestException(BadRequestException e) {
+    public ResponseDto<?> handleBadRequestException(HttpServletRequest request, BadRequestException e) {
         log.error("handleBadRequestException", e);
         return ResponseDto.fail(e.getMessage());
     }
 
+    @SlackNotification
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(TokenException.class)
-    public ResponseDto<?> handleTokenException(TokenException e) {
+    public ResponseDto<?> handleTokenException(HttpServletRequest request, TokenException e) {
         log.error("handleTokenException", e);
         return ResponseDto.fail(e.getMessage());
     }
 
+    @SlackNotification
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(AwsS3Exception.class)
-    public ResponseDto<?> handleAwsS3Exception(AwsS3Exception e) {
+    public ResponseDto<?> handleAwsS3Exception(HttpServletRequest request, AwsS3Exception e) {
         log.error("handleAwsS3Exception", e);
         return ResponseDto.fail(e.getMessage());
     }
 
+    @SlackNotification
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseDto<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+    public ResponseDto<?> handleMethodArgumentNotValidException(HttpServletRequest request, MethodArgumentNotValidException e) {
         Map<String, String> errorMap = new HashMap<>();
         BindingResult result = e.getBindingResult();
 
@@ -56,37 +62,42 @@ public class CustomExceptionHandler {
         return ResponseDto.fail("유효성 검사 실패", errorMap);
     }
 
+    @SlackNotification
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseDto<?> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
+    public ResponseDto<?> handleMethodArgumentTypeMismatchException(HttpServletRequest request, MethodArgumentTypeMismatchException e) {
         log.error("handleMethodArgumentTypeMismatchException", e);
         return ResponseDto.fail(e.getMessage());
     }
 
+    @SlackNotification
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseDto<?> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+    public ResponseDto<?> handleHttpRequestMethodNotSupportedException(HttpServletRequest request, HttpRequestMethodNotSupportedException e) {
         log.error("handleHttpRequestMethodNotSupportedException", e);
         return ResponseDto.fail(e.getMessage());
     }
 
+    @SlackNotification
     @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseDto<?> handleAccessDeniedException(AccessDeniedException e) {
+    public ResponseDto<?> handleAccessDeniedException(HttpServletRequest request, AccessDeniedException e) {
         log.error("handleAccessDeniedException", e);
         return ResponseDto.fail(e.getMessage());
     }
 
+    @SlackNotification
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MissingRequestCookieException.class)
-    public ResponseDto<?> handleMissingRequestCookieException(MissingRequestCookieException e) {
+    public ResponseDto<?> handleMissingRequestCookieException(HttpServletRequest request, MissingRequestCookieException e) {
         log.error("handleMissingRequestCookieException", e);
         return ResponseDto.fail(e.getMessage());
     }
 
+    @SlackNotification
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
-    public ResponseDto<?> handleException(Exception e) {
+    public ResponseDto<?> handleException(HttpServletRequest request, Exception e) {
         log.error("handleException", e);
         return ResponseDto.fail(ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
     }
