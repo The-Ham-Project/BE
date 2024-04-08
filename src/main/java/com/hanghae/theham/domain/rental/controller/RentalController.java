@@ -11,7 +11,6 @@ import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -52,25 +51,25 @@ public class RentalController implements RentalControllerDocs {
     }
 
     @GetMapping("/rentals")
-    public ResponseDto<Slice<RentalCategoryReadResponseDto>> readRentalList(
+    public ResponseDto<List<RentalCategoryReadResponseDto>> readRentalList(
+            @AuthenticationPrincipal @Nullable UserDetailsImpl userDetails,
             @RequestParam CategoryType category,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal @Nullable UserDetailsImpl userDetails
+            @RequestParam(defaultValue = "6", required = false) int size
     ) {
-        Slice<RentalCategoryReadResponseDto> responseDtoList =
-                rentalService.readRentalList(category, page - 1, size, userDetails != null ? userDetails.getUsername() : null);
+        String email = userDetails != null ? userDetails.getUsername() : null;
+        List<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(email, category, page, size);
         return ResponseDto.success("함께쓰기 카테고리별 게시글 조회 기능", responseDtoList);
     }
 
     @GetMapping("/rentals/my/posts")
-    public ResponseDto<Slice<RentalMyListReadResponseDto>> readRentalMyList(
+    public ResponseDto<List<RentalMyReadResponseDto>> readRentalMyList(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "6", required = false) int size
     ) {
-        Slice<RentalMyListReadResponseDto> responseDtoMyList = rentalService.readRentalMyList(userDetails.getUsername(), page - 1, size);
-        return ResponseDto.success("함께쓰기 마이페이지 내가 쓴 게시글 조회 기능", responseDtoMyList);
+        List<RentalMyReadResponseDto> responseDtoList = rentalService.readRentalMyList(userDetails.getUsername(), page, size);
+        return ResponseDto.success("함께쓰기 마이페이지 내가 쓴 게시글 조회 기능", responseDtoList);
     }
 
     @PutMapping(value = "/rentals/{rentalId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -95,13 +94,13 @@ public class RentalController implements RentalControllerDocs {
 
     @GetMapping("/rentals/search")
     public ResponseDto<List<RentalReadResponseDto>> searchRental(
-            @RequestParam(name = "searchValue") String searchValue,
+            @AuthenticationPrincipal @Nullable UserDetailsImpl userDetails,
+            @RequestParam(name = "keyword") String keyword,
             @RequestParam(name = "page", defaultValue = "1") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size,
-            @Nullable @AuthenticationPrincipal UserDetailsImpl userDetails) {
-
+            @RequestParam(name = "size", defaultValue = "6", required = false) int size
+    ) {
         String email = userDetails != null ? userDetails.getUsername() : null;
-        List<RentalReadResponseDto> responseDtoList = rentalSearchService.searchRentalList(searchValue, page, size, email);
+        List<RentalReadResponseDto> responseDtoList = rentalSearchService.searchRentalList(email, keyword, page, size);
 
         return ResponseDto.success("함께쓰기 검색 기능", responseDtoList);
     }
