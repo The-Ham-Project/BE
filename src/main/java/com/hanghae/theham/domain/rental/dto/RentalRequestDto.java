@@ -6,10 +6,12 @@ import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 public class RentalRequestDto {
 
+    @AllArgsConstructor
     @Getter
     public static class RentalCreateRequestDto {
 
