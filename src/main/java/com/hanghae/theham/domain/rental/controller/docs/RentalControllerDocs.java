@@ -12,6 +12,7 @@ import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -66,10 +67,12 @@ public interface RentalControllerDocs {
             @PathVariable Long rentalId
     );
 
+
     @Operation(summary = "함께쓰기 검색 기능", description = "함께쓰기 검색 기능")
     ResponseDto<List<RentalReadResponseDto>> searchRental(
             @RequestParam(name = "searchValue") String searchValue,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @Nullable @AuthenticationPrincipal UserDetailsImpl userDetails
     );
 }

@@ -3,11 +3,7 @@ package com.hanghae.theham.domain.rental.controller;
 import com.hanghae.theham.domain.rental.controller.docs.RentalControllerDocs;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCategoryReadResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalMyListReadResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.*;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import com.hanghae.theham.domain.rental.service.RentalSearchService;
 import com.hanghae.theham.domain.rental.service.RentalService;
@@ -101,8 +97,14 @@ public class RentalController implements RentalControllerDocs {
     public ResponseDto<List<RentalReadResponseDto>> searchRental(
             @RequestParam(name = "searchValue") String searchValue,
             @RequestParam(name = "page", defaultValue = "1") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size){
-        List<RentalReadResponseDto> responseDtoList = rentalSearchService.searchRentalList(searchValue, page, size);
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @Nullable @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        String email = userDetails != null ? userDetails.getUsername() : null;
+        List<RentalReadResponseDto> responseDtoList = rentalSearchService.searchUserRentalList(searchValue, page, size, email);
+
         return ResponseDto.success("함께쓰기 검색 기능", responseDtoList);
+
+
     }
 }

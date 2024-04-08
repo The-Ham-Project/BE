@@ -57,4 +57,17 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
             "ORDER BY created_at DESC " +
             "LIMIT :size OFFSET :page", nativeQuery = true)
     Slice<Rental> findAllWithSearch(String searchValue, int page, int size);
+
+    @Query(value =
+            "SELECT *, r.distance AS distance FROM " +
+                    "(SELECT *, ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 AS distance " +
+                    "FROM rental_tbl " +
+                    "WHERE (id IN (SELECT DISTINCT rental_id FROM rental_image_tbl WHERE image_url LIKE CONCAT('%', :searchValue, '%')) " +
+                    "OR id LIKE CONCAT('%', :searchValue, '%') " +
+                    "OR title LIKE CONCAT('%', :searchValue, '%') " +
+                    "OR member_id LIKE CONCAT('%', :searchValue, '%')) " +
+                    "AND ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 < 4) AS r " +
+                    "ORDER BY r.created_at DESC " +
+                    "LIMIT :size OFFSET :page", nativeQuery = true)
+    Slice<Rental> findAllWithSearchDistance(String searchValue, int page, int size, double userLatitude, double userLongitude);
 }
