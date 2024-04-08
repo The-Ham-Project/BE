@@ -1,6 +1,7 @@
 package com.hanghae.theham.domain.rental.repository;
 
 import com.hanghae.theham.domain.member.entity.Member;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import org.springframework.data.domain.Pageable;
@@ -44,4 +45,30 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
             , nativeQuery = true
     )
     Slice<Rental> findAllByCategoryAndDistance(String category, int page, int limit, double userLatitude, double userLongitude);
+
+    // 검색 쿼리
+    @Query(value =
+            "SELECT * FROM rental_tbl " +
+                    "WHERE id in(" +
+                    "SELECT DISTINCT rental_id FROM rental_image_tbl " +
+                    "WHERE image_url LIKE CONCAT('%', :searchValue, '%')) " +
+                    "OR id LIKE CONCAT('%', :searchValue, '%') " +
+                    "OR title LIKE CONCAT('%', :searchValue, '%') " +
+                    "OR member_id LIKE CONCAT('%', :searchValue, '%') " +
+                    "ORDER BY created_at DESC " +
+                    "LIMIT :size OFFSET :page", nativeQuery = true)
+    Slice<Rental> findAllWithSearch(String searchValue, int page, int size);
+
+    @Query(value =
+            "SELECT *, r.distance AS distance FROM " +
+                    "(SELECT *, ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 AS distance " +
+                    "FROM rental_tbl " +
+                    "WHERE (id IN (SELECT DISTINCT rental_id FROM rental_image_tbl WHERE image_url LIKE CONCAT('%', :searchValue, '%')) " +
+                    "OR id LIKE CONCAT('%', :searchValue, '%') " +
+                    "OR title LIKE CONCAT('%', :searchValue, '%') " +
+                    "OR member_id LIKE CONCAT('%', :searchValue, '%')) " +
+                    "AND ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 < 4) AS r " +
+                    "ORDER BY r.created_at DESC " +
+                    "LIMIT :size OFFSET :page", nativeQuery = true)
+    Slice<Rental> findAllWithSearchDistance(String searchValue, int page, int size, double userLatitude, double userLongitude);
 }

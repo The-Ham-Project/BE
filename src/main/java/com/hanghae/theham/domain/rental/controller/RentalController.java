@@ -5,6 +5,7 @@ import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequest
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.*;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
+import com.hanghae.theham.domain.rental.service.RentalSearchService;
 import com.hanghae.theham.domain.rental.service.RentalService;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
@@ -24,9 +25,11 @@ import java.util.List;
 public class RentalController implements RentalControllerDocs {
 
     private final RentalService rentalService;
+    private final RentalSearchService rentalSearchService;
 
-    public RentalController(RentalService rentalService) {
+    public RentalController(RentalService rentalService, RentalSearchService rentalSearchService) {
         this.rentalService = rentalService;
+        this.rentalSearchService = rentalSearchService;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -88,5 +91,18 @@ public class RentalController implements RentalControllerDocs {
             @PathVariable Long rentalId
     ) {
         rentalService.deleteRental(userDetails.getUsername(), rentalId);
+    }
+
+    @GetMapping("/rentals/search")
+    public ResponseDto<List<RentalReadResponseDto>> searchRental(
+            @RequestParam(name = "searchValue") String searchValue,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @Nullable @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        String email = userDetails != null ? userDetails.getUsername() : null;
+        List<RentalReadResponseDto> responseDtoList = rentalSearchService.searchRentalList(searchValue, page, size, email);
+
+        return ResponseDto.success("함께쓰기 검색 기능", responseDtoList);
     }
 }
