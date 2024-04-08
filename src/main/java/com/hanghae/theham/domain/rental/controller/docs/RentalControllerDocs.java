@@ -68,7 +68,7 @@ public interface RentalControllerDocs {
 
     @Operation(summary = "함께쓰기 검색 기능", description = "함께쓰기 검색 기능")
     ResponseDto<List<RentalReadResponseDto>> searchRental(
-            @PathVariable(name = "searchValue") String searchValue,
+            @RequestParam(name = "searchValue") String searchValue,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     );
