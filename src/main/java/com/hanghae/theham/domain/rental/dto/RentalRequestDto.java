@@ -49,6 +49,7 @@ public class RentalRequestDto {
         }
     }
 
+    @AllArgsConstructor
     @Getter
     public static class RentalUpdateRequestDto {
 
