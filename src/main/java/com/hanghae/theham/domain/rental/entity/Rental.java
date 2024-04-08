@@ -48,12 +48,15 @@ public class Rental extends Timestamped {
     @Column
     private double longitude; // 경도
 
+    @Column
+    private String district; // 지역구
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
     @Builder
-    public Rental(CategoryType category, String title, String content, long rentalFee, long deposit, boolean isDeleted, double latitude, double longitude, Member member) {
+    public Rental(CategoryType category, String title, String content, long rentalFee, long deposit, boolean isDeleted, double latitude, double longitude, String district, Member member) {
         this.category = category;
         this.title = title;
         this.content = content;
@@ -62,6 +65,7 @@ public class Rental extends Timestamped {
         this.isDeleted = isDeleted;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.district = district;
         this.member = member;
     }
 

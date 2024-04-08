@@ -32,7 +32,7 @@ public class RentalRequestDto {
         @PositiveOrZero(message = "금액 범위를 다시 한번 확인해주세요.")
         private Long deposit;
 
-        public Rental toEntity(Member member) {
+        public Rental toEntity(Member member, String district) {
             return Rental.builder()
                     .title(this.title)
                     .category(this.category)
@@ -41,6 +41,7 @@ public class RentalRequestDto {
                     .deposit(this.deposit)
                     .latitude(member.getLatitude())
                     .longitude(member.getLongitude())
+                    .district(district)
                     .member(member)
                     .build();
         }
