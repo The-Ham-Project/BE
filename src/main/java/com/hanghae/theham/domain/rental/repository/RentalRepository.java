@@ -47,15 +47,16 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     Slice<Rental> findAllByCategoryAndDistance(String category, int page, int limit, double userLatitude, double userLongitude);
 
     // 검색 쿼리
-    @Query(value = "SELECT * FROM rental_tbl " +
-            "WHERE id in(" +
-            "SELECT DISTINCT rental_id FROM rental_image_tbl " +
-            "WHERE image_url LIKE CONCAT('%', :searchValue, '%')) " +
-            "OR id LIKE CONCAT('%', :searchValue, '%') " +
-            "OR title LIKE CONCAT('%', :searchValue, '%') " +
-            "OR member_id LIKE CONCAT('%', :searchValue, '%') " +
-            "ORDER BY created_at DESC " +
-            "LIMIT :size OFFSET :page", nativeQuery = true)
+    @Query(value =
+            "SELECT * FROM rental_tbl " +
+                    "WHERE id in(" +
+                    "SELECT DISTINCT rental_id FROM rental_image_tbl " +
+                    "WHERE image_url LIKE CONCAT('%', :searchValue, '%')) " +
+                    "OR id LIKE CONCAT('%', :searchValue, '%') " +
+                    "OR title LIKE CONCAT('%', :searchValue, '%') " +
+                    "OR member_id LIKE CONCAT('%', :searchValue, '%') " +
+                    "ORDER BY created_at DESC " +
+                    "LIMIT :size OFFSET :page", nativeQuery = true)
     Slice<Rental> findAllWithSearch(String searchValue, int page, int size);
 
     @Query(value =

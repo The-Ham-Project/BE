@@ -101,10 +101,8 @@ public class RentalController implements RentalControllerDocs {
             @Nullable @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         String email = userDetails != null ? userDetails.getUsername() : null;
-        List<RentalReadResponseDto> responseDtoList = rentalSearchService.searchUserRentalList(searchValue, page, size, email);
+        List<RentalReadResponseDto> responseDtoList = rentalSearchService.searchRentalList(searchValue, page, size, email);
 
         return ResponseDto.success("함께쓰기 검색 기능", responseDtoList);
-
-
     }
 }

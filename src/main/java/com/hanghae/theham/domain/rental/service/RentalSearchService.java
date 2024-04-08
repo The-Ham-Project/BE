@@ -34,15 +34,15 @@ public class RentalSearchService {
         this.memberRepository = memberRepository;
     }
 
-    public List<RentalReadResponseDto> searchUserRentalList(String searchValue, int page, int size, @Nullable String email) {
+    public List<RentalReadResponseDto> searchRentalList(String searchValue, int page, int size, @Nullable String email) {
         Slice<Rental> rentalSlice;
 
         // 비회원 - 전체 게시글
-        if(email ==null){
+        if (email == null) {
             rentalSlice = rentalRepository.findAllWithSearch(searchValue, page, size);
         }
         // 회원 - 거리 이내 전체 게시글
-        else{
+        else {
             Member member = memberRepository.findByEmail(email)
                     .orElseThrow(() -> {
                         log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
@@ -53,7 +53,6 @@ public class RentalSearchService {
             double latitude = member.getLatitude();
 
             rentalSlice = rentalRepository.findAllWithSearchDistance(searchValue, page, size, latitude, longitude);
-
         }
         return convertSliceToListDto(rentalSlice);
     }
