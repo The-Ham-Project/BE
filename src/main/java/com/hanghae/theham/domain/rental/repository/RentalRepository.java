@@ -1,11 +1,10 @@
 package com.hanghae.theham.domain.rental.repository;
 
 import com.hanghae.theham.domain.member.entity.Member;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,9 +13,9 @@ import java.util.List;
 
 public interface RentalRepository extends JpaRepository<Rental, Long> {
 
-    Slice<Rental> findAllByCategory(CategoryType category, Pageable pageable);
+    Page<Rental> findAllByCategory(CategoryType category, Pageable pageable);
 
-    Slice<Rental> findByMemberOrderByCreatedAt(Member member, Pageable pageable);
+    Page<Rental> findByMemberOrderByCreatedAt(Member member, Pageable pageable);
 
     @Modifying
     @Query(value = "DELETE FROM rental_tbl WHERE id = :id", nativeQuery = true)
@@ -27,48 +26,49 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
 
     // 두 좌표(경도, 위도)로 거리 계산(m), distance < 4 / 4km보다 작은 게시글만
     @Query(value =
-            "SELECT  *, r.distance as distance FROM" +
-                    "(SELECT *, ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 as distance FROM rental_tbl) as r " +
-                    "WHERE distance < 4 " +
+            "SELECT *, r.distance " +
+                    "FROM (SELECT *, ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 as distance " +
+                    "FROM rental_tbl) as r " +
+                    "WHERE r.distance < 4 " +
                     "ORDER BY r.created_at DESC " +
-                    "LIMIT :limit OFFSET :page"
+                    "LIMIT :limit OFFSET :offset"
             , nativeQuery = true
     )
-    Slice<Rental> findAllByDistance(int page, int limit, double userLatitude, double userLongitude);
+    List<Rental> findAllByDistance(double userLatitude, double userLongitude, int limit, int offset);
 
     @Query(value =
             "SELECT  *, r.distance as distance FROM" +
                     "(SELECT *, ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 as distance FROM rental_tbl) as r " +
                     "WHERE distance < 4 AND category=:category " +
                     "ORDER BY r.created_at DESC " +
-                    "LIMIT :limit OFFSET :page"
+                    "LIMIT :limit OFFSET :offset"
             , nativeQuery = true
     )
-    Slice<Rental> findAllByCategoryAndDistance(String category, int page, int limit, double userLatitude, double userLongitude);
+    List<Rental> findAllByCategoryAndDistance(String category, double userLatitude, double userLongitude, int limit, int offset);
 
     // 검색 쿼리
     @Query(value =
             "SELECT * FROM rental_tbl " +
                     "WHERE id in(" +
                     "SELECT DISTINCT rental_id FROM rental_image_tbl " +
-                    "WHERE image_url LIKE CONCAT('%', :searchValue, '%')) " +
-                    "OR id LIKE CONCAT('%', :searchValue, '%') " +
-                    "OR title LIKE CONCAT('%', :searchValue, '%') " +
-                    "OR member_id LIKE CONCAT('%', :searchValue, '%') " +
+                    "WHERE title LIKE CONCAT('%', :keyword, '%')) " +
+                    "OR content LIKE CONCAT('%', :keyword, '%') " +
                     "ORDER BY created_at DESC " +
-                    "LIMIT :size OFFSET :page", nativeQuery = true)
-    Slice<Rental> findAllWithSearch(String searchValue, int page, int size);
+                    "LIMIT :limit OFFSET :offset"
+            , nativeQuery = true
+    )
+    List<Rental> findAllWithSearch(String keyword, int limit, int offset);
 
     @Query(value =
             "SELECT *, r.distance AS distance FROM " +
                     "(SELECT *, ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 AS distance " +
                     "FROM rental_tbl " +
-                    "WHERE (id IN (SELECT DISTINCT rental_id FROM rental_image_tbl WHERE image_url LIKE CONCAT('%', :searchValue, '%')) " +
-                    "OR id LIKE CONCAT('%', :searchValue, '%') " +
-                    "OR title LIKE CONCAT('%', :searchValue, '%') " +
-                    "OR member_id LIKE CONCAT('%', :searchValue, '%')) " +
+                    "WHERE (id IN (SELECT DISTINCT rental_id FROM rental_image_tbl WHERE title LIKE CONCAT('%', :keyword, '%')) " +
+                    "OR content LIKE CONCAT('%', :keyword, '%')) " +
                     "AND ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 < 4) AS r " +
                     "ORDER BY r.created_at DESC " +
-                    "LIMIT :size OFFSET :page", nativeQuery = true)
-    Slice<Rental> findAllWithSearchDistance(String searchValue, int page, int size, double userLatitude, double userLongitude);
+                    "LIMIT :limit OFFSET :offset"
+            , nativeQuery = true
+    )
+    List<Rental> findAllWithSearchDistance(String keyword, double userLatitude, double userLongitude, int limit, int offset);
 }

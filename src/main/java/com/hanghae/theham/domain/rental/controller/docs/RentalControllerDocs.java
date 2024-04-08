@@ -1,6 +1,5 @@
 package com.hanghae.theham.domain.rental.controller.docs;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.*;
@@ -11,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Slice;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,18 +34,18 @@ public interface RentalControllerDocs {
     );
 
     @Operation(summary = "함께쓰기 카테고리별 게시글 조회 기능", description = "함께쓰기 게시글을 조회할 수 있는 API")
-    ResponseDto<Slice<RentalCategoryReadResponseDto>> readRentalList(
+    ResponseDto<List<RentalCategoryReadResponseDto>> readRentalList(
+            @AuthenticationPrincipal @Nullable UserDetailsImpl userDetails,
             @RequestParam CategoryType category,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal UserDetailsImpl userDetails
-    ) throws JsonProcessingException;
+            @RequestParam(defaultValue = "6", required = false) int size
+    );
 
     @Operation(summary = "함께쓰기 마이페이지 내가 쓴 게시글 조회 기능", description = "함께쓰기 마이페이지 내가 쓴 게시글 조회할 수 있는 API")
-    ResponseDto<Slice<RentalMyListReadResponseDto>> readRentalMyList(
+    ResponseDto<List<RentalMyReadResponseDto>> readRentalMyList(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "6", required = false) int size
     );
 
     @Operation(summary = "함께쓰기 게시글 수정 기능", description = "함께쓰기 게시글을 수정할 수 있는 API")
@@ -67,9 +65,9 @@ public interface RentalControllerDocs {
 
     @Operation(summary = "함께쓰기 검색 기능", description = "함께쓰기 검색 기능")
     ResponseDto<List<RentalReadResponseDto>> searchRental(
+            @Nullable @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(name = "searchValue") String searchValue,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @Nullable @AuthenticationPrincipal UserDetailsImpl userDetails
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "6", required = false) int size
     );
 }

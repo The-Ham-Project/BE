@@ -93,7 +93,7 @@ public class RentalResponseDto {
     }
 
     @Getter
-    public static class RentalMyListReadResponseDto {
+    public static class RentalMyReadResponseDto {
 
         private final Long rentalId;
         private final String profileUrl;
@@ -103,7 +103,7 @@ public class RentalResponseDto {
         private final long deposit;
         private final String firstThumbnailUrl;
 
-        public RentalMyListReadResponseDto(Rental rental, String firstThumbnailUrl) {
+        public RentalMyReadResponseDto(Rental rental, String firstThumbnailUrl) {
             this.rentalId = rental.getId();
             this.profileUrl = rental.getMember().getProfileUrl();
             this.title = rental.getTitle();

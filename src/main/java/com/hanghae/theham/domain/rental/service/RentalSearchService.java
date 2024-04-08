@@ -8,10 +8,9 @@ import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
-import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -34,38 +33,33 @@ public class RentalSearchService {
         this.memberRepository = memberRepository;
     }
 
-    public List<RentalReadResponseDto> searchRentalList(String searchValue, int page, int size, @Nullable String email) {
-        Slice<Rental> rentalSlice;
+    public List<RentalReadResponseDto> searchRentalList(String email, String keyword, int page, int size) {
+        List<Rental> rentalList;
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size);
 
-        // 비회원 - 전체 게시글
         if (email == null) {
-            rentalSlice = rentalRepository.findAllWithSearch(searchValue, page, size);
-        }
-        // 회원 - 거리 이내 전체 게시글
-        else {
-            Member member = memberRepository.findByEmail(email)
-                    .orElseThrow(() -> {
-                        log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
-                        return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
-                    });
+            rentalList = rentalRepository.findAllWithSearch(keyword, pageRequest.getPageSize(), (int) pageRequest.getOffset());
+        } else {
+            Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
+                log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
+                return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
+            });
 
             double longitude = member.getLongitude();
             double latitude = member.getLatitude();
 
-            rentalSlice = rentalRepository.findAllWithSearchDistance(searchValue, page, size, latitude, longitude);
+            rentalList = rentalRepository.findAllWithSearchDistance(keyword, latitude, longitude, pageRequest.getPageSize(), (int) pageRequest.getOffset());
         }
-        return convertSliceToListDto(rentalSlice);
-    }
 
-    private List<RentalReadResponseDto> convertSliceToListDto(Slice<Rental> rentalSlice) {
-        List<RentalReadResponseDto> rentals = new ArrayList<>();
+        List<RentalReadResponseDto> rentalReadResponseDtoList = new ArrayList<>();
+        for (Rental rental : rentalList) {
+            List<RentalImage> rentalImageList = rentalImageRepository.findAllByRental(rental);
+            List<RentalImageReadResponseDto> images = rentalImageList.stream()
+                    .map(RentalImageReadResponseDto::new)
+                    .toList();
 
-        for (Rental rental : rentalSlice) {
-            List<RentalImage> rentalImages = rentalImageRepository.findAllByRental(rental);
-            List<RentalImageReadResponseDto> images = rentalImages.stream().map(RentalImageReadResponseDto::new).toList();
-
-            rentals.add(new RentalReadResponseDto(rental, images));
+            rentalReadResponseDtoList.add(new RentalReadResponseDto(rental, images));
         }
-        return rentals;
+        return rentalReadResponseDtoList;
     }
 }

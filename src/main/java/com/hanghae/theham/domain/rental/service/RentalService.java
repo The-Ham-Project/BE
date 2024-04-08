@@ -24,7 +24,9 @@ import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -153,32 +155,36 @@ public class RentalService {
         return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
     }
 
-    public Slice<RentalCategoryReadResponseDto> readRentalList(CategoryType category, int page, int size, String email) {
-        Slice<Rental> rentalSlice;
-        Pageable pageable = createPageRequest(page, size);
+    public List<RentalCategoryReadResponseDto> readRentalList(String email, CategoryType category, int page, int size) {
+        List<Rental> rentalList;
+        List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();
 
-        // 멤버의 위치 가져오기
-        Member member = memberRepository.findByEmail(email).orElse(null);
+        if (email == null) {
+            PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
 
-        if (member == null) {
             if (category == CategoryType.ALL) {
-                rentalSlice = rentalRepository.findAll(pageable);
+                rentalList = rentalRepository.findAll(pageRequest).getContent();
             } else {
-                rentalSlice = rentalRepository.findAllByCategory(category, pageable);
+                rentalList = rentalRepository.findAllByCategory(category, pageRequest).getContent();
             }
         } else {
+            Member member = memberRepository.findByEmail(email).orElseThrow(() ->
+                    new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage())
+            );
+
             double latitude = member.getLatitude();
             double longitude = member.getLongitude();
 
+            PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size);
+
             if (category == CategoryType.ALL) {
-                rentalSlice = rentalRepository.findAllByDistance(pageable.getPageNumber(), pageable.getPageSize(), latitude, longitude);
+                rentalList = rentalRepository.findAllByDistance(latitude, longitude, pageRequest.getPageSize(), (int) pageRequest.getOffset());
             } else {
-                rentalSlice = rentalRepository.findAllByCategoryAndDistance(category.toString(), pageable.getPageNumber(), pageable.getPageSize(), latitude, longitude);
+                rentalList = rentalRepository.findAllByCategoryAndDistance(category.toString(), latitude, longitude, pageRequest.getPageSize(), (int) pageRequest.getOffset());
             }
         }
 
-        List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();
-        for (Rental rental : rentalSlice) {
+        for (Rental rental : rentalList) {
             String firstThumbnailUrl = rentalImageRepository.findAllByRental(rental).stream()
                     .findFirst()
                     .map(RentalImage::getImageUrl)
@@ -186,33 +192,25 @@ public class RentalService {
 
             responseDtoList.add(new RentalCategoryReadResponseDto(rental, firstThumbnailUrl));
         }
-
-        // 페이징 여부 확인
-        boolean hasNestPage = rentalSlice.hasNext();
-
-        return new SliceImpl<>(responseDtoList, pageable, hasNestPage);
+        return responseDtoList;
     }
 
-    public Slice<RentalMyListReadResponseDto> readRentalMyList(String email, int page, int size) {
+    public List<RentalMyReadResponseDto> readRentalMyList(String email, int page, int size) {
         Member member = validateMember(email);
 
-        Pageable pageable = createPageRequest(page, size);
-        Slice<Rental> rentalSlice = rentalRepository.findByMemberOrderByCreatedAt(member, pageable);
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
+        Page<Rental> rentalPage = rentalRepository.findByMemberOrderByCreatedAt(member, pageRequest);
 
-        List<RentalMyListReadResponseDto> ResponseDtoMyList = new ArrayList<>();
-        for (Rental rental : rentalSlice) {
+        List<RentalMyReadResponseDto> responseDtoList = new ArrayList<>();
+        for (Rental rental : rentalPage) {
             String firstThumbnailUrl = rentalImageRepository.findAllByRental(rental).stream()
                     .findFirst()
                     .map(RentalImage::getImageUrl)
                     .orElse(null);
 
-            ResponseDtoMyList.add(new RentalMyListReadResponseDto(rental, firstThumbnailUrl));
+            responseDtoList.add(new RentalMyReadResponseDto(rental, firstThumbnailUrl));
         }
-
-        // 페이징 여부 확인
-        boolean hasNestPage = rentalSlice.hasNext();
-
-        return new SliceImpl<>(ResponseDtoMyList, pageable, hasNestPage);
+        return responseDtoList;
     }
 
     @Transactional
@@ -339,9 +337,5 @@ public class RentalService {
             log.error("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
             throw new AwsS3Exception(ErrorCode.S3_DELETE_UNKNOWN_ERROR.getMessage());
         }
-    }
-
-    private Pageable createPageRequest(int page, int size) {
-        return PageRequest.of(Math.max(0, page - 1), size, Sort.Direction.DESC, "createdAt");
     }
 }
