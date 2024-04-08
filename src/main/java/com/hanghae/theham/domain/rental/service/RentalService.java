@@ -92,42 +92,7 @@ public class RentalService {
         }
 
         // 카카오 지도 API로 지역구 불러오기
-        String district;
-
-        try {
-            URI uri = UriComponentsBuilder
-                    .fromUriString("https://dapi.kakao.com")
-                    .path("/v2/local/geo/coord2address.json")
-                    .queryParam("x", member.getLongitude())
-                    .queryParam("y", member.getLatitude())
-                    .queryParam("input_coord", "WGS84")
-                    .encode()
-                    .build()
-                    .toUri();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("Authorization", "KakaoAK " + kakaoClientId);
-
-            RequestEntity<Void> requestEntity = RequestEntity
-                    .get(uri)
-                    .headers(headers)
-                    .build();
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                    requestEntity,
-                    String.class
-            );
-
-            JsonNode jsonNode = new ObjectMapper().readTree(response.getBody());
-            district = jsonNode.path("documents")
-                    .path(0)
-                    .path("address")
-                    .path("region_2depth_name")
-                    .asText();
-
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        String district = getDistrictFromKakaoAPI(member.getLatitude(), member.getLongitude());
 
         // 함께쓰기 정보 저장
         Rental rental = rentalRepository.save(requestDto.toEntity(member, district));
@@ -337,5 +302,44 @@ public class RentalService {
             log.error("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
             throw new AwsS3Exception(ErrorCode.S3_DELETE_UNKNOWN_ERROR.getMessage());
         }
+    }
+
+    private String getDistrictFromKakaoAPI(double latitude, double longitude) {
+        String district;
+        try {
+            URI uri = UriComponentsBuilder
+                    .fromUriString("https://dapi.kakao.com")
+                    .path("/v2/local/geo/coord2address.json")
+                    .queryParam("x", longitude)
+                    .queryParam("y", latitude)
+                    .queryParam("input_coord", "WGS84")
+                    .encode()
+                    .build()
+                    .toUri();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "KakaoAK " + kakaoClientId);
+
+            RequestEntity<Void> requestEntity = RequestEntity
+                    .get(uri)
+                    .headers(headers)
+                    .build();
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    requestEntity,
+                    String.class
+            );
+
+            JsonNode jsonNode = new ObjectMapper().readTree(response.getBody());
+            district = jsonNode.path("documents")
+                    .path(0)
+                    .path("address")
+                    .path("region_2depth_name")
+                    .asText();
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return district;
     }
 }
