@@ -97,8 +97,9 @@ class RentalServiceTest {
 
         when(rentalRepository.save(any())).thenReturn(rental);
 
-        // then
         RentalCreateResponseDto responseDto = rentalService.createRental(member.getEmail(), requestDto, multipartFileList);
+
+        // then
 
         assertEquals("제목", responseDto.getTitle());
         assertEquals("내용", responseDto.getContent());
@@ -149,8 +150,9 @@ class RentalServiceTest {
         when(mockS3Client.putObject(any(PutObjectRequest.class))).thenReturn(new PutObjectResult());
         when(mockS3Client.getUrl(nullable(String.class), anyString())).thenReturn(new URI("http://example.com/image.jpg").toURL());
 
-        // then
         RentalCreateResponseDto responseDto = rentalService.createRental(member.getEmail(), requestDto, multipartFileList);
+
+        // then
 
         assertEquals("제목", responseDto.getTitle());
         assertEquals("내용", responseDto.getContent());
@@ -247,8 +249,9 @@ class RentalServiceTest {
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         when(rentalRepository.findById(any())).thenReturn(Optional.of(rental));
 
-        // then
         RentalUpdateResponseDto responseDto = rentalService.updateRental(member.getEmail(), rental.getId(), requestDto, null);
+
+        // then
 
         assertEquals("제목2", responseDto.getTitle());
         assertEquals(CategoryType.CLOSET.getValue(), responseDto.getCategory());
@@ -288,6 +291,66 @@ class RentalServiceTest {
         // then
         BadRequestException exception = assertThrows(BadRequestException.class, () ->
                 rentalService.updateRental(member1.getEmail(), rental.getId(), requestDto, null)
+        );
+
+        assertEquals(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage(), exception.getMessage());
+    }
+
+    @DisplayName("성공 - 함께쓰기 게시글 삭제")
+    @Test
+    void deleteRental_01() {
+        // given
+        Member member = Member.builder()
+                .email("test@test.com")
+                .build();
+
+        Rental rental = Rental.builder()
+                .title("제목")
+                .category(CategoryType.BOOK)
+                .content("내용")
+                .rentalFee(1000L)
+                .deposit(2000L)
+                .member(member)
+                .build();
+
+        // when
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
+        when(rentalRepository.findById(any())).thenReturn(Optional.of(rental));
+
+        rentalService.deleteRental(member.getEmail(), rental.getId());
+
+        // then
+        verify(rentalRepository).delete(rental);
+    }
+
+    @DisplayName("실패 - 함께쓰기 게시글 삭제, 작성자 정보가 일치하지 않음")
+    @Test
+    void deleteRental_02() {
+        // given
+        Member member1 = Member.builder()
+                .email("test@test.com")
+                .build();
+
+        Member member2 = Member.builder()
+                .email("test2@test.com")
+                .build();
+
+        Rental rental = Rental.builder()
+                .title("제목")
+                .category(CategoryType.BOOK)
+                .content("내용")
+                .rentalFee(1000L)
+                .deposit(2000L)
+                .member(member2)
+                .build();
+
+        // when
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member1));
+        when(rentalRepository.findById(any())).thenReturn(Optional.of(rental));
+
+        // then
+        BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                rentalService.deleteRental(member1.getEmail(), rental.getId())
         );
 
         assertEquals(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage(), exception.getMessage());
