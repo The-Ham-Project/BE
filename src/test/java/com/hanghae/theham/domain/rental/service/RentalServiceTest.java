@@ -6,7 +6,9 @@ import com.amazonaws.services.s3.model.PutObjectResult;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
+import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
@@ -211,13 +213,83 @@ class RentalServiceTest {
         ).thenReturn(mockResponse);
 
         when(rentalRepository.save(any())).thenReturn(rental);
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
 
         // then
-        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
         BadRequestException exception = assertThrows(BadRequestException.class, () ->
                 rentalService.createRental(member.getEmail(), requestDto, multipartFileList)
         );
 
         assertEquals(ErrorCode.UNSUPPORTED_FILE_TYPE.getMessage(), exception.getMessage());
+    }
+
+    @DisplayName("성공 - 함께쓰기 게시글 수정")
+    @Test
+    void updateRental_01() {
+        // given
+        Member member = Member.builder()
+                .email("test@test.com")
+                .build();
+
+        Rental rental = Rental.builder()
+                .title("제목")
+                .category(CategoryType.BOOK)
+                .content("내용")
+                .rentalFee(1000L)
+                .deposit(2000L)
+                .member(member)
+                .build();
+
+        RentalUpdateRequestDto requestDto =
+                new RentalUpdateRequestDto("제목2", CategoryType.CLOSET, "내용2", 10000L, 20000L);
+
+        // when
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
+        when(rentalRepository.findById(any())).thenReturn(Optional.of(rental));
+
+        // then
+        RentalUpdateResponseDto responseDto = rentalService.updateRental(member.getEmail(), rental.getId(), requestDto, null);
+
+        assertEquals("제목2", responseDto.getTitle());
+        assertEquals(CategoryType.CLOSET.getValue(), responseDto.getCategory());
+        assertEquals("내용2", responseDto.getContent());
+        assertEquals(10000L, responseDto.getRentalFee());
+        assertEquals(20000L, responseDto.getDeposit());
+    }
+
+    @DisplayName("실패 - 함께쓰기 게시글 수정, 작성자 정보가 일치하지 않음")
+    @Test
+    void updateRental_02() {
+        // given
+        Member member1 = Member.builder()
+                .email("test@test.com")
+                .build();
+
+        Member member2 = Member.builder()
+                .email("test2@test.com")
+                .build();
+
+        Rental rental = Rental.builder()
+                .title("제목")
+                .category(CategoryType.BOOK)
+                .content("내용")
+                .rentalFee(1000L)
+                .deposit(2000L)
+                .member(member2)
+                .build();
+
+        RentalUpdateRequestDto requestDto =
+                new RentalUpdateRequestDto("제목2", CategoryType.CLOSET, "내용2", 10000L, 20000L);
+
+        // when
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member1));
+        when(rentalRepository.findById(any())).thenReturn(Optional.of(rental));
+
+        // then
+        BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                rentalService.updateRental(member1.getEmail(), rental.getId(), requestDto, null)
+        );
+
+        assertEquals(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage(), exception.getMessage());
     }
 }
