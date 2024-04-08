@@ -1,6 +1,7 @@
 package com.hanghae.theham.domain.member.service;
 
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
@@ -21,14 +22,23 @@ public class MemberService {
         this.memberRepository = memberRepository;
     }
 
+    public MemberReadResponseDto getMember(String email) {
+        Member member = validateMember(email);
+        return new MemberReadResponseDto(member);
+    }
+
     @Transactional
     public MemberUpdatePositionResponseDto updatePosition(String email, MemberUpdatePositionRequestDto requestDto) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> {
-            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
-            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
-        });
+        Member member = validateMember(email);
 
         member.updatePosition(requestDto.getLatitude(), requestDto.getLongitude());
         return new MemberUpdatePositionResponseDto(member);
+    }
+
+    private Member validateMember(String email) {
+        return memberRepository.findByEmail(email).orElseThrow(() -> {
+            log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
+            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
+        });
     }
 }

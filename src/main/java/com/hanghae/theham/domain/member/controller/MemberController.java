@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.controller.docs.MemberControllerDocs;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
 import com.hanghae.theham.domain.member.service.AuthService;
 import com.hanghae.theham.domain.member.service.MemberService;
@@ -30,6 +31,14 @@ public class MemberController implements MemberControllerDocs {
         this.authService = authService;
         this.memberService = memberService;
         this.socialLoginService = socialLoginService;
+    }
+
+    @GetMapping
+    public ResponseDto<MemberReadResponseDto> getMember(
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        MemberReadResponseDto responseDto = memberService.getMember(userDetails.getUsername());
+        return ResponseDto.success("회원 정보 조회 기능", responseDto);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

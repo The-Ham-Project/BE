@@ -3,6 +3,7 @@ package com.hanghae.theham.domain.member.controller.docs;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
@@ -15,6 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "members", description = "회원 관련 API")
 public interface MemberControllerDocs {
+
+    @Operation(summary = "회원 정보 조회 기능", description = "회원의 정보를 조회할 수 있는 API")
+    ResponseDto<MemberReadResponseDto> getMember(
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    );
 
     @Operation(summary = "회원 토큰 재발행 기능", description = "회원의 토큰을 재발행할 수 있는 API")
     void reissue(
