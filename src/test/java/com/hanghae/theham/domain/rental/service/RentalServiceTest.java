@@ -8,8 +8,10 @@ import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
+import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
@@ -354,5 +356,55 @@ class RentalServiceTest {
         );
 
         assertEquals(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage(), exception.getMessage());
+    }
+
+    @DisplayName("성공 - 함께쓰기 게시글 조회")
+    @Test
+    void readRental_01() {
+        // given
+        Member member = Member.builder()
+                .email("test@test.com")
+                .nickname("더듬이")
+                .build();
+
+        Rental rental = Rental.builder()
+                .title("제목")
+                .category(CategoryType.BOOK)
+                .content("내용")
+                .rentalFee(1000L)
+                .deposit(2000L)
+                .member(member)
+                .build();
+
+        RentalImage rentalImage1 = RentalImage.builder()
+                .rental(rental)
+                .build();
+
+        RentalImage rentalImage2 = RentalImage.builder()
+                .rental(rental)
+                .build();
+
+        List<RentalImage> rentalImageList = Arrays.asList(rentalImage1, rentalImage2);
+
+        // when
+        when(rentalRepository.findById(any())).thenReturn(Optional.of(rental));
+        when(rentalImageRepository.findAllByRental(any(Rental.class))).thenReturn(rentalImageList);
+
+        RentalReadResponseDto responseDto = rentalService.readRental(rental.getId());
+
+        // then
+        assertEquals("제목", responseDto.getTitle());
+        assertEquals(2, responseDto.getRentalImageList().size());
+    }
+
+    @DisplayName("실패 - 함께쓰기 게시글 조회, 조회할 수 없는 게시글 번호")
+    @Test
+    void readRental_02() {
+        // when & then
+        BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                rentalService.readRental(99L)
+        );
+
+        assertEquals(ErrorCode.NOT_FOUND_RENTAL.getMessage(), exception.getMessage());
     }
 }
