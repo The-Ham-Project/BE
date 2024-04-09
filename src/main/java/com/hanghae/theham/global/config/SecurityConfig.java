@@ -60,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/ping").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/members").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/members", "/api/v1/members/check-position").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/members/position").authenticated()
                         .requestMatchers("/api/v1/members/**").permitAll()
                         .requestMatchers("/chat/**").permitAll()

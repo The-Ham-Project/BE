@@ -3,6 +3,7 @@ package com.hanghae.theham.domain.member.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.controller.docs.MemberControllerDocs;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberCheckPositionResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
@@ -66,6 +67,14 @@ public class MemberController implements MemberControllerDocs {
     ) {
         MemberUpdatePositionResponseDto responseDto = memberService.updatePosition(userDetails.getUsername(), requestDto);
         return ResponseDto.success("회원 좌표 갱신 기능", responseDto);
+    }
+
+    @GetMapping("/check-position")
+    public ResponseDto<MemberCheckPositionResponseDto> checkPosition(
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        MemberCheckPositionResponseDto responseDto = memberService.checkPosition(userDetails.getUsername());
+        return ResponseDto.success("회원 좌표 검사 기능", responseDto);
     }
 
     @GetMapping("/kakao/callback")

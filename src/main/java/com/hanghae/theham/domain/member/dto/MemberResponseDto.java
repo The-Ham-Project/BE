@@ -44,4 +44,14 @@ public class MemberResponseDto {
             this.profileUrl = profileUrl;
         }
     }
+
+    @Getter
+    public static class MemberCheckPositionResponseDto {
+
+        private final Boolean isCheck;
+
+        public MemberCheckPositionResponseDto(Boolean isCheck) {
+            this.isCheck = isCheck;
+        }
+    }
 }

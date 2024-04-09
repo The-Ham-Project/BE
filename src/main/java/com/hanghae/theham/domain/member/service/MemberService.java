@@ -1,6 +1,7 @@
 package com.hanghae.theham.domain.member.service;
 
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberCheckPositionResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
 import com.hanghae.theham.domain.member.entity.Member;
@@ -33,6 +34,15 @@ public class MemberService {
 
         member.updatePosition(requestDto.getLatitude(), requestDto.getLongitude());
         return new MemberUpdatePositionResponseDto(member);
+    }
+
+    public MemberCheckPositionResponseDto checkPosition(String email) {
+        Member member = validateMember(email);
+
+        if (member.getLongitude() == 0.0 || member.getLatitude() == 0.0) {
+            return new MemberCheckPositionResponseDto(false);
+        }
+        return new MemberCheckPositionResponseDto(true);
     }
 
     private Member validateMember(String email) {
