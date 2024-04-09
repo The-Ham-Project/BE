@@ -39,15 +39,14 @@ public class SlackNotificationAspect {
     }
 
     @Around("@annotation(com.hanghae.theham.global.slack.SlackNotification) && args(request, e)")
-    public void slackNotificate(
+    public Object slackNotificate(
             ProceedingJoinPoint proceedingJoinPoint, HttpServletRequest request,
             Exception e
     ) throws Throwable {
-
-        proceedingJoinPoint.proceed();
+        Object proceed = proceedingJoinPoint.proceed();
         RequestInfo requestInfo = new RequestInfo(request);
-
         threadPoolTaskExecutor.execute(() -> sendSlackMessage(requestInfo, e));
+        return proceed;
     }
 
 
