@@ -1,10 +1,8 @@
 package com.hanghae.theham.domain.chat.controller.docs;
 
 import com.hanghae.theham.domain.chat.dto.ChatRoomRequestDto.ChatRoomCreateRequestDto;
-import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomDetailResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomReadResponseDto;
-import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomCreateResponseDto;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;

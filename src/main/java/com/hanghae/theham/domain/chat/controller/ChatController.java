@@ -28,8 +28,8 @@ public class ChatController implements ChatControllerDocs {
     @MessageMapping("/chat/talk/{roomId}")
     public void sendMessage(@Valid @Payload ChatSendMessageRequestDto requestDto,
                             Principal principal,
-                            @DestinationVariable Long roomId){
+                            @DestinationVariable Long roomId) {
         chatService.saveMessage(requestDto, principal.getName(), roomId);
-        messagingTemplate.convertAndSend("/sub/chat/chatRoom/"+roomId, requestDto);
+        messagingTemplate.convertAndSend("/sub/chat/chatRoom/" + roomId, requestDto);
     }
 }

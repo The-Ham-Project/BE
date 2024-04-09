@@ -2,7 +2,6 @@ package com.hanghae.theham.domain.chat.service;
 
 import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatReadResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomRequestDto.ChatRoomCreateRequestDto;
-import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomCreateResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomDetailResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomReadResponseDto;
 import com.hanghae.theham.domain.chat.entity.ChatRoom;
@@ -39,7 +38,7 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public Long handleChatRoom(String email, ChatRoomCreateRequestDto requestDto){
+    public Long handleChatRoom(String email, ChatRoomCreateRequestDto requestDto) {
         // 렌탈 작성글이 존재하는지 확인
         Rental rental = findRentalById(requestDto.getRentalId());
 
@@ -56,10 +55,10 @@ public class ChatRoomService {
             throw new BadRequestException(ErrorCode.CANNOT_CHAT_WITH_SELF.getMessage());
         }
 
-        Optional<ChatRoom> optionalChatRoom  = chatRoomRepository.findChatRoomByBuyerAndRental(buyer, rental);
+        Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findChatRoomByBuyerAndRental(buyer, rental);
 
         return optionalChatRoom.orElseGet(()
-            -> createChatRoom(buyer, seller, rental)).getId();
+                -> createChatRoom(buyer, seller, rental)).getId();
     }
 
     @Transactional
