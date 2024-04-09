@@ -103,6 +103,7 @@ public class ChatRoomService {
             log.error("채팅방 정보를 찾을 수 없습니다. 채팅방 ID: {}", chatRoomId);
             return new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage());
         });
+        String senderProfileImage = member.getProfileUrl();
         Member toMember = resolveToMember(chatRoom, member.getEmail());
 
         List<ChatReadResponseDto> chatResponseList = chatRepository.findByChatRoomOrderByIdDesc(chatRoom)
@@ -113,6 +114,7 @@ public class ChatRoomService {
         return new ChatRoomDetailResponseDto(
                 toMember.getNickname(),
                 toMember.getProfileUrl(),
+                senderProfileImage,
                 chatResponseList);
     }
 

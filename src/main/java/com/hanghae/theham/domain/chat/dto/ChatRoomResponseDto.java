@@ -1,8 +1,8 @@
 package com.hanghae.theham.domain.chat.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.hanghae.theham.domain.chat.entity.ChatRoom;
 import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatReadResponseDto;
+import com.hanghae.theham.domain.chat.entity.ChatRoom;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -31,13 +31,16 @@ public class ChatRoomResponseDto {
     public static class ChatRoomDetailResponseDto{
         private final String toUserNickname; // 상대방 식별
         private final String toUserProfileImage; // 상대방 이미지
+        private final String senderProfileImage; // sender 이미지
         private final List<ChatReadResponseDto> chatReadResponseDtoList;
 
         public ChatRoomDetailResponseDto(String toUserNickname,
                                          String toUserProfileImage,
+                                         String senderProfileImage,
                                          List<ChatReadResponseDto> chatReadResponseDtoList) {
             this.toUserNickname = toUserNickname;
             this.toUserProfileImage = toUserProfileImage;
+            this.senderProfileImage = senderProfileImage;
             this.chatReadResponseDtoList = chatReadResponseDtoList;
         }
     }
