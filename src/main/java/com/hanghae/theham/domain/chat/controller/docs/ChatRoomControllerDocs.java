@@ -1,10 +1,8 @@
 package com.hanghae.theham.domain.chat.controller.docs;
 
 import com.hanghae.theham.domain.chat.dto.ChatRoomRequestDto.ChatRoomCreateRequestDto;
-import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomDetailResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomReadResponseDto;
-import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomCreateResponseDto;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,8 +17,8 @@ import java.util.List;
 @Tag(name = "chat-rooms", description = "채팅방 관련 API")
 public interface ChatRoomControllerDocs {
 
-    @Operation(summary = "채팅방 생성 기능", description = "채팅방을 생성할 수 있는 API")
-    ResponseDto<ChatRoomCreateResponseDto> createChatRoom(
+    @Operation(summary = "채팅방 생성 기능", description = "채팅방을 생성할 수 있는 API, 존재하는 채팅방이라면 기존의 채팅방을")
+    ResponseDto<Long> createChatRoom(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody @Valid ChatRoomCreateRequestDto requestDto
     );

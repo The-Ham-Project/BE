@@ -9,12 +9,12 @@ import java.time.LocalDateTime;
 public class ChatResponseDto {
 
     @Getter
-    public static class ChatReadResponseDto{ //메세지 반환
-        private Long chatId;
-        private String sender;
-        private String message;
+    public static class ChatReadResponseDto { //메세지 반환
+        private final Long chatId;
+        private final String sender;
+        private final String message;
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
-        private LocalDateTime createdAt;
+        private final LocalDateTime createdAt;
 
         public ChatReadResponseDto(Chat chat) {
             this.chatId = chat.getId();

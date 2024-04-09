@@ -1,7 +1,6 @@
 package com.hanghae.theham.domain.chat.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.hanghae.theham.domain.chat.entity.ChatRoom;
 import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatReadResponseDto;
 import lombok.Getter;
 
@@ -11,39 +10,25 @@ import java.util.List;
 public class ChatRoomResponseDto {
 
     @Getter
-    public static class ChatRoomCreateResponseDto {
-        private final Long id;
-        private String seller;
-        private String buyer;
-
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
-        private final LocalDateTime createdAt;
-
-        public ChatRoomCreateResponseDto(ChatRoom chatRoom) {
-            this.id = chatRoom.getId();
-            this.seller = chatRoom.getSeller().getNickname();
-            this.buyer = chatRoom.getBuyer().getNickname();
-            this.createdAt = chatRoom.getCreatedAt();
-        }
-    }
-
-    @Getter
-    public static class ChatRoomDetailResponseDto{
+    public static class ChatRoomDetailResponseDto {
         private final String toUserNickname; // 상대방 식별
         private final String toUserProfileImage; // 상대방 이미지
+        private final String senderProfileImage; // sender 이미지
         private final List<ChatReadResponseDto> chatReadResponseDtoList;
 
         public ChatRoomDetailResponseDto(String toUserNickname,
                                          String toUserProfileImage,
+                                         String senderProfileImage,
                                          List<ChatReadResponseDto> chatReadResponseDtoList) {
             this.toUserNickname = toUserNickname;
             this.toUserProfileImage = toUserProfileImage;
+            this.senderProfileImage = senderProfileImage;
             this.chatReadResponseDtoList = chatReadResponseDtoList;
         }
     }
 
     @Getter
-    public static class ChatRoomReadResponseDto{
+    public static class ChatRoomReadResponseDto {
         private final Long chatRoomId;
         private final Long toMemberId;
         private final String toMemberNickName;

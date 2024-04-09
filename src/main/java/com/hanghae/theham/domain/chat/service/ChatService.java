@@ -26,14 +26,14 @@ public class ChatService {
     }
 
     @Transactional
-    public void saveMessage(ChatSendMessageRequestDto requestDto,Long roomId) {
+    public void saveMessage(ChatSendMessageRequestDto requestDto, String email, Long roomId) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage())
                 );
-        Member sender = memberRepository.findByNickname(requestDto.getNickname())
+        Member sender = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage())
-        );
+                );
         chatRoom.updateLastChat(requestDto.getMessage());
-        chatRepository.save(requestDto.toEntity(chatRoom,sender));
+        chatRepository.save(requestDto.toEntity(chatRoom, sender));
     }
 }

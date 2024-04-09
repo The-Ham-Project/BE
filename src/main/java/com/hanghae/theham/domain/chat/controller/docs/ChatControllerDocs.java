@@ -7,10 +7,13 @@ import jakarta.validation.Valid;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Payload;
 
+import java.security.Principal;
+
 @Tag(name = "chats", description = "채팅 메세지 관련 API")
 public interface ChatControllerDocs {
 
     @Operation(summary = "채팅 메세지 전송 기능", description = "채팅 메세지를 전송할 수 있는 API")
     void sendMessage(@Valid @Payload ChatSendMessageRequestDto requestDto,
+                     Principal principal,
                      @DestinationVariable Long roomId);
 }

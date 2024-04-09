@@ -2,7 +2,6 @@ package com.hanghae.theham.domain.chat.service;
 
 import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatReadResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomRequestDto.ChatRoomCreateRequestDto;
-import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomCreateResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomDetailResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomReadResponseDto;
 import com.hanghae.theham.domain.chat.entity.ChatRoom;
@@ -20,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Transactional(readOnly = true)
@@ -38,7 +38,7 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public ChatRoomCreateResponseDto createChatRoom(String email, ChatRoomCreateRequestDto requestDto) {
+    public Long handleChatRoom(String email, ChatRoomCreateRequestDto requestDto) {
         // 렌탈 작성글이 존재하는지 확인
         Rental rental = findRentalById(requestDto.getRentalId());
 
@@ -51,25 +51,24 @@ public class ChatRoomService {
             return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
         });
 
-        /***
-         * buyer : 구매자 (채팅 요청자)
-         * seller : 게시글 작성자
-         */
         if (buyer == seller || rental.getMember() == buyer) {
             throw new BadRequestException(ErrorCode.CANNOT_CHAT_WITH_SELF.getMessage());
         }
 
-        ChatRoom existingChatRoom = chatRoomRepository.findChatRoomByBuyerAndRental(buyer, rental);
-        if (existingChatRoom != null) {
-            throw new BadRequestException(ErrorCode.CHAT_ROOM_ALREADY_EXISTS.getMessage());
-        }
+        Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findChatRoomByBuyerAndRental(buyer, rental);
 
+        return optionalChatRoom.orElseGet(()
+                -> createChatRoom(buyer, seller, rental)).getId();
+    }
+
+    @Transactional
+    public ChatRoom createChatRoom(Member buyer, Member seller, Rental rental) {
         ChatRoom newRoom = ChatRoom.builder()
                 .buyer(buyer)
                 .seller(seller)
                 .rental(rental)
                 .build();
-        return new ChatRoomCreateResponseDto(chatRoomRepository.save(newRoom));
+        return chatRoomRepository.save(newRoom);
     }
 
     // 채팅방 전체 목록 조회
@@ -103,6 +102,7 @@ public class ChatRoomService {
             log.error("채팅방 정보를 찾을 수 없습니다. 채팅방 ID: {}", chatRoomId);
             return new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage());
         });
+        String senderProfileImage = member.getProfileUrl();
         Member toMember = resolveToMember(chatRoom, member.getEmail());
 
         List<ChatReadResponseDto> chatResponseList = chatRepository.findByChatRoomOrderByIdDesc(chatRoom)
@@ -113,6 +113,7 @@ public class ChatRoomService {
         return new ChatRoomDetailResponseDto(
                 toMember.getNickname(),
                 toMember.getProfileUrl(),
+                senderProfileImage,
                 chatResponseList);
     }
 
