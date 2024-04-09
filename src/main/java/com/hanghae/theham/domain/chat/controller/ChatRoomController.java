@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Slf4j(topic = "chatController")
+@Slf4j(topic = "ChatController")
 @RequestMapping("/api/v1")
 @RestController
 public class ChatRoomController implements ChatRoomControllerDocs {
@@ -29,13 +29,12 @@ public class ChatRoomController implements ChatRoomControllerDocs {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(  "/chat-rooms")
-    public ResponseDto<ChatRoomCreateResponseDto> createChatRoom(
+    public ResponseDto<Long> createChatRoom(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody @Valid ChatRoomCreateRequestDto requestDto
     ) {
-        ChatRoomCreateResponseDto responseDto = chatRoomService.createChatRoom(userDetails.getUsername(), requestDto);
-
-        return ResponseDto.success("채팅 채팅방 생성 기능", responseDto);
+        Long roomId = chatRoomService.handleChatRoom(userDetails.getUsername(), requestDto);
+        return ResponseDto.success("채팅방 생성 및 기존 채팅방 반환 기능", roomId);
     }
 
     @GetMapping("/chat-rooms")
