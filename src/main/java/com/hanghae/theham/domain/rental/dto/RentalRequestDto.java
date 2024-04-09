@@ -4,6 +4,7 @@ import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -28,10 +29,12 @@ public class RentalRequestDto {
 
         @Schema(description = "대여비", example = "0")
         @PositiveOrZero(message = "금액 범위를 다시 한번 확인해주세요.")
+        @Max(value = 999999, message = "금액은 1백만원 미만이어야 합니다.")
         private Long rentalFee;
 
         @Schema(description = "보증금", example = "0")
         @PositiveOrZero(message = "금액 범위를 다시 한번 확인해주세요.")
+        @Max(value = 999999, message = "금액은 1백만원 미만이어야 합니다.")
         private Long deposit;
 
         public Rental toEntity(Member member, String district) {
@@ -66,10 +69,12 @@ public class RentalRequestDto {
 
         @Schema(description = "대여비", example = "0")
         @PositiveOrZero(message = "금액 범위를 다시 한번 확인해주세요.")
+        @Max(value = 999999, message = "금액은 1백만원 미만이어야 합니다.")
         private Long rentalFee;
 
         @Schema(description = "보증금", example = "0")
         @PositiveOrZero(message = "금액 범위를 다시 한번 확인해주세요.")
+        @Max(value = 999999, message = "금액은 1백만원 미만이어야 합니다.")
         private Long deposit;
     }
 }
