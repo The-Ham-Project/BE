@@ -2,6 +2,7 @@ package com.hanghae.theham.domain.member.controller.docs;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberCheckPositionResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
@@ -34,10 +35,15 @@ public interface MemberControllerDocs {
             HttpServletResponse response
     );
 
-    @Operation(summary = "회원 좌표 갱신 기능", description = "회원 좌표를 갱싱할 수 있는 API")
+    @Operation(summary = "회원 좌표 갱신 기능", description = "회원 좌표를 갱신할 수 있는 API")
     ResponseDto<MemberUpdatePositionResponseDto> updatePosition(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             MemberUpdatePositionRequestDto requestDto
+    );
+
+    @Operation(summary = "회원 좌표 검사 기능", description = "회원 좌표를 검사할 수 있는 API")
+    ResponseDto<MemberCheckPositionResponseDto> checkPosition(
+            @AuthenticationPrincipal UserDetailsImpl userDetails
     );
 
     @Operation(summary = "카카오 로그인 기능", description = "카카오 로그인할 수 있는 API")
