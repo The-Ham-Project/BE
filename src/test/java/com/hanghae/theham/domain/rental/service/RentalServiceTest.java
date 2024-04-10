@@ -7,10 +7,7 @@ import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalMyReadResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
-import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.*;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
@@ -103,7 +100,6 @@ class RentalServiceTest {
         RentalCreateResponseDto responseDto = rentalService.createRental(member.getEmail(), requestDto, multipartFileList);
 
         // then
-
         assertEquals("제목", responseDto.getTitle());
         assertEquals("내용", responseDto.getContent());
     }
@@ -407,6 +403,156 @@ class RentalServiceTest {
         );
 
         assertEquals(ErrorCode.NOT_FOUND_RENTAL.getMessage(), exception.getMessage());
+    }
+
+    @DisplayName("성공 - 함께쓰기 게시글 조회, 로그인 X, 카테고리 ALL")
+    @Test
+    void readRentalList_01() {
+        // given
+        int page = 1;
+        int size = 6;
+
+        Member member = Member.builder()
+                .email("test@test.com")
+                .build();
+
+        Rental rental1 = Rental.builder()
+                .title("제목1")
+                .category(CategoryType.BOOK)
+                .member(member)
+                .build();
+
+        Rental rental2 = Rental.builder()
+                .title("제목2")
+                .category(CategoryType.ELECTRONIC)
+                .member(member)
+                .build();
+
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
+        PageImpl<Rental> rentalPage = new PageImpl<>(Arrays.asList(rental1, rental2));
+
+        // when
+        when(rentalRepository.findAll(pageRequest)).thenReturn(rentalPage);
+
+        List<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(null, CategoryType.ALL, page, size);
+
+        // then
+        assertEquals(2, responseDtoList.size());
+        assertEquals("제목1", responseDtoList.get(0).getTitle());
+        assertEquals("제목2", responseDtoList.get(1).getTitle());
+    }
+
+    @DisplayName("성공 - 함께쓰기 게시글 조회, 로그인 X, 특정 카테고리")
+    @Test
+    void readRentalList_02() {
+        // given
+        int page = 1;
+        int size = 6;
+
+        Member member = Member.builder()
+                .email("test@test.com")
+                .build();
+
+        Rental rental1 = Rental.builder()
+                .title("제목1")
+                .category(CategoryType.BOOK)
+                .member(member)
+                .build();
+
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
+        PageImpl<Rental> rentalPage = new PageImpl<>(Collections.singletonList(rental1));
+
+        // when
+        when(rentalRepository.findAllByCategory(CategoryType.BOOK, pageRequest)).thenReturn(rentalPage);
+
+        List<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(null, CategoryType.BOOK, page, size);
+
+        // then
+        assertEquals(1, responseDtoList.size());
+        assertEquals("제목1", responseDtoList.get(0).getTitle());
+    }
+
+    @DisplayName("성공 - 함께쓰기 게시글 조회, 로그인 O, 카테고리 ALL")
+    @Test
+    void readRentalList_03() {
+        // given
+        int page = 1;
+        int size = 6;
+
+        Member member = Member.builder()
+                .email("test@test.com")
+                .longitude(0)
+                .latitude(0)
+                .build();
+
+        Rental rental1 = Rental.builder()
+                .title("제목1")
+                .category(CategoryType.BOOK)
+                .longitude(0)
+                .latitude(0)
+                .member(member)
+                .build();
+
+        Rental rental2 = Rental.builder()
+                .title("제목2")
+                .category(CategoryType.ELECTRONIC)
+                .longitude(0)
+                .latitude(0)
+                .member(member)
+                .build();
+
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
+        PageImpl<Rental> rentalPage = new PageImpl<>(Arrays.asList(rental1, rental2));
+
+        // when
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
+        when(rentalRepository.findAllByDistance(
+                member.getLatitude(), member.getLongitude(), pageRequest.getPageSize(), (int) pageRequest.getOffset()
+        )).thenReturn(rentalPage.getContent());
+
+        List<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(member.getEmail(), CategoryType.ALL, page, size);
+
+        // then
+        assertEquals(2, responseDtoList.size());
+        assertEquals("제목1", responseDtoList.get(0).getTitle());
+        assertEquals("제목2", responseDtoList.get(1).getTitle());
+    }
+
+    @DisplayName("성공 - 함께쓰기 게시글 조회, 로그인 O, 특정 카테고리")
+    @Test
+    void readRentalList_04() {
+        // given
+        int page = 1;
+        int size = 6;
+
+        Member member = Member.builder()
+                .email("test@test.com")
+                .longitude(0)
+                .latitude(0)
+                .build();
+
+        Rental rental1 = Rental.builder()
+                .title("제목1")
+                .category(CategoryType.BOOK)
+                .longitude(0)
+                .latitude(0)
+                .member(member)
+                .build();
+
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
+        PageImpl<Rental> rentalPage = new PageImpl<>(Collections.singletonList(rental1));
+
+        // when
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
+        when(rentalRepository.findAllByCategoryAndDistance(
+                CategoryType.BOOK.toString(), member.getLatitude(), member.getLongitude(), pageRequest.getPageSize(), (int) pageRequest.getOffset()
+        )).thenReturn(rentalPage.getContent());
+
+        List<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(member.getEmail(), CategoryType.BOOK, page, size);
+
+        // then
+        assertEquals(1, responseDtoList.size());
+        assertEquals("제목1", responseDtoList.get(0).getTitle());
     }
 
     @DisplayName("성공 - 함께쓰기 마이페이지 내가 쓴 글 조회, 이미지 X")
