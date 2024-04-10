@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -25,12 +26,16 @@ public interface ChatRoomControllerDocs {
 
     @Operation(summary = "나의 채팅방 목록 조회 기능", description = "나의 채팅방을 목록을 조회 할 수 있는 API")
     ResponseDto<List<ChatRoomReadResponseDto>> getChatRoomList(
-            @AuthenticationPrincipal UserDetailsImpl userDetails
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) int size
     );
 
     @Operation(summary = "선택한 채팅방 조회 기능", description = "선택한 채팅방을 조회 할 수 있는 API")
     ResponseDto<ChatRoomDetailResponseDto> getChatRoom(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable Long chatRoomId
+            @PathVariable Long chatRoomId,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) int size
     );
 }

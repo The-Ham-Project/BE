@@ -38,18 +38,22 @@ public class ChatRoomController implements ChatRoomControllerDocs {
 
     @GetMapping("/chat-rooms")
     public ResponseDto<List<ChatRoomReadResponseDto>> getChatRoomList(
-            @AuthenticationPrincipal UserDetailsImpl userDetails
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) int size
     ) {
-        List<ChatRoomReadResponseDto> responseDtoList = chatRoomService.getChatRoomList(userDetails.getUsername());
+        List<ChatRoomReadResponseDto> responseDtoList = chatRoomService.getChatRoomList(userDetails.getUsername(), page, size);
         return ResponseDto.success("회원 자신의 채팅방 목록 조회 기능", responseDtoList);
     }
 
     @GetMapping("/chat-rooms/{chatRoomId}")
     public ResponseDto<ChatRoomDetailResponseDto> getChatRoom(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable Long chatRoomId
+            @PathVariable Long chatRoomId,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) int size
     ) {
-        ChatRoomDetailResponseDto responseDto = chatRoomService.getChatRoom(userDetails.getUsername(), chatRoomId);
+        ChatRoomDetailResponseDto responseDto = chatRoomService.getChatRoom(userDetails.getUsername(), chatRoomId, page, size);
         return ResponseDto.success("채팅방 상세 조회 기능", responseDto);
     }
 }

@@ -14,6 +14,9 @@ import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,11 +75,13 @@ public class ChatRoomService {
     }
 
     // 채팅방 전체 목록 조회
-    public List<ChatRoomReadResponseDto> getChatRoomList(String email) {
+    public List<ChatRoomReadResponseDto> getChatRoomList(String email, int page, int size) {
         Member member = findMemberByEmail(email);
 
-        // 내가 판매자 or 구매자로 참가하고 있는 채팅방 목록 조회
-        List<ChatRoom> chatRooms = chatRoomRepository.findChatRoomByBuyerOrSeller(member);
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "modifiedAt");
+        Page<ChatRoom> chatRoomPage = chatRoomRepository.findChatRoomByMember(member, pageRequest);
+
+        List<ChatRoom> chatRooms = chatRoomPage.getContent();
         List<ChatRoomReadResponseDto> chatRoomList = new ArrayList<>();
 
         chatRooms.stream().forEach(chatRoom -> {
@@ -95,7 +100,7 @@ public class ChatRoomService {
     }
 
     // 채팅방 상세 조회
-    public ChatRoomDetailResponseDto getChatRoom(String email, Long chatRoomId) {
+    public ChatRoomDetailResponseDto getChatRoom(String email, Long chatRoomId, int page, int size) {
         Member member = findMemberByEmail(email);
 
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(() -> {
@@ -105,7 +110,9 @@ public class ChatRoomService {
         String senderProfileImage = member.getProfileUrl();
         Member toMember = resolveToMember(chatRoom, member.getEmail());
 
-        List<ChatReadResponseDto> chatResponseList = chatRepository.findByChatRoomOrderByIdDesc(chatRoom)
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
+
+        List<ChatReadResponseDto> chatResponseList = chatRepository.findByChatRoom(chatRoom, pageRequest)
                 .stream()
                 .map(ChatReadResponseDto::new)
                 .toList();
