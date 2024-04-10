@@ -1,24 +1,32 @@
 package com.hanghae.theham.domain.rental.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class RentalResponseDto {
 
+    @NoArgsConstructor
     @Getter
     public static class RentalCreateResponseDto {
 
-        private final Long id;
-        private final String title;
-        private final String content;
+        private Long id;
+        private String title;
+        private String content;
 
+        @JsonSerialize(using = LocalDateTimeSerializer.class)
+        @JsonDeserialize(using = LocalDateTimeDeserializer.class)
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
-        private final LocalDateTime createdAt;
+        private LocalDateTime createdAt;
 
         public RentalCreateResponseDto(Rental rental) {
             this.id = rental.getId();
@@ -28,21 +36,22 @@ public class RentalResponseDto {
         }
     }
 
+    @NoArgsConstructor
     @Getter
     public static class RentalReadResponseDto {
 
-        private final Long rentalId;
-        private final String nickname;
-        private final String profileUrl;
-        private final String category;
-        private final String title;
-        private final String content;
-        private final long rentalFee;
-        private final long deposit;
-        private final double latitude;
-        private final double longitude;
-        private final String district;
-        private final List<RentalImageReadResponseDto> rentalImageList;
+        private Long rentalId;
+        private String nickname;
+        private String profileUrl;
+        private String category;
+        private String title;
+        private String content;
+        private long rentalFee;
+        private long deposit;
+        private double latitude;
+        private double longitude;
+        private String district;
+        private List<RentalImageReadResponseDto> rentalImageList;
 
         public RentalReadResponseDto(Rental rental, List<RentalImageReadResponseDto> rentalImageList) {
             this.rentalId = rental.getId();
@@ -60,23 +69,26 @@ public class RentalResponseDto {
         }
     }
 
+    @NoArgsConstructor
     @Getter
     public static class RentalCategoryReadResponseDto {
 
-        private final Long rentalId;
-        private final String nickname;
-        private final String profileUrl;
-        private final String title;
-        private final String content;
-        private final long rentalFee;
-        private final long deposit;
-        private final double latitude;
-        private final double longitude;
-        private final String firstThumbnailUrl;
-        private final String district;
+        private Long rentalId;
+        private String nickname;
+        private String profileUrl;
+        private String title;
+        private String content;
+        private long rentalFee;
+        private long deposit;
+        private double latitude;
+        private double longitude;
+        private String firstThumbnailUrl;
+        private String district;
 
+        @JsonSerialize(using = LocalDateTimeSerializer.class)
+        @JsonDeserialize(using = LocalDateTimeDeserializer.class)
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
-        private final LocalDateTime createdAt;
+        private LocalDateTime createdAt;
 
         public RentalCategoryReadResponseDto(Rental rental, String firstThumbnailUrl) {
             this.rentalId = rental.getId();
@@ -94,16 +106,17 @@ public class RentalResponseDto {
         }
     }
 
+    @NoArgsConstructor
     @Getter
     public static class RentalMyReadResponseDto {
 
-        private final Long rentalId;
-        private final String profileUrl;
-        private final String title;
-        private final String content;
-        private final long rentalFee;
-        private final long deposit;
-        private final String firstThumbnailUrl;
+        private Long rentalId;
+        private String profileUrl;
+        private String title;
+        private String content;
+        private long rentalFee;
+        private long deposit;
+        private String firstThumbnailUrl;
 
         public RentalMyReadResponseDto(Rental rental, String firstThumbnailUrl) {
             this.rentalId = rental.getId();
@@ -116,14 +129,15 @@ public class RentalResponseDto {
         }
     }
 
+    @NoArgsConstructor
     @Getter
     public static class RentalUpdateResponseDto {
 
-        private final String category;
-        private final String title;
-        private final String content;
-        private final long rentalFee;
-        private final long deposit;
+        private String category;
+        private String title;
+        private String content;
+        private long rentalFee;
+        private long deposit;
 
         public RentalUpdateResponseDto(Rental rental) {
             this.category = rental.getCategory().getValue();

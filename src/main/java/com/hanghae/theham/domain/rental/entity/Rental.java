@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -15,6 +16,7 @@ import org.hibernate.annotations.Where;
 @Getter
 @Entity
 @Table(name = "rental_tbl")
+@DynamicUpdate
 @SQLDelete(sql = "UPDATE rental_tbl SET is_deleted = true WHERE id = ?")
 @Where(clause = "is_deleted = false")
 public class Rental extends Timestamped {
@@ -69,11 +71,14 @@ public class Rental extends Timestamped {
         this.member = member;
     }
 
-    public void update(String title, CategoryType category, String content, Long rentalFee, Long deposit) {
+    public void update(String title, CategoryType category, String content, Long rentalFee, Long deposit, double latitude, double longitude, String district) {
         this.title = title;
         this.category = category;
         this.content = content;
         this.rentalFee = rentalFee;
         this.deposit = deposit;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.district = district;
     }
 }

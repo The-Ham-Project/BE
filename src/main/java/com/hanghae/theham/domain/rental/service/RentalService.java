@@ -24,6 +24,8 @@ import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -113,6 +115,7 @@ public class RentalService {
         return new RentalCreateResponseDto(rental);
     }
 
+    @Cacheable(value = "Rentals", key = "#rentalId", cacheManager = "redisCacheManager")
     public RentalReadResponseDto readRental(Long rentalId) {
         Rental rental = validateRental(rentalId);
 
@@ -181,6 +184,7 @@ public class RentalService {
         return responseDtoList;
     }
 
+    @CacheEvict(value = "Rentals", key = "#rentalId", cacheManager = "redisCacheManager")
     @Transactional
     public RentalUpdateResponseDto updateRental(String email, Long rentalId, RentalUpdateRequestDto requestDto, List<MultipartFile> multipartFileList) {
         Member member = validateMember(email);
@@ -213,11 +217,15 @@ public class RentalService {
                 requestDto.getCategory(),
                 requestDto.getContent(),
                 requestDto.getRentalFee(),
-                requestDto.getDeposit()
+                requestDto.getDeposit(),
+                rental.getLatitude(),
+                rental.getLongitude(),
+                rental.getDistrict()
         );
         return new RentalUpdateResponseDto(rental);
     }
 
+    @CacheEvict(value = "Rentals", key = "#rentalId", cacheManager = "redisCacheManager")
     @Transactional
     public void deleteRental(String email, Long rentalId) {
         Member member = validateMember(email);
