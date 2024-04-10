@@ -41,6 +41,7 @@ public class RentalResponseDto {
         private final long deposit;
         private final double latitude;
         private final double longitude;
+        private final String district;
         private final List<RentalImageReadResponseDto> rentalImageList;
 
         public RentalReadResponseDto(Rental rental, List<RentalImageReadResponseDto> rentalImageList) {
@@ -54,6 +55,7 @@ public class RentalResponseDto {
             this.deposit = rental.getDeposit();
             this.latitude = rental.getMember().getLatitude();
             this.longitude = rental.getMember().getLongitude();
+            this.district = rental.getDistrict();
             this.rentalImageList = rentalImageList;
         }
     }
