@@ -15,7 +15,7 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
 
     Page<Rental> findAllByCategory(CategoryType category, Pageable pageable);
 
-    Page<Rental> findByMemberOrderByCreatedAt(Member member, Pageable pageable);
+    Page<Rental> findByMember(Member member, Pageable pageable);
 
     @Modifying
     @Query(value = "DELETE FROM rental_tbl WHERE id = :id", nativeQuery = true)
