@@ -6,15 +6,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.TestPropertySource;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 
+@AutoConfigureTestDatabase(replace = Replace.NONE)
 @DataJpaTest
-@TestPropertySource(locations = "classpath:application-test.yml")
 class MemberRepositoryTest {
 
     @Autowired
@@ -25,7 +26,7 @@ class MemberRepositoryTest {
         Member kakao = Member.builder()
                 .email("kakao@test.com")
                 .password("1234")
-                .nickname("더함이001")
+                .nickname("더함이9900")
                 .profileUrl("url")
                 .role(RoleType.ROLE_USER)
                 .latitude(12.123)
@@ -36,7 +37,7 @@ class MemberRepositoryTest {
         Member naver = Member.builder()
                 .email("naver@test.com")
                 .password("1234")
-                .nickname("더함이002")
+                .nickname("더함이9901")
                 .profileUrl("url")
                 .role(RoleType.ROLE_USER)
                 .latitude(12.123)
@@ -47,7 +48,7 @@ class MemberRepositoryTest {
         Member google = Member.builder()
                 .email("google@test.com")
                 .password("1234")
-                .nickname("더함이003")
+                .nickname("더함이9902")
                 .profileUrl("url")
                 .role(RoleType.ROLE_USER)
                 .latitude(12.123)
@@ -71,7 +72,7 @@ class MemberRepositoryTest {
     @DisplayName("성공 - 닉네임으로 회원 찾기 기능")
     @Test
     void findByNickname_01() {
-        Optional<Member> member = memberRepository.findByNickname("더함이001");
+        Optional<Member> member = memberRepository.findByNickname("더함이9900");
         assertThat(member).isPresent();
         assertThat(member.get().getEmail()).isEqualTo("kakao@test.com");
     }
@@ -104,6 +105,6 @@ class MemberRepositoryTest {
     @Test
     void findMaxNicknameSequence_01() {
         Integer maxSequence = memberRepository.findMaxNicknameSequence();
-        assertThat(maxSequence).isEqualTo(3);
+        assertThat(maxSequence).isEqualTo(9902);
     }
 }
