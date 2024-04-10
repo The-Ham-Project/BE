@@ -167,7 +167,7 @@ public class RentalService {
         Member member = validateMember(email);
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
-        Page<Rental> rentalPage = rentalRepository.findByMemberOrderByCreatedAt(member, pageRequest);
+        Page<Rental> rentalPage = rentalRepository.findByMember(member, pageRequest);
 
         List<RentalMyReadResponseDto> responseDtoList = new ArrayList<>();
         for (Rental rental : rentalPage) {

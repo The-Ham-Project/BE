@@ -8,6 +8,7 @@ import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalCreateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalRequestDto.RentalUpdateRequestDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalCreateResponseDto;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalMyReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
 import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalUpdateResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
@@ -25,6 +26,9 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -32,10 +36,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -406,5 +407,83 @@ class RentalServiceTest {
         );
 
         assertEquals(ErrorCode.NOT_FOUND_RENTAL.getMessage(), exception.getMessage());
+    }
+
+    @DisplayName("성공 - 함께쓰기 마이페이지 내가 쓴 글 조회, 이미지 X")
+    @Test
+    void readRentalMyList_01() {
+        // given
+        int page = 1;
+        int size = 6;
+
+        Member member = Member.builder()
+                .email("test@test.com")
+                .build();
+
+        Rental rental1 = Rental.builder()
+                .title("제목1")
+                .member(member)
+                .build();
+
+        Rental rental2 = Rental.builder()
+                .title("제목2")
+                .member(member)
+                .build();
+
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
+        PageImpl<Rental> rentalPage = new PageImpl<>(Arrays.asList(rental1, rental2));
+
+        // when
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
+        when(rentalRepository.findByMember(member, pageRequest)).thenReturn(rentalPage);
+
+        List<RentalMyReadResponseDto> responseDtoList = rentalService.readRentalMyList(member.getEmail(), page, size);
+
+        // then
+        assertEquals(2, responseDtoList.size());
+        assertEquals("제목1", responseDtoList.get(0).getTitle());
+        assertEquals("제목2", responseDtoList.get(1).getTitle());
+    }
+
+    @DisplayName("성공 - 함께쓰기 마이페이지 내가 쓴 글 조회, 이미지 O")
+    @Test
+    void readRentalMyList_02() {
+        // given
+        int page = 1;
+        int size = 6;
+
+        Member member = Member.builder()
+                .email("test@test.com")
+                .build();
+
+        Rental rental = Rental.builder()
+                .title("제목1")
+                .member(member)
+                .build();
+
+        RentalImage rentalImage1 = RentalImage.builder()
+                .rental(rental)
+                .imageUrl("이미지1")
+                .build();
+
+        RentalImage rentalImage2 = RentalImage.builder()
+                .rental(rental)
+                .imageUrl("이미지2")
+                .build();
+
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
+        PageImpl<Rental> rentalPage = new PageImpl<>(Collections.singletonList(rental));
+
+        // when
+        when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
+        when(rentalRepository.findByMember(member, pageRequest)).thenReturn(rentalPage);
+        when(rentalImageRepository.findAllByRental(rental)).thenReturn(Arrays.asList(rentalImage1, rentalImage2));
+
+        List<RentalMyReadResponseDto> responseDtoList = rentalService.readRentalMyList(member.getEmail(), page, size);
+
+        // then
+        assertEquals(1, responseDtoList.size());
+        assertEquals("제목1", responseDtoList.get(0).getTitle());
+        assertEquals("이미지1", responseDtoList.get(0).getFirstThumbnailUrl());
     }
 }
