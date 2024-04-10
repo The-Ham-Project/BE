@@ -90,6 +90,9 @@ public class RentalService {
         if (member.getLatitude() == 0.0 || member.getLongitude() == 0.0) {
             throw new BadRequestException(ErrorCode.INVALID_MEMBER_POSITION.getMessage());
         }
+        if (requestDto.getCategory() == CategoryType.ALL) {
+            throw new BadRequestException(ErrorCode.INVALID_RENTAL_CATEGORY.getMessage());
+        }
 
         // 카카오 지도 API로 지역구 불러오기
         String district = getDistrictFromKakaoAPI(member.getLatitude(), member.getLongitude());

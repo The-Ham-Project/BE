@@ -22,6 +22,7 @@ public enum ErrorCode {
     ALREADY_EXIST_RENTAL_LIKE("이미 등록된 좋아요입니다."),
     NOT_FOUND_LIKE_ID("찾을 수 없는 좋아요 번호입니다."),
     INVALID_MEMBER_POSITION("회원 위치 좌표가 올바르지 않습니다."),
+    INVALID_RENTAL_CATEGORY("카테고리가 올바르지 않습니다."),
 
     // chat
     CHAT_ROOM_ALREADY_EXISTS("채팅방이 이미 존재합니다."),
