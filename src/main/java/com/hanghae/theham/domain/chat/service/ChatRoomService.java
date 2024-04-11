@@ -3,7 +3,9 @@ package com.hanghae.theham.domain.chat.service;
 import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatReadResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomRequestDto.ChatRoomCreateRequestDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomDetailResponseDto;
+import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomListResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomReadResponseDto;
+import com.hanghae.theham.domain.chat.entity.Chat;
 import com.hanghae.theham.domain.chat.entity.ChatRoom;
 import com.hanghae.theham.domain.chat.repository.ChatRepository;
 import com.hanghae.theham.domain.chat.repository.ChatRoomRepository;
@@ -75,19 +77,19 @@ public class ChatRoomService {
     }
 
     // 채팅방 전체 목록 조회
-    public List<ChatRoomReadResponseDto> getChatRoomList(String email, int page, int size) {
+    public ChatRoomReadResponseDto getChatRoomList(String email, int page, int size) {
         Member member = findMemberByEmail(email);
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "modifiedAt");
         Page<ChatRoom> chatRoomPage = chatRoomRepository.findChatRoomByMember(member, pageRequest);
 
         List<ChatRoom> chatRooms = chatRoomPage.getContent();
-        List<ChatRoomReadResponseDto> chatRoomList = new ArrayList<>();
+        List<ChatRoomListResponseDto> chatRoomList = new ArrayList<>();
 
         chatRooms.stream().forEach(chatRoom -> {
             // member를 채팅 상대 정보로 변경
             Member toMember = resolveToMember(chatRoom, member.getEmail());
-            chatRoomList.add(new ChatRoomReadResponseDto(
+            chatRoomList.add(new ChatRoomListResponseDto(
                     chatRoom.getId(),
                     toMember.getId(),
                     toMember.getNickname(),
@@ -96,7 +98,7 @@ public class ChatRoomService {
                     chatRoom.getModifiedAt()
             ));
         });
-        return chatRoomList;
+        return new ChatRoomReadResponseDto(chatRoomPage.getTotalPages(), chatRoomPage.getNumber() + 1, chatRoomList);
     }
 
     // 채팅방 상세 조회
@@ -112,12 +114,15 @@ public class ChatRoomService {
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
 
-        List<ChatReadResponseDto> chatResponseList = chatRepository.findByChatRoom(chatRoom, pageRequest)
+        Page<Chat> chatPage = chatRepository.findByChatRoom(chatRoom, pageRequest);
+        List<ChatReadResponseDto> chatResponseList = chatPage.getContent()
                 .stream()
                 .map(ChatReadResponseDto::new)
                 .toList();
 
         return new ChatRoomDetailResponseDto(
+                chatPage.getTotalPages(),
+                chatPage.getNumber() + 1,
                 toMember.getNickname(),
                 toMember.getProfileUrl(),
                 senderProfileImage,
