@@ -2,11 +2,10 @@ package com.hanghae.theham.domain.chat.repository;
 
 import com.hanghae.theham.domain.chat.entity.Chat;
 import com.hanghae.theham.domain.chat.entity.ChatRoom;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-
 public interface ChatRepository extends JpaRepository<Chat, Long> {
-    List<Chat> findByChatRoom(ChatRoom chatRoom, PageRequest pageRequest);
+    Page<Chat> findByChatRoom(ChatRoom chatRoom, PageRequest pageRequest);
 }

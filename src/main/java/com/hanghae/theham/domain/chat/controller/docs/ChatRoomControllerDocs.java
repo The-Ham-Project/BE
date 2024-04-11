@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
-
 @Tag(name = "chat-rooms", description = "채팅방 관련 API")
 public interface ChatRoomControllerDocs {
 
@@ -25,7 +23,7 @@ public interface ChatRoomControllerDocs {
     );
 
     @Operation(summary = "나의 채팅방 목록 조회 기능", description = "나의 채팅방을 목록을 조회 할 수 있는 API")
-    ResponseDto<List<ChatRoomReadResponseDto>> getChatRoomList(
+    ResponseDto<ChatRoomReadResponseDto> getChatRoomList(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10", required = false) int size

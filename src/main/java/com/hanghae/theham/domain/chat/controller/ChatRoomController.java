@@ -13,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Slf4j(topic = "ChatController")
 @RequestMapping("/api/v1")
 @RestController
@@ -37,13 +35,13 @@ public class ChatRoomController implements ChatRoomControllerDocs {
     }
 
     @GetMapping("/chat-rooms")
-    public ResponseDto<List<ChatRoomReadResponseDto>> getChatRoomList(
+    public ResponseDto<ChatRoomReadResponseDto> getChatRoomList(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10", required = false) int size
     ) {
-        List<ChatRoomReadResponseDto> responseDtoList = chatRoomService.getChatRoomList(userDetails.getUsername(), page, size);
-        return ResponseDto.success("회원 자신의 채팅방 목록 조회 기능", responseDtoList);
+        ChatRoomReadResponseDto responseDto = chatRoomService.getChatRoomList(userDetails.getUsername(), page, size);
+        return ResponseDto.success("회원 자신의 채팅방 목록 조회 기능", responseDto);
     }
 
     @GetMapping("/chat-rooms/{chatRoomId}")

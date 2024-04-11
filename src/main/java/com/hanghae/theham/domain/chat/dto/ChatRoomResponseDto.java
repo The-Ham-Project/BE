@@ -11,15 +11,21 @@ public class ChatRoomResponseDto {
 
     @Getter
     public static class ChatRoomDetailResponseDto {
+        private final int totalPage;
+        private final int currentPage;
         private final String toUserNickname; // 상대방 식별
         private final String toUserProfileImage; // 상대방 이미지
         private final String senderProfileImage; // sender 이미지
         private final List<ChatReadResponseDto> chatReadResponseDtoList;
 
-        public ChatRoomDetailResponseDto(String toUserNickname,
+        public ChatRoomDetailResponseDto(int totalPage,
+                                         int currentPage,
+                                         String toUserNickname,
                                          String toUserProfileImage,
                                          String senderProfileImage,
                                          List<ChatReadResponseDto> chatReadResponseDtoList) {
+            this.totalPage = totalPage;
+            this.currentPage = currentPage;
             this.toUserNickname = toUserNickname;
             this.toUserProfileImage = toUserProfileImage;
             this.senderProfileImage = senderProfileImage;
@@ -29,6 +35,19 @@ public class ChatRoomResponseDto {
 
     @Getter
     public static class ChatRoomReadResponseDto {
+        private final int totalPage;
+        private final int currentPage;
+        private final List<ChatRoomListResponseDto> ChatRoomListResponseDto;
+
+        public ChatRoomReadResponseDto(int totalPage, int currentPage, List<ChatRoomListResponseDto> chatRoomListResponseDto) {
+            this.totalPage = totalPage;
+            this.currentPage = currentPage;
+            ChatRoomListResponseDto = chatRoomListResponseDto;
+        }
+    }
+
+    @Getter
+    public static class ChatRoomListResponseDto {
         private final Long chatRoomId;
         private final Long toMemberId;
         private final String toMemberNickName;
@@ -37,7 +56,7 @@ public class ChatRoomResponseDto {
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private final LocalDateTime lastMessageTime;
 
-        public ChatRoomReadResponseDto(Long chatRoomId,
+        public ChatRoomListResponseDto(Long chatRoomId,
                                        Long toMemberId,
                                        String toMemberNickName,
                                        String toMemberProfileUrl,
