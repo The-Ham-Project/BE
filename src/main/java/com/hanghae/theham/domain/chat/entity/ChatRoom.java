@@ -8,11 +8,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.hibernate.annotations.Comment;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,45 +17,68 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name = "chat_room_tbl")
-@EntityListeners(AuditingEntityListener.class)
-public class ChatRoom {
+//@EntityListeners(AuditingEntityListener.class)
+public class ChatRoom extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Comment("채팅방 생성시 최초의 메시지 발신자, 채팅하기를 시작하는 사람")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id")
-    private Member seller;
+    private Member sender;
 
+    @Column
+    private int senderUnreadCount;
+
+    @Column
+    private Boolean senderIsDeleted = Boolean.FALSE;
+
+    @Comment("채팅방 생성시 최초의 메시지 수신자, 함께쓰기 게시글 작성자")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "buyer_id")
-    private Member buyer;
+    private Member receiver;
+
+    @Column
+    private int receiverUnreadCount;
+
+    @Column
+    private Boolean receiverIsDeleted = Boolean.FALSE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Rental rental;
 
-    @Column(name="last_chat")
+    @Column(name = "last_chat")
     private String lastChat;
-
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(insertable = false)
-    private LocalDateTime modifiedAt;
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.REMOVE)
     private List<Chat> chatList = new ArrayList<>();
 
     @Builder
-    public ChatRoom(Member seller, Member buyer, Rental rental) {
-        this.seller = seller;
-        this.buyer = buyer;
+    public ChatRoom(Member sender, Member receiver, Rental rental) {
+        this.sender = sender;
+        this.receiver = receiver;
         this.rental = rental;
     }
 
     public void updateLastChat(String message) {
         this.lastChat = message;
-        this.modifiedAt = LocalDateTime.now();
+    }
+
+    public void updateChatRoom(Boolean isSender) {
+        if (isSender) {
+            this.senderUnreadCount = 0;
+            return;
+        }
+        this.receiverUnreadCount = 0;
+    }
+
+    public void updateChatRoom(Boolean isSender, String lastChat) {
+        this.lastChat = lastChat;
+        if (isSender) {
+            this.senderUnreadCount = 0;
+            this.receiverUnreadCount += 1;
+            return;
+        }
+        this.receiverUnreadCount = 0;
+        this.senderUnreadCount += 1;
     }
 }
