@@ -48,29 +48,29 @@ public class ChatRoomService {
         Rental rental = findRentalById(requestDto.getRentalId());
 
         // 채팅 요청한 member
-        Member buyer = findMemberByEmail(email);
+        Member sender = findMemberByEmail(email);
 
         // 채팅 요청 받은 member
-        Member seller = memberRepository.findByNickname(requestDto.getSellerNickname()).orElseThrow(() -> {
+        Member receiver = memberRepository.findByNickname(requestDto.getSellerNickname()).orElseThrow(() -> {
             log.error("회원 정보를 찾을 수 없습니다. nickname: {}", requestDto.getSellerNickname());
             return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
         });
 
-        if (buyer == seller || rental.getMember() == buyer) {
+        if (sender.equals(receiver) || rental.getMember().equals(sender)) {
             throw new BadRequestException(ErrorCode.CANNOT_CHAT_WITH_SELF.getMessage());
         }
 
-        Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findChatRoomByBuyerAndRental(buyer, rental);
+        Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findChatRoomBySenderAndRental(sender, rental);
 
         return optionalChatRoom.orElseGet(()
-                -> createChatRoom(buyer, seller, rental)).getId();
+                -> createChatRoom(sender, receiver, rental)).getId();
     }
 
     @Transactional
-    public ChatRoom createChatRoom(Member buyer, Member seller, Rental rental) {
+    public ChatRoom createChatRoom(Member sender, Member receiver, Rental rental) {
         ChatRoom newRoom = ChatRoom.builder()
-                .buyer(buyer)
-                .seller(seller)
+                .sender(sender)
+                .receiver(receiver)
                 .rental(rental)
                 .build();
         return chatRoomRepository.save(newRoom);
@@ -87,14 +87,25 @@ public class ChatRoomService {
         List<ChatRoomListResponseDto> chatRoomList = new ArrayList<>();
 
         chatRooms.stream().forEach(chatRoom -> {
-            // member를 채팅 상대 정보로 변경
-            Member toMember = resolveToMember(chatRoom, member.getEmail());
+
+            Member toMember;
+            int unreadCount;
+
+            if (chatRoom.getSender().equals(member)) {
+                toMember = chatRoom.getReceiver();
+                unreadCount = chatRoom.getReceiverUnreadCount();
+            } else {
+                toMember = chatRoom.getSender();
+                unreadCount = chatRoom.getSenderUnreadCount();
+            }
+
             chatRoomList.add(new ChatRoomListResponseDto(
                     chatRoom.getId(),
                     toMember.getId(),
                     toMember.getNickname(),
                     toMember.getProfileUrl(),
                     chatRoom.getLastChat(),
+                    unreadCount,
                     chatRoom.getModifiedAt()
             ));
         });
@@ -103,15 +114,31 @@ public class ChatRoomService {
 
     // 채팅방 상세 조회
     public ChatRoomDetailResponseDto getChatRoom(String email, Long chatRoomId, int page, int size) {
-        Member member = findMemberByEmail(email);
 
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(() -> {
             log.error("채팅방 정보를 찾을 수 없습니다. 채팅방 ID: {}", chatRoomId);
             return new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage());
         });
-        String senderProfileImage = member.getProfileUrl();
-        Member toMember = resolveToMember(chatRoom, member.getEmail());
+        Member member = findMemberByEmail(email); // 현재 접속한 멤버
+        Member sender = chatRoom.getSender(); // 채팅방 최초 발신자
+        Member receiver = chatRoom.getReceiver(); // 채팅방 최초 수신자
 
+        // 발신자가 최초 발신자와 동일한지 확인
+        boolean isSender = chatRoom.getSender().equals(member);
+
+        // 이전 메시지 읽음 처리
+        readPreviousMessages(chatRoom, isSender, sender, receiver).forEach(Chat::updateIsRead);
+
+        // 채팅방 업데이트
+        chatRoom.updateChatRoom(isSender);
+
+        // 발신자 수신자 프로필 이미지
+        String senderProfileImage = member.getProfileUrl();
+
+        // 대화 상대자 정보 가져오기
+        Member toMember = isSender ? receiver : sender;
+
+        // 채팅 메시지 가져오기
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
 
         Page<Chat> chatPage = chatRepository.findByChatRoom(chatRoom, pageRequest);
@@ -129,19 +156,15 @@ public class ChatRoomService {
                 chatResponseList);
     }
 
-    /***
-     *
-     * @param chatRoom  현재 채팅방 정보
-     * @param fromEmail 조회하는 유저 이메일
-     * @return
-     *  채팅방 seller 정보와 현재 email 정보가 일치?
-     *  true : member = Buyer
-     *  false : member = seller
-     */
-    private Member resolveToMember(ChatRoom chatRoom, String fromEmail) {
-        return chatRoom.getSeller().getEmail().equals(fromEmail) ?
-                chatRoom.getBuyer() :
-                chatRoom.getSeller();
+    public List<Chat> readPreviousMessages(ChatRoom chatRoom, boolean isSender, Member sender, Member receiver) {
+        if (isSender) {
+            // 현재 사용자가 발신자인 경우, 수신자(receiver)가 보낸 읽지 않은 메시지를 가져온다.
+            List<Chat> unreadChatList = chatRepository.findByChatRoomAndSenderAndIsRead(chatRoom, receiver, false);
+            return unreadChatList;
+        }
+        // 현재 사용자가 수신자인 경우, 발신자(sender)가 보낸 읽지 않은 메시지를 가져온다.
+        List<Chat> unreadChatList = chatRepository.findByChatRoomAndSenderAndIsRead(chatRoom, sender, false);
+        return unreadChatList;
     }
 
     private Member findMemberByEmail(String email) {
