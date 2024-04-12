@@ -13,6 +13,7 @@ public class ChatResponseDto {
         private final Long chatId;
         private final String sender;
         private final String message;
+        private final boolean isRead;
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private final LocalDateTime createdAt;
 
@@ -20,6 +21,7 @@ public class ChatResponseDto {
             this.chatId = chat.getId();
             this.message = chat.getMessage();
             this.sender = chat.getSender().getNickname();
+            this.isRead = chat.isRead();
             this.createdAt = chat.getCreatedAt();
         }
     }

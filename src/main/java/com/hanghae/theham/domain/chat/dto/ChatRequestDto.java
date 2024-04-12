@@ -14,11 +14,13 @@ public class ChatRequestDto {
         @Schema(description = "채팅 메세지 내용", example = "안녕하세요? 함께쓰기 문의합니다")
         private String message;
 
-        public Chat toEntity(ChatRoom chatRoom, Member sender) {
+        public Chat toEntity(ChatRoom chatRoom, Member sender, int currentMemberCount) {
+            boolean isRead = currentMemberCount == 2;
             return Chat.builder()
                     .chatRoom(chatRoom)
                     .sender(sender)
                     .message(message)
+                    .isRead(isRead)
                     .build();
         }
     }

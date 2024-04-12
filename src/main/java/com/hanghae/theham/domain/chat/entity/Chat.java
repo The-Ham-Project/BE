@@ -1,5 +1,6 @@
 package com.hanghae.theham.domain.chat.entity;
 
+import com.hanghae.theham.domain.chat.entity.type.VisibleType;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.global.entity.Timestamped;
 import jakarta.persistence.*;
@@ -32,11 +33,19 @@ public class Chat extends Timestamped {
     @Column(name = "is_read")
     private boolean isRead = Boolean.FALSE;
 
+    @Enumerated(EnumType.STRING)
+    @Column
+    private VisibleType visible = VisibleType.BOTH;
+
     @Builder
     public Chat(String message, ChatRoom chatRoom, Member sender, boolean isRead) {
         this.message = message;
         this.chatRoom = chatRoom;
         this.sender = sender;
         this.isRead = isRead;
+    }
+
+    public void updateIsRead() {
+        this.isRead = true;
     }
 }

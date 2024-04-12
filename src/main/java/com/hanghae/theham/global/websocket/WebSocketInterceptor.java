@@ -24,10 +24,12 @@ import org.springframework.util.StringUtils;
 public class WebSocketInterceptor implements ChannelInterceptor {
     private final TokenProvider tokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
+    private final ChatRoomParticipantManager chatRoomParticipantManager;
 
-    public WebSocketInterceptor(TokenProvider tokenProvider, UserDetailsServiceImpl userDetailsService) {
+    public WebSocketInterceptor(TokenProvider tokenProvider, UserDetailsServiceImpl userDetailsService, ChatRoomParticipantManager chatRoomParticipantManager) {
         this.tokenProvider = tokenProvider;
         this.userDetailsService = userDetailsService;
+        this.chatRoomParticipantManager = chatRoomParticipantManager;
     }
 
     @SneakyThrows
