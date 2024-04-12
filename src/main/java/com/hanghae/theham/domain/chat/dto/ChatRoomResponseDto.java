@@ -53,6 +53,7 @@ public class ChatRoomResponseDto {
         private final String toMemberNickName;
         private final String toMemberProfileUrl;
         private final String lastMessage;
+        private final int unreadCount;
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private final LocalDateTime lastMessageTime;
 
@@ -61,12 +62,14 @@ public class ChatRoomResponseDto {
                                        String toMemberNickName,
                                        String toMemberProfileUrl,
                                        String lastMessage,
+                                       int unreadCount,
                                        LocalDateTime modifiedAt) {
             this.chatRoomId = chatRoomId;
             this.toMemberId = toMemberId;
             this.toMemberNickName = toMemberNickName;
             this.toMemberProfileUrl = toMemberProfileUrl;
             this.lastMessage = lastMessage;
+            this.unreadCount = unreadCount;
             this.lastMessageTime = modifiedAt;
         }
     }
