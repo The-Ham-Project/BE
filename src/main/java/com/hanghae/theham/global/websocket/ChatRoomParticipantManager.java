@@ -12,15 +12,15 @@ public class ChatRoomParticipantManager { // 채팅방 참가자 수 관리
     private final Map<Long, Set<String>> roomMemberCount = new ConcurrentHashMap<>();
 
     // 채팅방에 사용자가 접속할 때 호출
-    public void addMemberToRoom(Long roomId, String sessionId) {
-        roomMemberCount.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(sessionId);
+    public void addMemberToRoom(Long roomId, String email) {// 0~2< 3++++ 유저 정보를 넣으면 되지 않을까?
+        roomMemberCount.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(email);
     }
 
     // 채팅방에서 사용자가 나갈 때 호출
-    public void removeMemberFromRoom(Long roomId, String sessionId) {
+    public void removeMemberFromRoom(Long roomId, String email) {
         Set<String> Members = roomMemberCount.get(roomId);
         if (Members != null) {
-            Members.remove(sessionId);
+            Members.remove(email);
             if (Members.isEmpty()) {
                 roomMemberCount.remove(roomId);
             }
