@@ -67,16 +67,6 @@ public class WebSocketInterceptor implements ChannelInterceptor {
             // accessor에 등록
             accessor.setUser(authentication);
         }
-        if (accessor.getCommand() == StompCommand.SUBSCRIBE) { // 채팅룸 구독요청
-            // header에서 구독 정보 얻기, roomid 추출
-            if (accessor.getDestination() != null) {
-                Long chatRoomId = Long.valueOf(accessor.getFirstNativeHeader("chatRoomId"));
-                chatRoomParticipantManager.increaseMemberCount(chatRoomId);
-            }
-        }
-        if (accessor.getCommand() == StompCommand.DISCONNECT) { // 채팅룸에서 사용자가 나감
-//            Long chatRoomId = Long.valueOf(accessor.getFirstNativeHeader("chatRoomId"));
-        }
         return message;
     }
 }

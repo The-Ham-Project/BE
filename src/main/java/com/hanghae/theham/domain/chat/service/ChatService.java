@@ -41,7 +41,7 @@ public class ChatService {
                 );
         boolean isSender = chatRoom.getSender().equals(sender);
 
-        int currentMemberCount = chatRoomParticipantManager.getCurrentMemberCount(roomId);
+        int currentMemberCount = chatRoomParticipantManager.getMemberCountInRoom(roomId);
 
         // 메세지 발송 처리
         Chat chat = chatRepository.save(requestDto.toEntity(chatRoom, sender, currentMemberCount));
