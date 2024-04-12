@@ -113,6 +113,7 @@ public class ChatRoomService {
     }
 
     // 채팅방 상세 조회
+    @Transactional
     public ChatRoomDetailResponseDto getChatRoom(String email, Long chatRoomId, int page, int size) {
 
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(() -> {

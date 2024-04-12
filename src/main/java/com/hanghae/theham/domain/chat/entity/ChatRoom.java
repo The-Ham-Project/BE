@@ -59,10 +59,6 @@ public class ChatRoom extends Timestamped {
         this.rental = rental;
     }
 
-    public void updateLastChat(String message) {
-        this.lastChat = message;
-    }
-
     public void updateChatRoom(Boolean isSender) {
         if (isSender) {
             this.senderUnreadCount = 0;
@@ -71,8 +67,14 @@ public class ChatRoom extends Timestamped {
         this.receiverUnreadCount = 0;
     }
 
-    public void updateChatRoom(Boolean isSender, String lastChat) {
+    public void updateChatRoom(Boolean isSender, String lastChat, int currentMemberCount) {
         this.lastChat = lastChat;
+
+        if (currentMemberCount == 2) {
+            this.senderUnreadCount = 0;
+            this.receiverUnreadCount = 0;
+            return;
+        }
         if (isSender) {
             this.senderUnreadCount = 0;
             this.receiverUnreadCount += 1;
