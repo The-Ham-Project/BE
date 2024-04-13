@@ -88,16 +88,9 @@ public class ChatRoomService {
 
         chatRooms.stream().forEach(chatRoom -> {
 
-            Member toMember;
-            int unreadCount;
+            Member toMember = chatRoom.getSender().equals(member) ? chatRoom.getReceiver() : chatRoom.getSender();
+            int unreadCount = chatRoom.getSender().equals(member) ? chatRoom.getSenderUnreadCount() : chatRoom.getReceiverUnreadCount();
 
-            if (chatRoom.getSender().equals(member)) {
-                toMember = chatRoom.getReceiver();
-                unreadCount = chatRoom.getReceiverUnreadCount();
-            } else {
-                toMember = chatRoom.getSender();
-                unreadCount = chatRoom.getSenderUnreadCount();
-            }
 
             chatRoomList.add(new ChatRoomListResponseDto(
                     chatRoom.getId(),
