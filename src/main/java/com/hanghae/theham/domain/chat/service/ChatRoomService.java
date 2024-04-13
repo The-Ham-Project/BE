@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -91,7 +92,6 @@ public class ChatRoomService {
             Member toMember = chatRoom.getSender().equals(member) ? chatRoom.getReceiver() : chatRoom.getSender();
             int unreadCount = chatRoom.getSender().equals(member) ? chatRoom.getSenderUnreadCount() : chatRoom.getReceiverUnreadCount();
 
-
             chatRoomList.add(new ChatRoomListResponseDto(
                     chatRoom.getId(),
                     toMember.getId(),
@@ -138,6 +138,7 @@ public class ChatRoomService {
         Page<Chat> chatPage = chatRepository.findByChatRoom(chatRoom, pageRequest);
         List<ChatReadResponseDto> chatResponseList = chatPage.getContent()
                 .stream()
+                .sorted(Comparator.comparing(Chat::getCreatedAt))
                 .map(ChatReadResponseDto::new)
                 .toList();
 
