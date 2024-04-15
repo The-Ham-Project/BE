@@ -405,7 +405,7 @@ class RentalServiceTest {
         assertEquals(ErrorCode.NOT_FOUND_RENTAL.getMessage(), exception.getMessage());
     }
 
-    @DisplayName("성공 - 함께쓰기 게시글 조회, 내가 쓴 게시글일 경우 버튼 True")
+    @DisplayName("성공 - 함께쓰기 게시글 조회, 내가 쓴 게시글일 경우 버튼 False")
     @Test
     void readRental_03() {
         // given
@@ -446,7 +446,7 @@ class RentalServiceTest {
         assertEquals(Boolean.FALSE, responseDto.getIsChatButton());
     }
 
-    @DisplayName("성공 - 함께쓰기 게시글 조회, 내가 쓴 게시글이 아닐 경우 버튼 False")
+    @DisplayName("성공 - 함께쓰기 게시글 조회, 내가 쓴 게시글이 아닐 경우 버튼 True")
     @Test
     void readRental_04() {
         // given
@@ -492,7 +492,7 @@ class RentalServiceTest {
         assertEquals(Boolean.TRUE, responseDto.getIsChatButton());
     }
 
-    @DisplayName("성공 - 함께쓰기 게시글 조회, 로그인을 안했을 경우 False")
+    @DisplayName("성공 - 함께쓰기 게시글 조회, 로그인을 안했을 경우 True")
     @Test
     void readRental_05() {
         // given
