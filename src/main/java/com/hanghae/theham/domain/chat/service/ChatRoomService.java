@@ -12,6 +12,8 @@ import com.hanghae.theham.domain.chat.repository.ChatRoomRepository;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.entity.Rental;
+import com.hanghae.theham.domain.rental.entity.RentalImage;
+import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
@@ -23,7 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,12 +37,14 @@ public class ChatRoomService {
     private final MemberRepository memberRepository;
     private final RentalRepository rentalRepository;
     private final ChatRepository chatRepository;
+    private final RentalImageRepository rentalImageRepository;
 
-    public ChatRoomService(ChatRoomRepository chatRoomRepository, MemberRepository memberRepository, RentalRepository rentalRepository, ChatRepository chatRepository) {
+    public ChatRoomService(ChatRoomRepository chatRoomRepository, MemberRepository memberRepository, RentalRepository rentalRepository, ChatRepository chatRepository, RentalImageRepository rentalImageRepository) {
         this.chatRoomRepository = chatRoomRepository;
         this.memberRepository = memberRepository;
         this.rentalRepository = rentalRepository;
         this.chatRepository = chatRepository;
+        this.rentalImageRepository = rentalImageRepository;
     }
 
     @Transactional
@@ -92,17 +96,9 @@ public class ChatRoomService {
             Member toMember = chatRoom.getSender().equals(member) ? chatRoom.getReceiver() : chatRoom.getSender();
             int unreadCount = chatRoom.getSender().equals(member) ? chatRoom.getSenderUnreadCount() : chatRoom.getReceiverUnreadCount();
 
-            chatRoomList.add(new ChatRoomListResponseDto(
-                    chatRoom.getId(),
-                    toMember.getId(),
-                    toMember.getNickname(),
-                    toMember.getProfileUrl(),
-                    chatRoom.getLastChat(),
-                    unreadCount,
-                    chatRoom.getModifiedAt()
-            ));
+            chatRoomList.add(new ChatRoomListResponseDto(chatRoom, toMember, unreadCount));
         });
-        return new ChatRoomReadResponseDto(chatRoomPage.getTotalPages(), chatRoomPage.getNumber() + 1, chatRoomList);
+        return new ChatRoomReadResponseDto(chatRoomPage, chatRoomList);
     }
 
     // 채팅방 상세 조회
@@ -126,28 +122,24 @@ public class ChatRoomService {
         // 채팅방 업데이트
         chatRoom.updateChatRoom(isSender);
 
-        // 발신자 수신자 프로필 이미지
-        String senderProfileImage = member.getProfileUrl();
-
-        // 대화 상대자 정보 가져오기
-        Member toMember = isSender ? receiver : sender;
-
         // 채팅 메시지 가져오기
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
 
         Page<Chat> chatPage = chatRepository.findByChatRoom(chatRoom, pageRequest);
-        List<ChatReadResponseDto> chatResponseList = chatPage.getContent()
-                .stream()
-                .sorted(Comparator.comparing(Chat::getCreatedAt))
-                .map(ChatReadResponseDto::new)
-                .toList();
+        List<ChatReadResponseDto> chatResponseList = new ArrayList<>(chatPage.map(ChatReadResponseDto::new).toList());
+        Collections.reverse(chatResponseList);
+
+        // rental thumnail 이미지
+        String rentalThumbnailUrl = rentalImageRepository.findFirstByRental(chatRoom.getRental())
+                .map(RentalImage::getImageUrl)
+                .orElse(null);
 
         return new ChatRoomDetailResponseDto(
-                chatPage.getTotalPages(),
-                chatPage.getNumber() + 1,
-                toMember.getNickname(),
-                toMember.getProfileUrl(),
-                senderProfileImage,
+                chatPage,
+                chatRoom.getRental(),
+                rentalThumbnailUrl,
+                isSender ? receiver : sender,
+                member,
                 chatResponseList);
     }
 

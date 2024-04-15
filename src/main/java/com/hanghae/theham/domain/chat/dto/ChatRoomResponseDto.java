@@ -2,7 +2,12 @@ package com.hanghae.theham.domain.chat.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatReadResponseDto;
+import com.hanghae.theham.domain.chat.entity.Chat;
+import com.hanghae.theham.domain.chat.entity.ChatRoom;
+import com.hanghae.theham.domain.member.entity.Member;
+import com.hanghae.theham.domain.rental.entity.Rental;
 import lombok.Getter;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,22 +18,28 @@ public class ChatRoomResponseDto {
     public static class ChatRoomDetailResponseDto {
         private final int totalPage;
         private final int currentPage;
+        private final Long rentalId;
+        private final String rentalTitle;
+        private final String rentalThumbnailUrl;
         private final String toUserNickname; // 상대방 식별
         private final String toUserProfileImage; // 상대방 이미지
         private final String senderProfileImage; // sender 이미지
         private final List<ChatReadResponseDto> chatReadResponseDtoList;
 
-        public ChatRoomDetailResponseDto(int totalPage,
-                                         int currentPage,
-                                         String toUserNickname,
-                                         String toUserProfileImage,
-                                         String senderProfileImage,
+        public ChatRoomDetailResponseDto(Page<Chat> chatPage,
+                                         Rental rental,
+                                         String rentalThumbnailUrl,
+                                         Member toMember,
+                                         Member member,
                                          List<ChatReadResponseDto> chatReadResponseDtoList) {
-            this.totalPage = totalPage;
-            this.currentPage = currentPage;
-            this.toUserNickname = toUserNickname;
-            this.toUserProfileImage = toUserProfileImage;
-            this.senderProfileImage = senderProfileImage;
+            this.totalPage = chatPage.getTotalPages();
+            this.currentPage = chatPage.getNumber() + 1;
+            this.rentalId = rental.getId();
+            this.rentalTitle = rental.getTitle();
+            this.rentalThumbnailUrl = rentalThumbnailUrl;
+            this.toUserNickname = toMember.getNickname();
+            this.toUserProfileImage = toMember.getProfileUrl();
+            this.senderProfileImage = member.getProfileUrl();
             this.chatReadResponseDtoList = chatReadResponseDtoList;
         }
     }
@@ -39,9 +50,9 @@ public class ChatRoomResponseDto {
         private final int currentPage;
         private final List<ChatRoomListResponseDto> ChatRoomListResponseDto;
 
-        public ChatRoomReadResponseDto(int totalPage, int currentPage, List<ChatRoomListResponseDto> chatRoomListResponseDto) {
-            this.totalPage = totalPage;
-            this.currentPage = currentPage;
+        public ChatRoomReadResponseDto(Page<ChatRoom> chatRoomPage, List<ChatRoomListResponseDto> chatRoomListResponseDto) {
+            this.totalPage = chatRoomPage.getTotalPages();
+            this.currentPage = chatRoomPage.getNumber() + 1;
             ChatRoomListResponseDto = chatRoomListResponseDto;
         }
     }
@@ -57,20 +68,16 @@ public class ChatRoomResponseDto {
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private final LocalDateTime lastMessageTime;
 
-        public ChatRoomListResponseDto(Long chatRoomId,
-                                       Long toMemberId,
-                                       String toMemberNickName,
-                                       String toMemberProfileUrl,
-                                       String lastMessage,
-                                       int unreadCount,
-                                       LocalDateTime modifiedAt) {
-            this.chatRoomId = chatRoomId;
-            this.toMemberId = toMemberId;
-            this.toMemberNickName = toMemberNickName;
-            this.toMemberProfileUrl = toMemberProfileUrl;
-            this.lastMessage = lastMessage;
+        public ChatRoomListResponseDto(ChatRoom chatRoom,
+                                       Member toMember,
+                                       int unreadCount) {
+            this.chatRoomId = chatRoom.getId();
+            this.toMemberId = toMember.getId();
+            this.toMemberNickName = toMember.getNickname();
+            this.toMemberProfileUrl = toMember.getProfileUrl();
+            this.lastMessage = chatRoom.getLastChat();
             this.unreadCount = unreadCount;
-            this.lastMessageTime = modifiedAt;
+            this.lastMessageTime = chatRoom.getModifiedAt();
         }
     }
 }
