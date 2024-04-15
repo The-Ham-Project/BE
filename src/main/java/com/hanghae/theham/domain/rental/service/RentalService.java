@@ -24,8 +24,6 @@ import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -115,15 +113,23 @@ public class RentalService {
         return new RentalCreateResponseDto(rental);
     }
 
-    @Cacheable(value = "Rentals", key = "#rentalId", cacheManager = "redisCacheManager")
-    public RentalReadResponseDto readRental(Long rentalId) {
+    public RentalReadResponseDto readRental(String email, Long rentalId) {
+        Boolean isChatButton = Boolean.TRUE;
+
         Rental rental = validateRental(rentalId);
+        if (email != null) {
+            Member member = memberRepository.findByEmail(email).orElse(null);
+
+            if (rental.getMember().equals(member)) {
+                isChatButton = Boolean.FALSE;
+            }
+        }
 
         List<RentalImageReadResponseDto> rentalImageReadResponseDtoList = rentalImageRepository.findAllByRental(rental).stream()
                 .map(RentalImageReadResponseDto::new)
                 .toList();
 
-        return new RentalReadResponseDto(rental, rentalImageReadResponseDtoList);
+        return new RentalReadResponseDto(rental, isChatButton, rentalImageReadResponseDtoList);
     }
 
     public List<RentalCategoryReadResponseDto> readRentalList(String email, CategoryType category, int page, int size) {
@@ -184,7 +190,6 @@ public class RentalService {
         return responseDtoList;
     }
 
-    @CacheEvict(value = "Rentals", key = "#rentalId", cacheManager = "redisCacheManager")
     @Transactional
     public RentalUpdateResponseDto updateRental(String email, Long rentalId, RentalUpdateRequestDto requestDto, List<MultipartFile> multipartFileList) {
         Member member = validateMember(email);
@@ -225,7 +230,6 @@ public class RentalService {
         return new RentalUpdateResponseDto(rental);
     }
 
-    @CacheEvict(value = "Rentals", key = "#rentalId", cacheManager = "redisCacheManager")
     @Transactional
     public void deleteRental(String email, Long rentalId) {
         Member member = validateMember(email);
