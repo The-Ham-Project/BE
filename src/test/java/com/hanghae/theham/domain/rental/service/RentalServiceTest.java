@@ -387,7 +387,7 @@ class RentalServiceTest {
         when(rentalRepository.findById(any())).thenReturn(Optional.of(rental));
         when(rentalImageRepository.findAllByRental(any(Rental.class))).thenReturn(rentalImageList);
 
-        RentalReadResponseDto responseDto = rentalService.readRental(rental.getId());
+        RentalReadResponseDto responseDto = rentalService.readRental(member.getEmail(), rental.getId());
 
         // then
         assertEquals("제목", responseDto.getTitle());
@@ -399,10 +399,137 @@ class RentalServiceTest {
     void readRental_02() {
         // when & then
         BadRequestException exception = assertThrows(BadRequestException.class, () ->
-                rentalService.readRental(99L)
+                rentalService.readRental(null, 99L)
         );
 
         assertEquals(ErrorCode.NOT_FOUND_RENTAL.getMessage(), exception.getMessage());
+    }
+
+    @DisplayName("성공 - 함께쓰기 게시글 조회, 내가 쓴 게시글일 경우 버튼 True")
+    @Test
+    void readRental_03() {
+        // given
+        Member member = Member.builder()
+                .email("test@test.com")
+                .nickname("더듬이")
+                .build();
+
+        Rental rental = Rental.builder()
+                .title("제목")
+                .category(CategoryType.BOOK)
+                .content("내용")
+                .rentalFee(1000L)
+                .deposit(2000L)
+                .member(member)
+                .build();
+
+        RentalImage rentalImage1 = RentalImage.builder()
+                .rental(rental)
+                .build();
+
+        RentalImage rentalImage2 = RentalImage.builder()
+                .rental(rental)
+                .build();
+
+        List<RentalImage> rentalImageList = Arrays.asList(rentalImage1, rentalImage2);
+
+        // when
+        when(rentalRepository.findById(any())).thenReturn(Optional.of(rental));
+        when(rentalImageRepository.findAllByRental(any(Rental.class))).thenReturn(rentalImageList);
+        when(memberRepository.findByEmail(any())).thenReturn(Optional.ofNullable(member));
+
+        RentalReadResponseDto responseDto = rentalService.readRental(member != null ? member.getEmail() : null, rental.getId());
+
+        // then
+        assertEquals("제목", responseDto.getTitle());
+        assertEquals(2, responseDto.getRentalImageList().size());
+        assertEquals(Boolean.FALSE, responseDto.getIsChatButton());
+    }
+
+    @DisplayName("성공 - 함께쓰기 게시글 조회, 내가 쓴 게시글이 아닐 경우 버튼 False")
+    @Test
+    void readRental_04() {
+        // given
+        Member member1 = Member.builder()
+                .email("test@test.com")
+                .nickname("더듬이1")
+                .build();
+
+        Member member2 = Member.builder()
+                .email("test2@test.com")
+                .nickname("더듬이2")
+                .build();
+
+        Rental rental = Rental.builder()
+                .title("제목")
+                .category(CategoryType.BOOK)
+                .content("내용")
+                .rentalFee(1000L)
+                .deposit(2000L)
+                .member(member1)
+                .build();
+
+        RentalImage rentalImage1 = RentalImage.builder()
+                .rental(rental)
+                .build();
+
+        RentalImage rentalImage2 = RentalImage.builder()
+                .rental(rental)
+                .build();
+
+        List<RentalImage> rentalImageList = Arrays.asList(rentalImage1, rentalImage2);
+
+        // when
+        when(rentalRepository.findById(any())).thenReturn(Optional.of(rental));
+        when(rentalImageRepository.findAllByRental(any(Rental.class))).thenReturn(rentalImageList);
+        when(memberRepository.findByEmail(any())).thenReturn(Optional.ofNullable(member2));
+
+        RentalReadResponseDto responseDto = rentalService.readRental(member1 != null ? member1.getEmail() : null, rental.getId());
+
+        // then
+        assertEquals("제목", responseDto.getTitle());
+        assertEquals(2, responseDto.getRentalImageList().size());
+        assertEquals(Boolean.TRUE, responseDto.getIsChatButton());
+    }
+
+    @DisplayName("성공 - 함께쓰기 게시글 조회, 로그인을 안했을 경우 False")
+    @Test
+    void readRental_05() {
+        // given
+        Member member = Member.builder()
+                .email("test@test.com")
+                .nickname("더듬이1")
+                .build();
+
+        Rental rental = Rental.builder()
+                .title("제목")
+                .category(CategoryType.BOOK)
+                .content("내용")
+                .rentalFee(1000L)
+                .deposit(2000L)
+                .member(member)
+                .build();
+
+        RentalImage rentalImage1 = RentalImage.builder()
+                .rental(rental)
+                .build();
+
+        RentalImage rentalImage2 = RentalImage.builder()
+                .rental(rental)
+                .build();
+
+        List<RentalImage> rentalImageList = Arrays.asList(rentalImage1, rentalImage2);
+
+        // when
+        when(rentalRepository.findById(any())).thenReturn(Optional.of(rental));
+        when(rentalImageRepository.findAllByRental(any(Rental.class))).thenReturn(rentalImageList);
+
+        RentalReadResponseDto responseDto = rentalService.readRental(null, rental.getId());
+
+        // then
+        assertEquals("제목", responseDto.getTitle());
+        assertEquals(2, responseDto.getRentalImageList().size());
+        assertEquals(Boolean.TRUE, responseDto.getIsChatButton());
     }
 
     @DisplayName("성공 - 함께쓰기 게시글 조회, 로그인 X, 카테고리 ALL")

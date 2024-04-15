@@ -30,6 +30,7 @@ public interface RentalControllerDocs {
 
     @Operation(summary = "함께쓰기 게시글 조회 기능", description = "함께쓰기 게시글을 조회할 수 있는 API")
     ResponseDto<RentalReadResponseDto> readRental(
+            @AuthenticationPrincipal @Nullable UserDetailsImpl userDetails,
             @PathVariable Long rentalId
     );
 
@@ -64,9 +65,9 @@ public interface RentalControllerDocs {
 
 
     @Operation(summary = "함께쓰기 검색 기능", description = "함께쓰기 검색 기능")
-    ResponseDto<List<RentalReadResponseDto>> searchRental(
-            @Nullable @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestParam(name = "searchValue") String searchValue,
+    ResponseDto<List<RentalSearchResponseDto>> searchRental(
+            @AuthenticationPrincipal @Nullable UserDetailsImpl userDetails,
+            @RequestParam(name = "keyword") String keyword,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "6", required = false) int size
     );
