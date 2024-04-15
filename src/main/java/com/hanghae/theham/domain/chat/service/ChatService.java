@@ -41,6 +41,10 @@ public class ChatService {
                 );
         boolean isSender = chatRoom.getSender().equals(sender);
 
+        if (chatRoom.getSenderIsDeleted() || chatRoom.getReceiverIsDeleted()) {
+            chatRoom.rejoinChatRoom();
+        }
+
         int currentMemberCount = chatRoomParticipantManager.getMemberCountInRoom(roomId);
 
         // 메세지 발송 처리

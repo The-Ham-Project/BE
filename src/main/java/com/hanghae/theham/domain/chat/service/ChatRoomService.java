@@ -68,8 +68,13 @@ public class ChatRoomService {
 
         Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findChatRoomBySenderAndRental(sender, rental);
 
-        return optionalChatRoom.orElseGet(()
-                -> createChatRoom(sender, receiver, rental)).getId();
+        ChatRoom chatRoom = optionalChatRoom.orElseGet(() -> createChatRoom(sender, receiver, rental));
+
+        if (chatRoom.getSenderIsDeleted() || chatRoom.getReceiverIsDeleted()) {
+            chatRoom.rejoinChatRoom();
+            chatRoomRepository.save(chatRoom);
+        }
+        return chatRoom.getId();
     }
 
     @Transactional
@@ -90,15 +95,13 @@ public class ChatRoomService {
         Page<ChatRoom> chatRoomPage = chatRoomRepository.findChatRoomByMember(member, pageRequest);
 
         List<ChatRoom> chatRooms = chatRoomPage.getContent();
-        List<ChatRoomListResponseDto> chatRoomList = new ArrayList<>();
-
-        chatRooms.stream().forEach(chatRoom -> {
-
-            Member toMember = chatRoom.getSender().equals(member) ? chatRoom.getReceiver() : chatRoom.getSender();
-            int unreadCount = chatRoom.getSender().equals(member) ? chatRoom.getSenderUnreadCount() : chatRoom.getReceiverUnreadCount();
-
-            chatRoomList.add(new ChatRoomListResponseDto(chatRoom, toMember, unreadCount));
-        });
+        List<ChatRoomListResponseDto> chatRoomList = chatRooms.stream()
+                .map(chatRoom -> {
+                    Member toMember = chatRoom.getSender().equals(member) ? chatRoom.getReceiver() : chatRoom.getSender();
+                    int unreadCount = chatRoom.getSender().equals(member) ? chatRoom.getSenderUnreadCount() : chatRoom.getReceiverUnreadCount();
+                    return new ChatRoomListResponseDto(chatRoom, toMember, unreadCount);
+                })
+                .toList();
         return new ChatRoomReadResponseDto(chatRoomPage, chatRoomList);
     }
 
@@ -111,11 +114,14 @@ public class ChatRoomService {
             return new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage());
         });
         Member member = findMemberByEmail(email); // 현재 접속한 멤버
+
+        checkValidChatRoomParticipant(chatRoom, member); // 채팅방 참여자인지 확인
+
         Member sender = chatRoom.getSender(); // 채팅방 최초 발신자
         Member receiver = chatRoom.getReceiver(); // 채팅방 최초 수신자
 
         // 발신자가 최초 발신자와 동일한지 확인
-        boolean isSender = chatRoom.getSender().equals(member);
+        boolean isSender = sender.equals(member);
 
         // 이전 메시지 읽음 처리
         readPreviousMessages(chatRoom, isSender, sender, receiver).forEach(Chat::updateIsRead);
@@ -126,7 +132,13 @@ public class ChatRoomService {
         // 채팅 메시지 가져오기
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
 
-        Page<Chat> chatPage = chatRepository.findByChatRoom(chatRoom, pageRequest);
+        Page<Chat> chatPage = chatRepository.findByChatRoomAndVisibleIn(
+                chatRoom,
+                VisibleType.BOTH,
+                isSender ? VisibleType.ONLY_SENDER : VisibleType.ONLY_RECEIVER,
+                pageRequest
+        );
+
         List<ChatReadResponseDto> chatResponseList = new ArrayList<>(chatPage.map(ChatReadResponseDto::new).toList());
         Collections.reverse(chatResponseList);
 
@@ -150,12 +162,8 @@ public class ChatRoomService {
         ChatRoom chatRoom = findChatRoomById(chatRoomId); // 채팅방 존재여부
         Member member = findMemberByEmail(email); // 존재하는 회원여부
         boolean isSender = chatRoom.getSender().equals(member);
-        boolean isReceiver = chatRoom.getReceiver().equals(member);
 
-        if (!(isSender && !chatRoom.getSenderIsDeleted()) && !(isReceiver && !chatRoom.getReceiverIsDeleted())) {
-            log.error("채팅방 참여자가 아닙니다. 이메일: {}, 채팅방 ID: {}", email, chatRoomId);
-            throw new BadRequestException(ErrorCode.INVALID_CHAT_ROOM_PARTICIPANT.getMessage());
-        }
+        checkValidChatRoomParticipant(chatRoom, member);
 
         // 1. 한명 이미 나간상태 -> 채팅방, 해당 메세지 완전 삭제 진행
         if (chatRoom.getSenderIsDeleted() || chatRoom.getReceiverIsDeleted()) {
@@ -207,5 +215,15 @@ public class ChatRoomService {
             log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. 함께쓰기 정보: {}", id);
             return new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage());
         });
+    }
+
+    private void checkValidChatRoomParticipant(ChatRoom chatRoom, Member member) {
+        boolean isSender = chatRoom.getSender().equals(member);
+        boolean isReceiver = chatRoom.getReceiver().equals(member);
+
+        if (!(isSender && !chatRoom.getSenderIsDeleted()) && !(isReceiver && !chatRoom.getReceiverIsDeleted())) {
+            log.error("채팅방 참여자가 아닙니다. 이메일: {}, 채팅방 ID: {}", member.getEmail(), chatRoom.getId());
+            throw new BadRequestException(ErrorCode.INVALID_CHAT_ROOM_PARTICIPANT.getMessage());
+        }
     }
 }

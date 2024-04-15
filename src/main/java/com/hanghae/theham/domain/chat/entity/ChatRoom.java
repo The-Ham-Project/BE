@@ -92,4 +92,9 @@ public class ChatRoom extends Timestamped {
             this.receiverIsDeleted = true;
         }
     }
+
+    public void rejoinChatRoom() {
+        this.senderIsDeleted = false;
+        this.receiverIsDeleted = false;
+    }
 }
