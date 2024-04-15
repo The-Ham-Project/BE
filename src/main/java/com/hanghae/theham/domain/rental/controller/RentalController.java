@@ -44,9 +44,11 @@ public class RentalController implements RentalControllerDocs {
 
     @GetMapping("/rentals/{rentalId}")
     public ResponseDto<RentalReadResponseDto> readRental(
+            @AuthenticationPrincipal @Nullable UserDetailsImpl userDetails,
             @PathVariable Long rentalId
     ) {
-        RentalReadResponseDto responseDto = rentalService.readRental(rentalId);
+        String email = userDetails != null ? userDetails.getUsername() : null;
+        RentalReadResponseDto responseDto = rentalService.readRental(email, rentalId);
         return ResponseDto.success("함께쓰기 게시글 조회 기능", responseDto);
     }
 
@@ -93,14 +95,14 @@ public class RentalController implements RentalControllerDocs {
     }
 
     @GetMapping("/rentals/search")
-    public ResponseDto<List<RentalReadResponseDto>> searchRental(
+    public ResponseDto<List<RentalSearchResponseDto>> searchRental(
             @AuthenticationPrincipal @Nullable UserDetailsImpl userDetails,
             @RequestParam(name = "keyword") String keyword,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "6", required = false) int size
     ) {
         String email = userDetails != null ? userDetails.getUsername() : null;
-        List<RentalReadResponseDto> responseDtoList = rentalSearchService.searchRentalList(email, keyword, page, size);
+        List<RentalSearchResponseDto> responseDtoList = rentalSearchService.searchRentalList(email, keyword, page, size);
 
         return ResponseDto.success("함께쓰기 검색 기능", responseDtoList);
     }

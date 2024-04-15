@@ -51,9 +51,10 @@ public class RentalResponseDto {
         private double latitude;
         private double longitude;
         private String district;
+        private Boolean isChatButton;
         private List<RentalImageReadResponseDto> rentalImageList;
 
-        public RentalReadResponseDto(Rental rental, List<RentalImageReadResponseDto> rentalImageList) {
+        public RentalReadResponseDto(Rental rental, Boolean isChatButton, List<RentalImageReadResponseDto> rentalImageList) {
             this.rentalId = rental.getId();
             this.nickname = rental.getMember().getNickname();
             this.profileUrl = rental.getMember().getProfileUrl();
@@ -65,6 +66,7 @@ public class RentalResponseDto {
             this.latitude = rental.getMember().getLatitude();
             this.longitude = rental.getMember().getLongitude();
             this.district = rental.getDistrict();
+            this.isChatButton = isChatButton;
             this.rentalImageList = rentalImageList;
         }
     }
@@ -145,6 +147,39 @@ public class RentalResponseDto {
             this.content = rental.getContent();
             this.rentalFee = rental.getRentalFee();
             this.deposit = rental.getDeposit();
+        }
+    }
+
+    @NoArgsConstructor
+    @Getter
+    public static class RentalSearchResponseDto {
+
+        private Long rentalId;
+        private String nickname;
+        private String profileUrl;
+        private String category;
+        private String title;
+        private String content;
+        private long rentalFee;
+        private long deposit;
+        private double latitude;
+        private double longitude;
+        private String district;
+        private List<RentalImageReadResponseDto> rentalImageList;
+
+        public RentalSearchResponseDto(Rental rental, List<RentalImageReadResponseDto> rentalImageList) {
+            this.rentalId = rental.getId();
+            this.nickname = rental.getMember().getNickname();
+            this.profileUrl = rental.getMember().getProfileUrl();
+            this.category = rental.getCategory().getValue();
+            this.title = rental.getTitle();
+            this.content = rental.getContent();
+            this.rentalFee = rental.getRentalFee();
+            this.deposit = rental.getDeposit();
+            this.latitude = rental.getMember().getLatitude();
+            this.longitude = rental.getMember().getLongitude();
+            this.district = rental.getDistrict();
+            this.rentalImageList = rentalImageList;
         }
     }
 }

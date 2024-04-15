@@ -2,6 +2,7 @@ package com.hanghae.theham.domain.rental.service;
 
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalSearchResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
@@ -17,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
-import static com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalReadResponseDto;
 
 @Service
 @Slf4j
@@ -33,7 +33,7 @@ public class RentalSearchService {
         this.memberRepository = memberRepository;
     }
 
-    public List<RentalReadResponseDto> searchRentalList(String email, String keyword, int page, int size) {
+    public List<RentalSearchResponseDto> searchRentalList(String email, String keyword, int page, int size) {
         List<Rental> rentalList;
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size);
 
@@ -51,15 +51,15 @@ public class RentalSearchService {
             rentalList = rentalRepository.findAllWithSearchDistance(keyword, latitude, longitude, pageRequest.getPageSize(), (int) pageRequest.getOffset());
         }
 
-        List<RentalReadResponseDto> rentalReadResponseDtoList = new ArrayList<>();
+        List<RentalSearchResponseDto> rentalSearchResponseDtoList = new ArrayList<>();
         for (Rental rental : rentalList) {
             List<RentalImage> rentalImageList = rentalImageRepository.findAllByRental(rental);
             List<RentalImageReadResponseDto> images = rentalImageList.stream()
                     .map(RentalImageReadResponseDto::new)
                     .toList();
 
-            rentalReadResponseDtoList.add(new RentalReadResponseDto(rental, images));
+            rentalSearchResponseDtoList.add(new RentalSearchResponseDto(rental, images));
         }
-        return rentalReadResponseDtoList;
+        return rentalSearchResponseDtoList;
     }
 }
