@@ -17,7 +17,6 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name = "chat_room_tbl")
-//@EntityListeners(AuditingEntityListener.class)
 public class ChatRoom extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -82,5 +81,15 @@ public class ChatRoom extends Timestamped {
         }
         this.receiverUnreadCount = 0;
         this.senderUnreadCount += 1;
+    }
+
+    public void disableChatRoom(boolean isSender) {
+        if (isSender) {
+            this.senderUnreadCount = 0;
+            this.senderIsDeleted = true;
+        } else {
+            this.receiverUnreadCount = 0;
+            this.receiverIsDeleted = true;
+        }
     }
 }

@@ -54,4 +54,13 @@ public class ChatRoomController implements ChatRoomControllerDocs {
         ChatRoomDetailResponseDto responseDto = chatRoomService.getChatRoom(userDetails.getUsername(), chatRoomId, page, size);
         return ResponseDto.success("채팅방 상세 조회 기능", responseDto);
     }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PatchMapping("/chat-rooms/{chatRoomId}")
+    public void leaveChatRoom(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long chatRoomId
+    ) {
+        chatRoomService.leaveChatRoom(userDetails.getUsername(), chatRoomId);
+    }
 }

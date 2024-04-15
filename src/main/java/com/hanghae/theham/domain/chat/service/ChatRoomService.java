@@ -7,6 +7,7 @@ import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomListRespon
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomReadResponseDto;
 import com.hanghae.theham.domain.chat.entity.Chat;
 import com.hanghae.theham.domain.chat.entity.ChatRoom;
+import com.hanghae.theham.domain.chat.entity.type.VisibleType;
 import com.hanghae.theham.domain.chat.repository.ChatRepository;
 import com.hanghae.theham.domain.chat.repository.ChatRoomRepository;
 import com.hanghae.theham.domain.member.entity.Member;
@@ -143,7 +144,40 @@ public class ChatRoomService {
                 chatResponseList);
     }
 
-    public List<Chat> readPreviousMessages(ChatRoom chatRoom, boolean isSender, Member sender, Member receiver) {
+    // 채팅방 나가기 기능
+    @Transactional
+    public void leaveChatRoom(String email, Long chatRoomId) {
+        ChatRoom chatRoom = findChatRoomById(chatRoomId); // 채팅방 존재여부
+        Member member = findMemberByEmail(email); // 존재하는 회원여부
+        boolean isSender = chatRoom.getSender().equals(member);
+        boolean isReceiver = chatRoom.getReceiver().equals(member);
+
+        if (!(isSender && !chatRoom.getSenderIsDeleted()) && !(isReceiver && !chatRoom.getReceiverIsDeleted())) {
+            log.error("채팅방 참여자가 아닙니다. 이메일: {}, 채팅방 ID: {}", email, chatRoomId);
+            throw new BadRequestException(ErrorCode.INVALID_CHAT_ROOM_PARTICIPANT.getMessage());
+        }
+
+        // 1. 한명 이미 나간상태 -> 채팅방, 해당 메세지 완전 삭제 진행
+        if (chatRoom.getSenderIsDeleted() || chatRoom.getReceiverIsDeleted()) {
+            List<Chat> chats = chatRoom.getChatList();
+            chatRepository.deleteAll(chats);
+            chatRoomRepository.delete(chatRoom);
+            return;
+        }
+
+        // 2. 두명 다 채팅방에 있는 상태
+        List<Chat> deleteChatList = chatRepository.findByChatRoomAndVisible(chatRoom, isSender ? VisibleType.ONLY_SENDER : VisibleType.ONLY_RECEIVER);
+        chatRepository.deleteAll(deleteChatList);
+        List<Chat> chatList = chatRepository.findByChatRoomAndVisible(chatRoom, VisibleType.BOTH);
+        chatList.forEach(chat -> {
+            chat.updateChatVisible(isSender ? VisibleType.ONLY_RECEIVER : VisibleType.ONLY_SENDER);
+        });
+        chatRoom.disableChatRoom(isSender);
+        chatRoomRepository.save(chatRoom);
+    }
+
+    // 채팅 방 상세조회 이전에 안읽은 메세지 가져오기
+    private List<Chat> readPreviousMessages(ChatRoom chatRoom, boolean isSender, Member sender, Member receiver) {
         if (isSender) {
             // 현재 사용자가 발신자인 경우, 수신자(receiver)가 보낸 읽지 않은 메시지를 가져온다.
             List<Chat> unreadChatList = chatRepository.findByChatRoomAndSenderAndIsRead(chatRoom, receiver, false);
@@ -165,6 +199,13 @@ public class ChatRoomService {
         return rentalRepository.findById(id).orElseThrow(() -> {
             log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. 함께쓰기 정보: {}", id);
             return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
+        });
+    }
+
+    private ChatRoom findChatRoomById(Long id) {
+        return chatRoomRepository.findById(id).orElseThrow(() -> {
+            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. 함께쓰기 정보: {}", id);
+            return new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage());
         });
     }
 }
