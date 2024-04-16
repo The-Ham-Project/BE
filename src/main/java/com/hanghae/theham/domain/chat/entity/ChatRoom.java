@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,6 +49,9 @@ public class ChatRoom extends Timestamped {
     @Column(name = "last_chat")
     private String lastChat;
 
+    @Column
+    private LocalDateTime lastChatTime;
+
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.REMOVE)
     private List<Chat> chatList = new ArrayList<>();
 
@@ -66,8 +70,9 @@ public class ChatRoom extends Timestamped {
         this.receiverUnreadCount = 0;
     }
 
-    public void updateChatRoom(Boolean isSender, String lastChat, int currentMemberCount) {
+    public void updateChatRoom(Boolean isSender, String lastChat, LocalDateTime lastChatTime, int currentMemberCount) {
         this.lastChat = lastChat;
+        this.lastChatTime = lastChatTime;
 
         if (currentMemberCount == 2) {
             this.senderUnreadCount = 0;

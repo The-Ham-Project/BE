@@ -91,7 +91,7 @@ public class ChatRoomService {
     public ChatRoomReadResponseDto getChatRoomList(String email, int page, int size) {
         Member member = findMemberByEmail(email);
 
-        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "modifiedAt");
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "lastChatTime");
         Page<ChatRoom> chatRoomPage = chatRoomRepository.findChatRoomByMember(member, pageRequest);
 
         List<ChatRoom> chatRooms = chatRoomPage.getContent();
