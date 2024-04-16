@@ -59,6 +59,9 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     )
     List<Rental> findAllWithSearch(String keyword, int limit, int offset);
 
+    @Query("SELECT COUNT(r) FROM Rental r WHERE r.title LIKE %:keyword% OR r.content LIKE %:keyword%")
+    Long countByTitleContainingOrContentContaining(String keyword);
+
     @Query(value =
             "SELECT *, r.distance AS distance FROM " +
                     "(SELECT *, ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 AS distance " +
@@ -71,4 +74,15 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
             , nativeQuery = true
     )
     List<Rental> findAllWithSearchDistance(String keyword, double userLatitude, double userLongitude, int limit, int offset);
+
+    @Query(value =
+            "SELECT count(*) AS distance FROM " +
+                    "(SELECT *, ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 AS distance " +
+                    "FROM rental_tbl " +
+                    "WHERE (id IN (SELECT DISTINCT rental_id FROM rental_image_tbl WHERE title LIKE CONCAT('%', :keyword, '%')) " +
+                    "OR content LIKE CONCAT('%', :keyword, '%')) " +
+                    "AND ST_DISTANCE_SPHERE(POINT(:userLongitude, :userLatitude), POINT(rental_tbl.longitude, rental_tbl.latitude)) / 1000 < 4) AS r"
+            , nativeQuery = true
+    )
+    Long CountWithSearchDistance(String keyword, double userLatitude, double userLongitude);
 }
