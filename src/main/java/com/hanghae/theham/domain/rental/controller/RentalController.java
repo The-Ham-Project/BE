@@ -95,15 +95,15 @@ public class RentalController implements RentalControllerDocs {
     }
 
     @GetMapping("/rentals/search")
-    public ResponseDto<List<RentalSearchResponseDto>> searchRental(
+    public ResponseDto<RentalSearchResponseListDto> searchRental(
             @AuthenticationPrincipal @Nullable UserDetailsImpl userDetails,
             @RequestParam(name = "keyword") String keyword,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "6", required = false) int size
     ) {
         String email = userDetails != null ? userDetails.getUsername() : null;
-        List<RentalSearchResponseDto> responseDtoList = rentalSearchService.searchRentalList(email, keyword, page, size);
+        RentalSearchResponseListDto responseListDto = rentalSearchService.searchRentalList(email, keyword, page, size);
 
-        return ResponseDto.success("함께쓰기 검색 기능", responseDtoList);
+        return ResponseDto.success("함께쓰기 검색 기능", responseListDto);
     }
 }

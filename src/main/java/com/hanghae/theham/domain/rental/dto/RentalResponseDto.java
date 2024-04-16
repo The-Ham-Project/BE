@@ -152,6 +152,18 @@ public class RentalResponseDto {
 
     @NoArgsConstructor
     @Getter
+    public static class RentalSearchResponseListDto {
+        private Long count;
+        private List<RentalSearchResponseDto> searchResponseList;
+
+        public RentalSearchResponseListDto(Long count, List<RentalSearchResponseDto> searchResponseList) {
+            this.count = count;
+            this.searchResponseList = searchResponseList;
+        }
+    }
+
+    @NoArgsConstructor
+    @Getter
     public static class RentalSearchResponseDto {
 
         private Long rentalId;

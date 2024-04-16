@@ -65,7 +65,7 @@ public interface RentalControllerDocs {
 
 
     @Operation(summary = "함께쓰기 검색 기능", description = "함께쓰기 검색 기능")
-    ResponseDto<List<RentalSearchResponseDto>> searchRental(
+    ResponseDto<RentalSearchResponseListDto> searchRental(
             @AuthenticationPrincipal @Nullable UserDetailsImpl userDetails,
             @RequestParam(name = "keyword") String keyword,
             @RequestParam(name = "page", defaultValue = "1") int page,
