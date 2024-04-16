@@ -11,9 +11,10 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
-
     Optional<ChatRoom> findChatRoomBySenderAndRental(Member sender, Rental rental);
 
-    @Query("SELECT cr FROM ChatRoom cr WHERE (cr.sender = :member OR cr.receiver = :member)")
+    @Query("SELECT cr FROM ChatRoom cr " +
+            "WHERE (cr.sender = :member AND cr.senderIsDeleted = false ) " +
+            "OR (cr.receiver = :member AND cr.receiverIsDeleted = false)")
     Page<ChatRoom> findChatRoomByMember(Member member, Pageable pageable);
 }

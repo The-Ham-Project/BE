@@ -36,4 +36,10 @@ public interface ChatRoomControllerDocs {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "10", required = false) int size
     );
+
+    @Operation(summary = "선택한 채팅방 나가기 기능", description = "선택한 채팅방을 나가는 API")
+    void leaveChatRoom(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long chatRoomId
+    );
 }
