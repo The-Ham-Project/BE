@@ -50,8 +50,6 @@ public class ChatService {
         // 메세지 발송 처리
         Chat chat = chatRepository.save(requestDto.toEntity(chatRoom, sender, currentMemberCount));
 
-        System.out.println(chat.getCreatedAt());
-
         // 채팅방 업데이트
         chatRoom.updateChatRoom(isSender, chat.getMessage(), chat.getCreatedAt(), currentMemberCount);
 
