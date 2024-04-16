@@ -21,6 +21,8 @@ public class ChatRoomResponseDto {
         private final Long rentalId;
         private final String rentalTitle;
         private final String rentalThumbnailUrl;
+        private final long rentalFee;
+        private final long deposit;
         private final String toUserNickname; // 상대방 식별
         private final String toUserProfileImage; // 상대방 이미지
         private final String senderProfileImage; // sender 이미지
@@ -37,6 +39,8 @@ public class ChatRoomResponseDto {
             this.rentalId = rental.getId();
             this.rentalTitle = rental.getTitle();
             this.rentalThumbnailUrl = rentalThumbnailUrl;
+            this.rentalFee = rental.getRentalFee();
+            this.deposit = rental.getDeposit();
             this.toUserNickname = toMember.getNickname();
             this.toUserProfileImage = toMember.getProfileUrl();
             this.senderProfileImage = member.getProfileUrl();
