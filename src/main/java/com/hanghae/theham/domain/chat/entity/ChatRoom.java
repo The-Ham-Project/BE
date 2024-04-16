@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +18,6 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name = "chat_room_tbl")
-//@EntityListeners(AuditingEntityListener.class)
 public class ChatRoom extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,6 +49,9 @@ public class ChatRoom extends Timestamped {
     @Column(name = "last_chat")
     private String lastChat;
 
+    @Column
+    private LocalDateTime lastChatTime;
+
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.REMOVE)
     private List<Chat> chatList = new ArrayList<>();
 
@@ -67,8 +70,9 @@ public class ChatRoom extends Timestamped {
         this.receiverUnreadCount = 0;
     }
 
-    public void updateChatRoom(Boolean isSender, String lastChat, int currentMemberCount) {
+    public void updateChatRoom(Boolean isSender, String lastChat, LocalDateTime lastChatTime, int currentMemberCount) {
         this.lastChat = lastChat;
+        this.lastChatTime = lastChatTime;
 
         if (currentMemberCount == 2) {
             this.senderUnreadCount = 0;
@@ -82,5 +86,20 @@ public class ChatRoom extends Timestamped {
         }
         this.receiverUnreadCount = 0;
         this.senderUnreadCount += 1;
+    }
+
+    public void disableChatRoom(boolean isSender) {
+        if (isSender) {
+            this.senderUnreadCount = 0;
+            this.senderIsDeleted = true;
+        } else {
+            this.receiverUnreadCount = 0;
+            this.receiverIsDeleted = true;
+        }
+    }
+
+    public void rejoinChatRoom() {
+        this.senderIsDeleted = false;
+        this.receiverIsDeleted = false;
     }
 }

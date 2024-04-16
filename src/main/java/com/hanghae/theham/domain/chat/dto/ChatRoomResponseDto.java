@@ -77,7 +77,7 @@ public class ChatRoomResponseDto {
             this.toMemberProfileUrl = toMember.getProfileUrl();
             this.lastMessage = chatRoom.getLastChat();
             this.unreadCount = unreadCount;
-            this.lastMessageTime = chatRoom.getModifiedAt();
+            this.lastMessageTime = chatRoom.getLastChatTime();
         }
     }
 }

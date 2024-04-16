@@ -41,13 +41,17 @@ public class ChatService {
                 );
         boolean isSender = chatRoom.getSender().equals(sender);
 
+        if (chatRoom.getSenderIsDeleted() || chatRoom.getReceiverIsDeleted()) {
+            chatRoom.rejoinChatRoom();
+        }
+
         int currentMemberCount = chatRoomParticipantManager.getMemberCountInRoom(roomId);
 
         // 메세지 발송 처리
         Chat chat = chatRepository.save(requestDto.toEntity(chatRoom, sender, currentMemberCount));
 
         // 채팅방 업데이트
-        chatRoom.updateChatRoom(isSender, requestDto.getMessage(), currentMemberCount);
+        chatRoom.updateChatRoom(isSender, chat.getMessage(), chat.getCreatedAt(), currentMemberCount);
 
         return new ChatReadResponseDto(chat);
     }

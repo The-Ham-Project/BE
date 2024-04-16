@@ -48,4 +48,8 @@ public class Chat extends Timestamped {
     public void updateIsRead() {
         this.isRead = true;
     }
+
+    public void updateChatVisible(VisibleType visible) {
+        this.visible = visible;
+    }
 }
