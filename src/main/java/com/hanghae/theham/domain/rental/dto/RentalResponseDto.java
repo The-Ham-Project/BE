@@ -63,8 +63,8 @@ public class RentalResponseDto {
             this.content = rental.getContent();
             this.rentalFee = rental.getRentalFee();
             this.deposit = rental.getDeposit();
-            this.latitude = rental.getMember().getLatitude();
-            this.longitude = rental.getMember().getLongitude();
+            this.latitude = rental.getLatitude();
+            this.longitude = rental.getLongitude();
             this.district = rental.getDistrict();
             this.isChatButton = isChatButton;
             this.rentalImageList = rentalImageList;
