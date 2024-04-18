@@ -51,7 +51,7 @@ import java.util.UUID;
 public class RentalService {
 
     private static final int MAX_IMAGE_UPLOAD_COUNT = 3;
-    private static final int MAX_IMAGE_UPLOAD_SIZE = 2 * 1024 * 1024; // 2MB
+    private static final int MAX_IMAGE_UPLOAD_SIZE = 5 * 1024 * 1024; // 2MB
     private static final List<String> LIMIT_IMAGE_TYPE_LIST = Arrays.asList(
             "image/jpeg", "image/jpg", "image/png", "image/gif"
     );
