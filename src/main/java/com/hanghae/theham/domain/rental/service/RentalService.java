@@ -17,6 +17,7 @@ import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
+import com.hanghae.theham.domain.rental.repository.RentalImageThumbnailRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.config.S3Config;
 import com.hanghae.theham.global.exception.AwsS3Exception;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Transactional(readOnly = true)
@@ -51,7 +53,7 @@ import java.util.UUID;
 public class RentalService {
 
     private static final int MAX_IMAGE_UPLOAD_COUNT = 3;
-    private static final int MAX_IMAGE_UPLOAD_SIZE = 5 * 1024 * 1024; // 2MB
+    private static final int MAX_IMAGE_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
     private static final List<String> LIMIT_IMAGE_TYPE_LIST = Arrays.asList(
             "image/jpeg", "image/jpg", "image/png", "image/gif"
     );
@@ -59,6 +61,7 @@ public class RentalService {
 
     private final RentalRepository rentalRepository;
     private final RentalImageRepository rentalImageRepository;
+    private final RentalImageThumbnailRepository rentalImageThumbnailRepository;
     private final MemberRepository memberRepository;
     private final S3Config s3Config;
     private final RestTemplate restTemplate;
@@ -66,15 +69,13 @@ public class RentalService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    @Value("${cloud.aws.s3.bucket-resized}")
-    private String resizedBucket;
-
     @Value("${kakao.client-id}")
     private String kakaoClientId;
 
-    public RentalService(RentalRepository rentalRepository, RentalImageRepository rentalImageRepository, MemberRepository memberRepository, S3Config s3Config, RestTemplate restTemplate) {
+    public RentalService(RentalRepository rentalRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, S3Config s3Config, RestTemplate restTemplate) {
         this.rentalRepository = rentalRepository;
         this.rentalImageRepository = rentalImageRepository;
+        this.rentalImageThumbnailRepository = rentalImageThumbnailRepository;
         this.memberRepository = memberRepository;
         this.s3Config = s3Config;
         this.restTemplate = restTemplate;
@@ -165,17 +166,16 @@ public class RentalService {
         }
 
         for (Rental rental : rentalList) {
-            String firstThumbnail = rentalImageRepository.findFirstByRental(rental)
+            AtomicReference<String> firstThumbnail = new AtomicReference<>(rentalImageRepository.findFirstByRental(rental)
                     .map(RentalImage::getImageUrl)
-                    .orElse(null);
+                    .orElse(null));
 
-            if (firstThumbnail != null) {
-                int lastedIndexOf = firstThumbnail.lastIndexOf("/") + 1;
-                String substring = firstThumbnail.substring(lastedIndexOf);
-
-                firstThumbnail = resizedBucket + substring;
+            if (firstThumbnail.get() != null) {
+                rentalImageThumbnailRepository.findByImagePath(firstThumbnail.get()).ifPresent(
+                        rentalImageThumbnail -> firstThumbnail.set(rentalImageThumbnail.getThumbnailPath())
+                );
             }
-            responseDtoList.add(new RentalCategoryReadResponseDto(rental, firstThumbnail));
+            responseDtoList.add(new RentalCategoryReadResponseDto(rental, firstThumbnail.get()));
         }
         return responseDtoList;
     }
@@ -188,17 +188,16 @@ public class RentalService {
 
         List<RentalMyReadResponseDto> responseDtoList = new ArrayList<>();
         for (Rental rental : rentalPage) {
-            String firstThumbnail = rentalImageRepository.findFirstByRental(rental)
+            AtomicReference<String> firstThumbnail = new AtomicReference<>(rentalImageRepository.findFirstByRental(rental)
                     .map(RentalImage::getImageUrl)
-                    .orElse(null);
+                    .orElse(null));
 
-            if (firstThumbnail != null) {
-                int lastedIndexOf = firstThumbnail.lastIndexOf("/") + 1;
-                String substring = firstThumbnail.substring(lastedIndexOf);
-
-                firstThumbnail = resizedBucket + substring;
+            if (firstThumbnail.get() != null) {
+                rentalImageThumbnailRepository.findByImagePath(firstThumbnail.get()).ifPresent(
+                        rentalImageThumbnail -> firstThumbnail.set(rentalImageThumbnail.getThumbnailPath())
+                );
             }
-            responseDtoList.add(new RentalMyReadResponseDto(rental, firstThumbnail));
+            responseDtoList.add(new RentalMyReadResponseDto(rental, firstThumbnail.get()));
         }
         return responseDtoList;
     }
