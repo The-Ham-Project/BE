@@ -66,6 +66,9 @@ public class RentalService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
+    @Value("${cloud.aws.s3.bucket-resized}")
+    private String resizedBucket;
+
     @Value("${kakao.client-id}")
     private String kakaoClientId;
 
@@ -162,12 +165,17 @@ public class RentalService {
         }
 
         for (Rental rental : rentalList) {
-            String firstThumbnailUrl = rentalImageRepository.findAllByRental(rental).stream()
-                    .findFirst()
+            String firstThumbnail = rentalImageRepository.findFirstByRental(rental)
                     .map(RentalImage::getImageUrl)
                     .orElse(null);
 
-            responseDtoList.add(new RentalCategoryReadResponseDto(rental, firstThumbnailUrl));
+            if (firstThumbnail != null) {
+                int lastedIndexOf = firstThumbnail.lastIndexOf("/") + 1;
+                String substring = firstThumbnail.substring(lastedIndexOf);
+
+                firstThumbnail = resizedBucket + substring;
+            }
+            responseDtoList.add(new RentalCategoryReadResponseDto(rental, firstThumbnail));
         }
         return responseDtoList;
     }
@@ -180,12 +188,17 @@ public class RentalService {
 
         List<RentalMyReadResponseDto> responseDtoList = new ArrayList<>();
         for (Rental rental : rentalPage) {
-            String firstThumbnailUrl = rentalImageRepository.findAllByRental(rental).stream()
-                    .findFirst()
+            String firstThumbnail = rentalImageRepository.findFirstByRental(rental)
                     .map(RentalImage::getImageUrl)
                     .orElse(null);
 
-            responseDtoList.add(new RentalMyReadResponseDto(rental, firstThumbnailUrl));
+            if (firstThumbnail != null) {
+                int lastedIndexOf = firstThumbnail.lastIndexOf("/") + 1;
+                String substring = firstThumbnail.substring(lastedIndexOf);
+
+                firstThumbnail = resizedBucket + substring;
+            }
+            responseDtoList.add(new RentalMyReadResponseDto(rental, firstThumbnail));
         }
         return responseDtoList;
     }

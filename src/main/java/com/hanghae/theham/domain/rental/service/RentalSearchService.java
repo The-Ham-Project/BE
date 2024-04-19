@@ -12,14 +12,13 @@ import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
 
 @Slf4j
 @Transactional(readOnly = true)
@@ -28,6 +27,9 @@ public class RentalSearchService {
     private final RentalRepository rentalRepository;
     private final RentalImageRepository rentalImageRepository;
     private final MemberRepository memberRepository;
+
+    @Value("${cloud.aws.s3.bucket-resized}")
+    private String resizedBucket;
 
     @Autowired
     public RentalSearchService(RentalRepository rentalRepository, RentalImageRepository rentalImageRepository, MemberRepository memberRepository) {
@@ -59,12 +61,17 @@ public class RentalSearchService {
 
         List<RentalSearchResponseDto> rentalSearchResponseDtoList = new ArrayList<>();
         for (Rental rental : rentalList) {
-            List<RentalImage> rentalImageList = rentalImageRepository.findAllByRental(rental);
-            List<RentalImageReadResponseDto> images = rentalImageList.stream()
-                    .map(RentalImageReadResponseDto::new)
-                    .toList();
+            String firstThumbnail = rentalImageRepository.findFirstByRental(rental)
+                    .map(RentalImage::getImageUrl)
+                    .orElse(null);
 
-            rentalSearchResponseDtoList.add(new RentalSearchResponseDto(rental, images));
+            if (firstThumbnail != null) {
+                int lastedIndexOf = firstThumbnail.lastIndexOf("/") + 1;
+                String substring = firstThumbnail.substring(lastedIndexOf);
+
+                firstThumbnail = resizedBucket + substring;
+            }
+            rentalSearchResponseDtoList.add(new RentalSearchResponseDto(rental, firstThumbnail));
         }
         return new RentalSearchResponseListDto(count, rentalSearchResponseDtoList);
     }
