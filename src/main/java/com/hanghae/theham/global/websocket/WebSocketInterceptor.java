@@ -6,6 +6,8 @@ import io.jsonwebtoken.Claims;
 import jakarta.security.auth.message.AuthException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -21,15 +23,14 @@ import org.springframework.util.StringUtils;
 
 @Slf4j(topic = "WebSocketInterceptor")
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class WebSocketInterceptor implements ChannelInterceptor {
     private final TokenProvider tokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
-    private final ChatRoomParticipantManager chatRoomParticipantManager;
 
-    public WebSocketInterceptor(TokenProvider tokenProvider, UserDetailsServiceImpl userDetailsService, ChatRoomParticipantManager chatRoomParticipantManager) {
+    public WebSocketInterceptor(TokenProvider tokenProvider, UserDetailsServiceImpl userDetailsService) {
         this.tokenProvider = tokenProvider;
         this.userDetailsService = userDetailsService;
-        this.chatRoomParticipantManager = chatRoomParticipantManager;
     }
 
     @SneakyThrows
