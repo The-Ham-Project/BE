@@ -7,18 +7,18 @@ import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalSearchRespon
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
+import com.hanghae.theham.domain.rental.repository.RentalImageThumbnailRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Transactional(readOnly = true)
@@ -26,15 +26,13 @@ import java.util.List;
 public class RentalSearchService {
     private final RentalRepository rentalRepository;
     private final RentalImageRepository rentalImageRepository;
+    private final RentalImageThumbnailRepository rentalImageThumbnailRepository;
     private final MemberRepository memberRepository;
 
-    @Value("${cloud.aws.s3.bucket-resized}")
-    private String resizedBucket;
-
-    @Autowired
-    public RentalSearchService(RentalRepository rentalRepository, RentalImageRepository rentalImageRepository, MemberRepository memberRepository) {
+    public RentalSearchService(RentalRepository rentalRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository) {
         this.rentalRepository = rentalRepository;
         this.rentalImageRepository = rentalImageRepository;
+        this.rentalImageThumbnailRepository = rentalImageThumbnailRepository;
         this.memberRepository = memberRepository;
     }
 
@@ -61,17 +59,16 @@ public class RentalSearchService {
 
         List<RentalSearchResponseDto> rentalSearchResponseDtoList = new ArrayList<>();
         for (Rental rental : rentalList) {
-            String firstThumbnail = rentalImageRepository.findFirstByRental(rental)
+            AtomicReference<String> firstThumbnail = new AtomicReference<>(rentalImageRepository.findFirstByRental(rental)
                     .map(RentalImage::getImageUrl)
-                    .orElse(null);
+                    .orElse(null));
 
-            if (firstThumbnail != null) {
-                int lastedIndexOf = firstThumbnail.lastIndexOf("/") + 1;
-                String substring = firstThumbnail.substring(lastedIndexOf);
-
-                firstThumbnail = resizedBucket + substring;
+            if (firstThumbnail.get() != null) {
+                rentalImageThumbnailRepository.findByImagePath(firstThumbnail.get()).ifPresent(
+                        rentalImageThumbnail -> firstThumbnail.set(rentalImageThumbnail.getThumbnailPath())
+                );
             }
-            rentalSearchResponseDtoList.add(new RentalSearchResponseDto(rental, firstThumbnail));
+            rentalSearchResponseDtoList.add(new RentalSearchResponseDto(rental, firstThumbnail.get()));
         }
         return new RentalSearchResponseListDto(count, rentalSearchResponseDtoList);
     }
