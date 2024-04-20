@@ -15,6 +15,7 @@ import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
+import com.hanghae.theham.domain.rental.repository.RentalImageThumbnailRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Transactional(readOnly = true)
@@ -39,13 +41,15 @@ public class ChatRoomService {
     private final RentalRepository rentalRepository;
     private final ChatRepository chatRepository;
     private final RentalImageRepository rentalImageRepository;
+    private final RentalImageThumbnailRepository rentalImageThumbnailRepository;
 
-    public ChatRoomService(ChatRoomRepository chatRoomRepository, MemberRepository memberRepository, RentalRepository rentalRepository, ChatRepository chatRepository, RentalImageRepository rentalImageRepository) {
+    public ChatRoomService(ChatRoomRepository chatRoomRepository, MemberRepository memberRepository, RentalRepository rentalRepository, ChatRepository chatRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository) {
         this.chatRoomRepository = chatRoomRepository;
         this.memberRepository = memberRepository;
         this.rentalRepository = rentalRepository;
         this.chatRepository = chatRepository;
         this.rentalImageRepository = rentalImageRepository;
+        this.rentalImageThumbnailRepository = rentalImageThumbnailRepository;
     }
 
     @Transactional
@@ -143,14 +147,20 @@ public class ChatRoomService {
         Collections.reverse(chatResponseList);
 
         // rental thumnail 이미지
-        String rentalThumbnailUrl = rentalImageRepository.findFirstByRental(chatRoom.getRental())
+        AtomicReference<String> rentalThumbnailUrl = new AtomicReference<>(rentalImageRepository.findFirstByRental(chatRoom.getRental())
                 .map(RentalImage::getImageUrl)
-                .orElse(null);
+                .orElse(null));
+
+        if (rentalThumbnailUrl.get() != null) {
+            rentalImageThumbnailRepository.findByImagePath(rentalThumbnailUrl.get()).ifPresent(
+                    rentalImageThumbnail -> rentalThumbnailUrl.set(rentalImageThumbnail.getThumbnailPath())
+            );
+        }
 
         return new ChatRoomDetailResponseDto(
                 chatPage,
                 chatRoom.getRental(),
-                rentalThumbnailUrl,
+                rentalThumbnailUrl.get(),
                 isSender ? receiver : sender,
                 member,
                 chatResponseList);
