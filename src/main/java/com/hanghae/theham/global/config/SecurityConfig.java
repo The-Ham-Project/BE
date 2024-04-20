@@ -63,7 +63,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/members", "/api/v1/members/check-position").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/members/position").authenticated()
                         .requestMatchers("/api/v1/members/**").permitAll()
-                        .requestMatchers("/chat/**").permitAll()
+                        .requestMatchers("/chat/**", "/user/queue/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/rentals", "/api/v1/rentals/{rentalId}").permitAll()
                         .anyRequest().authenticated()
         );
