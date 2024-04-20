@@ -2,7 +2,7 @@ package com.hanghae.theham.global.websocket.exception;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hanghae.theham.global.websocket.MessageErrorResponse;
+import com.hanghae.theham.global.websocket.dto.MessageErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
@@ -32,12 +32,6 @@ public class WebSocketErrorHandler extends StompSubProtocolErrorHandler {
         log.info("handleClientMessageProcessingError: {}", ex.getMessage());
 
         final Throwable exception = converterTrowException(ex);
-
-//        if (error instanceof MessageDeliveryException) {
-//            String errorMessage = (error).getMessage();
-//            HttpStatus status = ((WebSocketException) error).getStatus();
-//            return prepareErrorMessage(errorMessage, status);
-//        }
 
         if (exception != null) {
             return handleWebSocketException(clientMessage, exception);

@@ -2,7 +2,7 @@ package com.hanghae.theham.global.websocket.exception;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hanghae.theham.global.websocket.MessageErrorResponse;
+import com.hanghae.theham.global.websocket.dto.MessageErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
