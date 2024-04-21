@@ -53,6 +53,9 @@ dependencies {
 
     // jsr310
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.3'
+
+    // hibernate-spatial
+    implementation 'org.hibernate.orm:hibernate-spatial:6.4.4.Final'
 }
 
 tasks.named('bootBuildImage') {

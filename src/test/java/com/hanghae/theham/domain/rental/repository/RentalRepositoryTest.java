@@ -8,6 +8,9 @@ import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
@@ -28,10 +31,19 @@ class RentalRepositoryTest {
     private RentalRepository rentalRepository;
 
     @Autowired
+    private RentalDistanceRepository rentalDistanceRepository;
+
+    @Autowired
     private MemberRepository memberRepository;
 
     @BeforeEach
     void setUp() {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Point location1 = geometryFactory.createPoint(new Coordinate(12.123, 12.123));
+        location1.setSRID(4326);
+        Point location2 = geometryFactory.createPoint(new Coordinate(23.123, 23.123));
+        location2.setSRID(4326);
+
         Member member = Member.builder()
                 .email("test@test.com")
                 .password("1234")
@@ -51,8 +63,7 @@ class RentalRepositoryTest {
                 .content("내용1")
                 .rentalFee(100L)
                 .deposit(100L)
-                .latitude(12.123)
-                .longitude(12.123)
+                .location(location1)
                 .district("종로구")
                 .member(member)
                 .build();
@@ -63,9 +74,8 @@ class RentalRepositoryTest {
                 .content("내용2")
                 .rentalFee(200L)
                 .deposit(200L)
-                .latitude(12.123)
-                .longitude(12.123)
                 .district("종로구")
+                .location(location1)
                 .member(member)
                 .build();
 
@@ -75,9 +85,8 @@ class RentalRepositoryTest {
                 .content("내용3")
                 .rentalFee(300L)
                 .deposit(300L)
-                .latitude(50)
-                .longitude(50)
                 .district("종로구")
+                .location(location2)
                 .member(member)
                 .build();
 
@@ -95,6 +104,7 @@ class RentalRepositoryTest {
 
         // when
         Page<Rental> rentalPage = rentalRepository.findAllByCategory(categoryType, pageable);
+        System.out.println(rentalPage.getContent().get(0).getTitle());
 
         // then
         assertEquals(1, rentalPage.getContent().size());
@@ -122,9 +132,12 @@ class RentalRepositoryTest {
         // given
         Pageable pageable = PageRequest.of(0, 6);
 
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Point memberLocation = geometryFactory.createPoint(new Coordinate(12.123, 12.123));
+        memberLocation.setSRID(4326);
+
         // when
-        List<Rental> rentalList =
-                rentalRepository.findAllByDistance(12.123, 12.123, pageable.getPageSize(), (int) pageable.getOffset());
+        List<Rental> rentalList = rentalDistanceRepository.findRentalsNearby(memberLocation, 4000, pageable).getContent();
 
         // then
         assertEquals(2, rentalList.size());
@@ -137,8 +150,12 @@ class RentalRepositoryTest {
         Pageable pageable = PageRequest.of(0, 6);
 
         // when
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Point memberLocation = geometryFactory.createPoint(new Coordinate(12.123, 12.123));
+        memberLocation.setSRID(4326);
+
         List<Rental> rentalList =
-                rentalRepository.findAllByCategoryAndDistance(CategoryType.BOOK.toString(), 12.123, 12.123, pageable.getPageSize(), (int) pageable.getOffset());
+                rentalDistanceRepository.findRentalsByCategoryNearby(CategoryType.BOOK, memberLocation, 4000, pageable).getContent();
 
         // then
         assertEquals(1, rentalList.size());
