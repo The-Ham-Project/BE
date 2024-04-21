@@ -16,6 +16,7 @@ import com.hanghae.theham.domain.rental.dto.RentalResponseDto.*;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
+import com.hanghae.theham.domain.rental.repository.RentalDistanceRepository;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
 import com.hanghae.theham.domain.rental.repository.RentalImageThumbnailRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
@@ -24,6 +25,9 @@ import com.hanghae.theham.global.exception.AwsS3Exception;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -58,8 +62,10 @@ public class RentalService {
             "image/jpeg", "image/jpg", "image/png", "image/gif"
     );
     private static final String S3_UPLOAD_FOLDER = "rentals/";
+    private static final double DISTANCE_RANGE = 4000.0;
 
     private final RentalRepository rentalRepository;
+    private final RentalDistanceRepository rentalDistanceRepository;
     private final RentalImageRepository rentalImageRepository;
     private final RentalImageThumbnailRepository rentalImageThumbnailRepository;
     private final MemberRepository memberRepository;
@@ -72,8 +78,9 @@ public class RentalService {
     @Value("${kakao.client-id}")
     private String kakaoClientId;
 
-    public RentalService(RentalRepository rentalRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, S3Config s3Config, RestTemplate restTemplate) {
+    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, S3Config s3Config, RestTemplate restTemplate) {
         this.rentalRepository = rentalRepository;
+        this.rentalDistanceRepository = rentalDistanceRepository;
         this.rentalImageRepository = rentalImageRepository;
         this.rentalImageThumbnailRepository = rentalImageThumbnailRepository;
         this.memberRepository = memberRepository;
@@ -139,30 +146,24 @@ public class RentalService {
     public List<RentalCategoryReadResponseDto> readRentalList(String email, CategoryType category, int page, int size) {
         List<Rental> rentalList;
         List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
 
         if (email == null) {
-            PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
-
-            if (category == CategoryType.ALL) {
-                rentalList = rentalRepository.findAll(pageRequest).getContent();
-            } else {
-                rentalList = rentalRepository.findAllByCategory(category, pageRequest).getContent();
-            }
+            rentalList = category == CategoryType.ALL ?
+                    rentalRepository.findAll(pageRequest).getContent() :
+                    rentalRepository.findAllByCategory(category, pageRequest).getContent();
         } else {
             Member member = memberRepository.findByEmail(email).orElseThrow(() ->
                     new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage())
             );
 
-            double latitude = member.getLatitude();
-            double longitude = member.getLongitude();
+            GeometryFactory geometryFactory = new GeometryFactory();
+            Point memberLocation = geometryFactory.createPoint(new Coordinate(member.getLongitude(), member.getLatitude()));
+            memberLocation.setSRID(4326);
 
-            PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size);
-
-            if (category == CategoryType.ALL) {
-                rentalList = rentalRepository.findAllByDistance(latitude, longitude, pageRequest.getPageSize(), (int) pageRequest.getOffset());
-            } else {
-                rentalList = rentalRepository.findAllByCategoryAndDistance(category.toString(), latitude, longitude, pageRequest.getPageSize(), (int) pageRequest.getOffset());
-            }
+            rentalList = category == CategoryType.ALL ?
+                    rentalDistanceRepository.findRentalsNearby(memberLocation, DISTANCE_RANGE, pageRequest).getContent() :
+                    rentalDistanceRepository.findRentalsByCategoryNearby(category, memberLocation, DISTANCE_RANGE, pageRequest).getContent();
         }
 
         for (Rental rental : rentalList) {
@@ -235,8 +236,7 @@ public class RentalService {
                 requestDto.getContent(),
                 requestDto.getRentalFee(),
                 requestDto.getDeposit(),
-                rental.getLatitude(),
-                rental.getLongitude(),
+                rental.getLocation(),
                 rental.getDistrict()
         );
         return new RentalUpdateResponseDto(rental);

@@ -9,6 +9,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 
 public class RentalRequestDto {
 
@@ -38,14 +41,17 @@ public class RentalRequestDto {
         private Long deposit;
 
         public Rental toEntity(Member member, String district) {
+            GeometryFactory geometryFactory = new GeometryFactory();
+            Point location = geometryFactory.createPoint(new Coordinate(member.getLongitude(), member.getLatitude()));
+            location.setSRID(4326);
+
             return Rental.builder()
                     .title(this.title)
                     .category(this.category)
                     .content(this.content)
                     .rentalFee(this.rentalFee)
                     .deposit(this.deposit)
-                    .latitude(member.getLatitude())
-                    .longitude(member.getLongitude())
+                    .location(location)
                     .district(district)
                     .member(member)
                     .build();
