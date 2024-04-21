@@ -54,7 +54,7 @@ public class RentalSearchService {
             double latitude = member.getLatitude();
 
             rentalList = rentalRepository.findAllWithSearchDistance(keyword, latitude, longitude, pageRequest.getPageSize(), (int) pageRequest.getOffset());
-            count = rentalRepository.CountWithSearchDistance(keyword, latitude, longitude);
+            count = rentalRepository.countWithSearchDistance(keyword, latitude, longitude);
         }
 
         List<RentalSearchResponseDto> rentalSearchResponseDtoList = new ArrayList<>();
