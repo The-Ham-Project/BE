@@ -15,13 +15,16 @@ import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
+import com.hanghae.theham.domain.rental.repository.RentalImageThumbnailRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
+import com.hanghae.theham.global.websocket.exception.WebSocketException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Transactional(readOnly = true)
@@ -39,13 +43,15 @@ public class ChatRoomService {
     private final RentalRepository rentalRepository;
     private final ChatRepository chatRepository;
     private final RentalImageRepository rentalImageRepository;
+    private final RentalImageThumbnailRepository rentalImageThumbnailRepository;
 
-    public ChatRoomService(ChatRoomRepository chatRoomRepository, MemberRepository memberRepository, RentalRepository rentalRepository, ChatRepository chatRepository, RentalImageRepository rentalImageRepository) {
+    public ChatRoomService(ChatRoomRepository chatRoomRepository, MemberRepository memberRepository, RentalRepository rentalRepository, ChatRepository chatRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository) {
         this.chatRoomRepository = chatRoomRepository;
         this.memberRepository = memberRepository;
         this.rentalRepository = rentalRepository;
         this.chatRepository = chatRepository;
         this.rentalImageRepository = rentalImageRepository;
+        this.rentalImageThumbnailRepository = rentalImageThumbnailRepository;
     }
 
     @Transactional
@@ -143,14 +149,20 @@ public class ChatRoomService {
         Collections.reverse(chatResponseList);
 
         // rental thumnail 이미지
-        String rentalThumbnailUrl = rentalImageRepository.findFirstByRental(chatRoom.getRental())
+        AtomicReference<String> rentalThumbnailUrl = new AtomicReference<>(rentalImageRepository.findFirstByRental(chatRoom.getRental())
                 .map(RentalImage::getImageUrl)
-                .orElse(null);
+                .orElse(null));
+
+        if (rentalThumbnailUrl.get() != null) {
+            rentalImageThumbnailRepository.findByImagePath(rentalThumbnailUrl.get()).ifPresent(
+                    rentalImageThumbnail -> rentalThumbnailUrl.set(rentalImageThumbnail.getThumbnailPath())
+            );
+        }
 
         return new ChatRoomDetailResponseDto(
                 chatPage,
                 chatRoom.getRental(),
-                rentalThumbnailUrl,
+                rentalThumbnailUrl.get(),
                 isSender ? receiver : sender,
                 member,
                 chatResponseList);
@@ -199,21 +211,21 @@ public class ChatRoomService {
     private Member findMemberByEmail(String email) {
         return memberRepository.findByEmail(email).orElseThrow(() -> {
             log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
-            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
+            return new WebSocketException(ErrorCode.NOT_FOUND_MEMBER.getMessage(), HttpStatus.BAD_REQUEST);
         });
     }
 
     private Rental findRentalById(Long id) {
         return rentalRepository.findById(id).orElseThrow(() -> {
             log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. 함께쓰기 정보: {}", id);
-            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
+            return new WebSocketException(ErrorCode.NOT_FOUND_RENTAL.getMessage(), HttpStatus.BAD_REQUEST);
         });
     }
 
     private ChatRoom findChatRoomById(Long id) {
         return chatRoomRepository.findById(id).orElseThrow(() -> {
             log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. 함께쓰기 정보: {}", id);
-            return new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage());
+            return new WebSocketException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage(), HttpStatus.BAD_REQUEST);
         });
     }
 
@@ -223,7 +235,7 @@ public class ChatRoomService {
 
         if (!(isSender && !chatRoom.getSenderIsDeleted()) && !(isReceiver && !chatRoom.getReceiverIsDeleted())) {
             log.error("채팅방 참여자가 아닙니다. 이메일: {}, 채팅방 ID: {}", member.getEmail(), chatRoom.getId());
-            throw new BadRequestException(ErrorCode.INVALID_CHAT_ROOM_PARTICIPANT.getMessage());
+            throw new WebSocketException(ErrorCode.INVALID_CHAT_ROOM_PARTICIPANT.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 }
