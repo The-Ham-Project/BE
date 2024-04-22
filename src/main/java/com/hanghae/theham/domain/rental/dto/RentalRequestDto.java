@@ -13,6 +13,8 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 
+import java.util.List;
+
 public class RentalRequestDto {
 
     @AllArgsConstructor
@@ -82,5 +84,8 @@ public class RentalRequestDto {
         @PositiveOrZero(message = "금액 범위를 다시 한번 확인해주세요.")
         @Max(value = 999999, message = "금액은 1백만원 미만이어야 합니다.")
         private Long deposit;
+
+        @Schema(description = "이전 이미지 URL")
+        private List<String> beforeImageUrlList;
     }
 }
