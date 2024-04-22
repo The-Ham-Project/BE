@@ -55,10 +55,10 @@ public class ChatRoomService {
     @Transactional
     public Long handleChatRoom(String email, ChatRoomCreateRequestDto requestDto) {
         // 렌탈 작성글이 존재하는지 확인
-        Rental rental = findRentalById(requestDto.getRentalId());
+        Rental rental = validateRental(requestDto.getRentalId());
 
         // 채팅 요청한 member
-        Member sender = findMemberByEmail(email);
+        Member sender = validateMember(email);
 
         // 채팅 요청 받은 member
         Member receiver = memberRepository.findByNickname(requestDto.getSellerNickname()).orElseThrow(() -> {
@@ -93,7 +93,7 @@ public class ChatRoomService {
 
     // 채팅방 전체 목록 조회
     public ChatRoomReadResponseDto getChatRoomList(String email, int page, int size) {
-        Member member = findMemberByEmail(email);
+        Member member = validateMember(email);
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "lastChatTime");
         Page<ChatRoom> chatRoomPage = chatRoomRepository.findChatRoomByMember(member, pageRequest);
@@ -113,13 +113,11 @@ public class ChatRoomService {
     @Transactional
     public ChatRoomDetailResponseDto getChatRoom(String email, Long chatRoomId, int page, int size) {
 
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(() -> {
-            log.error("채팅방 정보를 찾을 수 없습니다. 채팅방 ID: {}", chatRoomId);
-            return new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage());
-        });
-        Member member = findMemberByEmail(email); // 현재 접속한 멤버
+        ChatRoom chatRoom = validateChatRoom(chatRoomId);
+        Rental rental = validateRental(chatRoom.getRental().getId());
+        Member member = validateMember(email); // 현재 접속한 멤버
 
-        checkValidChatRoomParticipant(chatRoom, member); // 채팅방 참여자인지 확인
+        validateChatRoomParticipant(chatRoom, member); // 채팅방 참여자인지 확인
 
         Member sender = chatRoom.getSender(); // 채팅방 최초 발신자
         Member receiver = chatRoom.getReceiver(); // 채팅방 최초 수신자
@@ -159,7 +157,7 @@ public class ChatRoomService {
 
         return new ChatRoomDetailResponseDto(
                 chatPage,
-                chatRoom.getRental(),
+                rental,
                 rentalThumbnailUrl.get(),
                 isSender ? receiver : sender,
                 member,
@@ -169,11 +167,11 @@ public class ChatRoomService {
     // 채팅방 나가기 기능
     @Transactional
     public void leaveChatRoom(String email, Long chatRoomId) {
-        ChatRoom chatRoom = findChatRoomById(chatRoomId); // 채팅방 존재여부
-        Member member = findMemberByEmail(email); // 존재하는 회원여부
+        ChatRoom chatRoom = validateChatRoom(chatRoomId); // 채팅방 존재여부
+        Member member = validateMember(email); // 존재하는 회원여부
         boolean isSender = chatRoom.getSender().equals(member);
 
-        checkValidChatRoomParticipant(chatRoom, member);
+        validateChatRoomParticipant(chatRoom, member);
 
         // 1. 한명 이미 나간상태 -> 채팅방, 해당 메세지 완전 삭제 진행
         if (chatRoom.getSenderIsDeleted() || chatRoom.getReceiverIsDeleted()) {
@@ -206,28 +204,28 @@ public class ChatRoomService {
         return unreadChatList;
     }
 
-    private Member findMemberByEmail(String email) {
+    private Member validateMember(String email) {
         return memberRepository.findByEmail(email).orElseThrow(() -> {
             log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
             return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
         });
     }
 
-    private Rental findRentalById(Long id) {
+    private Rental validateRental(Long id) {
         return rentalRepository.findById(id).orElseThrow(() -> {
             log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. 함께쓰기 정보: {}", id);
             return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
         });
     }
 
-    private ChatRoom findChatRoomById(Long id) {
-        return chatRoomRepository.findById(id).orElseThrow(() -> {
-            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. 함께쓰기 정보: {}", id);
+    private ChatRoom validateChatRoom(Long chatRoomId) {
+        return chatRoomRepository.findById(chatRoomId).orElseThrow(() -> {
+            log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. 함께쓰기 정보: {}", chatRoomId);
             return new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage());
         });
     }
 
-    private void checkValidChatRoomParticipant(ChatRoom chatRoom, Member member) {
+    private void validateChatRoomParticipant(ChatRoom chatRoom, Member member) {
         boolean isSender = chatRoom.getSender().equals(member);
         boolean isReceiver = chatRoom.getReceiver().equals(member);
 
