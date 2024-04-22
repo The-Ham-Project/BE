@@ -175,8 +175,6 @@ public class ChatRoomService {
 
         // 1. 한명 이미 나간상태 -> 채팅방, 해당 메세지 완전 삭제 진행
         if (chatRoom.getSenderIsDeleted() || chatRoom.getReceiverIsDeleted()) {
-            List<Chat> chats = chatRoom.getChatList();
-            chatRepository.deleteAll(chats);
             chatRoomRepository.delete(chatRoom);
             return;
         }

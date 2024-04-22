@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hanghae.theham.domain.chat.repository.ChatRoomRepository;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
@@ -69,6 +70,7 @@ public class RentalService {
     private final RentalImageRepository rentalImageRepository;
     private final RentalImageThumbnailRepository rentalImageThumbnailRepository;
     private final MemberRepository memberRepository;
+    private final ChatRoomRepository chatRoomRepository;
     private final S3Config s3Config;
     private final RestTemplate restTemplate;
 
@@ -78,12 +80,13 @@ public class RentalService {
     @Value("${kakao.client-id}")
     private String kakaoClientId;
 
-    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, S3Config s3Config, RestTemplate restTemplate) {
+    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, ChatRoomRepository chatRoomRepository, S3Config s3Config, RestTemplate restTemplate) {
         this.rentalRepository = rentalRepository;
         this.rentalDistanceRepository = rentalDistanceRepository;
         this.rentalImageRepository = rentalImageRepository;
         this.rentalImageThumbnailRepository = rentalImageThumbnailRepository;
         this.memberRepository = memberRepository;
+        this.chatRoomRepository = chatRoomRepository;
         this.s3Config = s3Config;
         this.restTemplate = restTemplate;
     }
@@ -252,6 +255,7 @@ public class RentalService {
             throw new BadRequestException(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage());
         }
 
+        chatRoomRepository.deleteAllByRental(rental);
         rentalRepository.delete(rental);
     }
 
