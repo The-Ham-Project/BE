@@ -52,7 +52,7 @@ public class ChatRoom extends Timestamped {
     @Column
     private LocalDateTime lastChatTime;
 
-    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Chat> chatList = new ArrayList<>();
 
     @Builder

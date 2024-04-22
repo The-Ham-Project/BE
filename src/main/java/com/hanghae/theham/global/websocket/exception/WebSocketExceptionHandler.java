@@ -20,10 +20,10 @@ import java.util.Objects;
 
 @Component
 @Slf4j
-public class WebSocketErrorHandler extends StompSubProtocolErrorHandler {
+public class WebSocketExceptionHandler extends StompSubProtocolErrorHandler {
     private static final byte[] EMPTY_PAYLOAD = new byte[0];
 
-    public WebSocketErrorHandler() {
+    public WebSocketExceptionHandler() {
         super();
     }
 

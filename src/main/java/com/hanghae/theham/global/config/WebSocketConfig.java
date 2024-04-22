@@ -1,7 +1,7 @@
 package com.hanghae.theham.global.config;
 
 import com.hanghae.theham.global.websocket.WebSocketInterceptor;
-import com.hanghae.theham.global.websocket.exception.WebSocketErrorHandler;
+import com.hanghae.theham.global.websocket.exception.WebSocketExceptionHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -14,18 +14,18 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final WebSocketInterceptor webSocketInterceptor;
-    private final WebSocketErrorHandler webSocketErrorHandler;
+    private final WebSocketExceptionHandler webSocketExceptionHandler;
 
-    public WebSocketConfig(WebSocketInterceptor webSocketInterceptor, WebSocketErrorHandler webSocketErrorHandler) {
+    public WebSocketConfig(WebSocketInterceptor webSocketInterceptor, WebSocketExceptionHandler webSocketExceptionHandler) {
         this.webSocketInterceptor = webSocketInterceptor;
-        this.webSocketErrorHandler = webSocketErrorHandler;
+        this.webSocketExceptionHandler = webSocketExceptionHandler;
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
 
         registry
-                .setErrorHandler(webSocketErrorHandler)
+                .setErrorHandler(webSocketExceptionHandler)
                 .addEndpoint("/chat")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();

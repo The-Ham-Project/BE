@@ -17,4 +17,6 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             "WHERE (cr.sender = :member AND cr.senderIsDeleted = false ) " +
             "OR (cr.receiver = :member AND cr.receiverIsDeleted = false)")
     Page<ChatRoom> findChatRoomByMember(Member member, Pageable pageable);
+
+    void deleteAllByRental(Rental rental);
 }
