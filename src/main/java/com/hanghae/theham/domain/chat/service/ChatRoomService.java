@@ -61,12 +61,9 @@ public class ChatRoomService {
         Member sender = validateMember(email);
 
         // 채팅 요청 받은 member
-        Member receiver = memberRepository.findByNickname(requestDto.getSellerNickname()).orElseThrow(() -> {
-            log.error("회원 정보를 찾을 수 없습니다. nickname: {}", requestDto.getSellerNickname());
-            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
-        });
+        Member receiver = validateMember(rental.getMember().getEmail());
 
-        if (sender.equals(receiver) || rental.getMember().equals(sender)) {
+        if (sender.equals(receiver)) {
             throw new BadRequestException(ErrorCode.CANNOT_CHAT_WITH_SELF.getMessage());
         }
 
