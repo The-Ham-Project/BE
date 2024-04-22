@@ -19,12 +19,10 @@ import com.hanghae.theham.domain.rental.repository.RentalImageThumbnailRepositor
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
-import com.hanghae.theham.global.websocket.exception.WebSocketException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -211,21 +209,21 @@ public class ChatRoomService {
     private Member findMemberByEmail(String email) {
         return memberRepository.findByEmail(email).orElseThrow(() -> {
             log.error("회원 정보를 찾을 수 없습니다. 이메일: {}", email);
-            return new WebSocketException(ErrorCode.NOT_FOUND_MEMBER.getMessage(), HttpStatus.BAD_REQUEST);
+            return new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage());
         });
     }
 
     private Rental findRentalById(Long id) {
         return rentalRepository.findById(id).orElseThrow(() -> {
             log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. 함께쓰기 정보: {}", id);
-            return new WebSocketException(ErrorCode.NOT_FOUND_RENTAL.getMessage(), HttpStatus.BAD_REQUEST);
+            return new BadRequestException(ErrorCode.NOT_FOUND_RENTAL.getMessage());
         });
     }
 
     private ChatRoom findChatRoomById(Long id) {
         return chatRoomRepository.findById(id).orElseThrow(() -> {
             log.error("함께쓰기 게시글 정보를 찾을 수 없습니다. 함께쓰기 정보: {}", id);
-            return new WebSocketException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage(), HttpStatus.BAD_REQUEST);
+            return new BadRequestException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage());
         });
     }
 
@@ -235,7 +233,7 @@ public class ChatRoomService {
 
         if (!(isSender && !chatRoom.getSenderIsDeleted()) && !(isReceiver && !chatRoom.getReceiverIsDeleted())) {
             log.error("채팅방 참여자가 아닙니다. 이메일: {}, 채팅방 ID: {}", member.getEmail(), chatRoom.getId());
-            throw new WebSocketException(ErrorCode.INVALID_CHAT_ROOM_PARTICIPANT.getMessage(), HttpStatus.BAD_REQUEST);
+            throw new BadRequestException(ErrorCode.INVALID_CHAT_ROOM_PARTICIPANT.getMessage());
         }
     }
 }
