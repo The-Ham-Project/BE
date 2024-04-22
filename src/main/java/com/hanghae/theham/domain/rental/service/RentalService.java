@@ -213,11 +213,22 @@ public class RentalService {
             throw new BadRequestException(ErrorCode.UNMATCHED_RENTAL_MEMBER.getMessage());
         }
 
-        // 기존 이미지 삭제
-        List<RentalImage> existingImages = rentalImageRepository.findAllByRental(rental);
-        existingImages.forEach(image -> {
-            deleteFileFromS3(image.getImageUrl());
-            rentalImageRepository.delete(image);
+        // 기존 이미지 저장하기
+        List<String> beforeImageList = new ArrayList<>();
+        rentalImageRepository.findAllByRental(rental).forEach(rentalImage ->
+                beforeImageList.add(rentalImage.getImageUrl())
+        );
+
+        // 삭제된 이미지 구분하기
+        List<String> requestImageUrlList = requestDto.getBeforeImageUrlList();
+        List<String> deletedImageList = beforeImageList.stream()
+                .filter(imageUrl -> !requestImageUrlList.contains(imageUrl))
+                .toList();
+
+        // 삭제 처리 하기
+        deletedImageList.forEach(deletedImageUrl -> {
+            deleteFileFromS3(deletedImageUrl);
+            rentalImageRepository.deleteByImageUrl(deletedImageUrl);
         });
 
         // 새 이미지 파일 검증 및 업로드

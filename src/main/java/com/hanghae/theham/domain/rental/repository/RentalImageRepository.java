@@ -18,4 +18,6 @@ public interface RentalImageRepository extends JpaRepository<RentalImage, Long> 
     void hardDeleteForRentalImage(Long rental_id);
 
     Optional<RentalImage> findFirstByRental(Rental rental);
+
+    void deleteByImageUrl(String imageUrl);
 }
