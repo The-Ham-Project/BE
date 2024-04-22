@@ -4,6 +4,8 @@ import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.jwt.TokenProvider;
 import com.hanghae.theham.global.security.UserDetailsServiceImpl;
 import com.hanghae.theham.global.websocket.exception.WebSocketException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -72,12 +74,17 @@ public class WebSocketInterceptor implements ChannelInterceptor {
     }
 
     private void validateToken(String accessToken) {
-        if (!tokenProvider.getTokenType(accessToken).equals("access")) {
-            throw new WebSocketException(ErrorCode.INVALID_ACCESS_TOKEN.getMessage(), HttpStatus.UNAUTHORIZED);
-        }
-        if (tokenProvider.isExpired(accessToken)) {
+        try {
+            if (!tokenProvider.getTokenType(accessToken).equals("access")) {
+                throw new WebSocketException(ErrorCode.EXPIRED_ACCESS_TOKEN.getMessage(), HttpStatus.UNAUTHORIZED);
+            }
+            if (tokenProvider.isExpired(accessToken)) {
+                throw new WebSocketException(ErrorCode.EXPIRED_ACCESS_TOKEN.getMessage(), HttpStatus.UNAUTHORIZED);
+            }
+        } catch (ExpiredJwtException e) {
             throw new WebSocketException(ErrorCode.EXPIRED_ACCESS_TOKEN.getMessage(), HttpStatus.UNAUTHORIZED);
+        } catch (JwtException e) {
+            throw new WebSocketException(ErrorCode.INVALID_ACCESS_TOKEN.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 }
-
