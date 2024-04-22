@@ -11,6 +11,7 @@ import com.hanghae.theham.domain.rental.dto.RentalResponseDto.*;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
+import com.hanghae.theham.domain.rental.repository.RentalDistanceRepository;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
 import com.hanghae.theham.global.config.S3Config;
@@ -19,6 +20,9 @@ import com.hanghae.theham.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -48,6 +52,9 @@ class RentalServiceTest {
 
     @Mock
     private RentalRepository rentalRepository;
+
+    @Mock
+    private RentalDistanceRepository rentalDistanceRepository;
 
     @Mock
     private RentalImageRepository rentalImageRepository;
@@ -615,27 +622,26 @@ class RentalServiceTest {
         Rental rental1 = Rental.builder()
                 .title("제목1")
                 .category(CategoryType.BOOK)
-                .longitude(0)
-                .latitude(0)
                 .member(member)
                 .build();
 
         Rental rental2 = Rental.builder()
                 .title("제목2")
                 .category(CategoryType.ELECTRONIC)
-                .longitude(0)
-                .latitude(0)
                 .member(member)
                 .build();
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
         PageImpl<Rental> rentalPage = new PageImpl<>(Arrays.asList(rental1, rental2));
 
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Point memberLocation = geometryFactory.createPoint(new Coordinate(member.getLongitude(), member.getLatitude()));
+        memberLocation.setSRID(4326);
+
         // when
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
-        when(rentalRepository.findAllByDistance(
-                member.getLatitude(), member.getLongitude(), pageRequest.getPageSize(), (int) pageRequest.getOffset()
-        )).thenReturn(rentalPage.getContent());
+        when(rentalDistanceRepository.findRentalsNearby(memberLocation, 4000, pageRequest))
+                .thenReturn(rentalPage);
 
         List<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(member.getEmail(), CategoryType.ALL, page, size);
 
@@ -661,19 +667,20 @@ class RentalServiceTest {
         Rental rental1 = Rental.builder()
                 .title("제목1")
                 .category(CategoryType.BOOK)
-                .longitude(0)
-                .latitude(0)
                 .member(member)
                 .build();
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
         PageImpl<Rental> rentalPage = new PageImpl<>(Collections.singletonList(rental1));
 
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Point memberLocation = geometryFactory.createPoint(new Coordinate(member.getLongitude(), member.getLatitude()));
+        memberLocation.setSRID(4326);
+
         // when
         when(memberRepository.findByEmail(anyString())).thenReturn(Optional.of(member));
-        when(rentalRepository.findAllByCategoryAndDistance(
-                CategoryType.BOOK.toString(), member.getLatitude(), member.getLongitude(), pageRequest.getPageSize(), (int) pageRequest.getOffset()
-        )).thenReturn(rentalPage.getContent());
+        when(rentalDistanceRepository.findRentalsByCategoryNearby(CategoryType.BOOK, memberLocation, 4000, pageRequest))
+                .thenReturn(rentalPage);
 
         List<RentalCategoryReadResponseDto> responseDtoList = rentalService.readRentalList(member.getEmail(), CategoryType.BOOK, page, size);
 
