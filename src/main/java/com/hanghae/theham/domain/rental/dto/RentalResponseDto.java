@@ -2,6 +2,7 @@ package com.hanghae.theham.domain.rental.dto;
 
 import com.hanghae.theham.domain.rental.dto.RentalImageResponseDto.RentalImageReadResponseDto;
 import com.hanghae.theham.domain.rental.entity.Rental;
+import com.hanghae.theham.domain.rental.entity.type.CategoryType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -31,7 +32,7 @@ public class RentalResponseDto {
         private Long rentalId;
         private String nickname;
         private String profileUrl;
-        private String category;
+        private CategoryType category;
         private String title;
         private String content;
         private long rentalFee;
@@ -44,7 +45,7 @@ public class RentalResponseDto {
             this.rentalId = rental.getId();
             this.nickname = rental.getMember().getNickname();
             this.profileUrl = rental.getMember().getProfileUrl();
-            this.category = rental.getCategory().getValue();
+            this.category = rental.getCategory();
             this.title = rental.getTitle();
             this.content = rental.getContent();
             this.rentalFee = rental.getRentalFee();
