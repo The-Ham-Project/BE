@@ -3,6 +3,7 @@ package com.hanghae.theham.domain.chat.dto;
 import com.hanghae.theham.domain.chat.entity.Chat;
 import com.hanghae.theham.domain.chat.entity.ChatRoom;
 import com.hanghae.theham.domain.member.entity.Member;
+import com.hanghae.theham.global.util.BadWordFilteringUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -16,10 +17,12 @@ public class ChatRequestDto {
 
         public Chat toEntity(ChatRoom chatRoom, Member sender, int currentMemberCount) {
             boolean isRead = currentMemberCount == 2;
+            // 비속어
+            String badWordFilterMessage = BadWordFilteringUtil.change(this.message);
             return Chat.builder()
                     .chatRoom(chatRoom)
                     .sender(sender)
-                    .message(message)
+                    .message(badWordFilterMessage)
                     .isRead(isRead)
                     .build();
         }
