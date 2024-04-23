@@ -56,6 +56,9 @@ dependencies {
 
     // hibernate-spatial
     implementation 'org.hibernate.orm:hibernate-spatial:6.4.4.Final'
+
+    // 비속어 필터링
+    implementation 'io.github.vaneproject:badwordfiltering:1.0.0'
 }
 
 tasks.named('bootBuildImage') {

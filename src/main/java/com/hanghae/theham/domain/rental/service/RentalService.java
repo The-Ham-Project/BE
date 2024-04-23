@@ -25,6 +25,7 @@ import com.hanghae.theham.global.config.S3Config;
 import com.hanghae.theham.global.exception.AwsS3Exception;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
+import com.hanghae.theham.global.util.BadWordFilteringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -244,10 +245,13 @@ public class RentalService {
             });
         }
 
+        String badWordFilteringTitle = BadWordFilteringUtil.change(requestDto.getTitle());
+        String badWordFilteringContent = BadWordFilteringUtil.change(requestDto.getContent());
+
         rental.update(
-                requestDto.getTitle(),
+                badWordFilteringTitle,
                 requestDto.getCategory(),
-                requestDto.getContent(),
+                badWordFilteringContent,
                 requestDto.getRentalFee(),
                 requestDto.getDeposit(),
                 rental.getLocation(),
