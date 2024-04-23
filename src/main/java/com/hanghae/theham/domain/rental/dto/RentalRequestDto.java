@@ -3,6 +3,7 @@ package com.hanghae.theham.domain.rental.dto;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
+import com.hanghae.theham.global.util.BadWordFilteringUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
@@ -43,14 +44,19 @@ public class RentalRequestDto {
         private Long deposit;
 
         public Rental toEntity(Member member, String district) {
+            // 비속어
+            String badWordFilterTitle = BadWordFilteringUtil.change(this.title);
+            String badWordFilterContent = BadWordFilteringUtil.change(this.content);
+
+            // 위치
             GeometryFactory geometryFactory = new GeometryFactory();
             Point location = geometryFactory.createPoint(new Coordinate(member.getLongitude(), member.getLatitude()));
             location.setSRID(4326);
 
             return Rental.builder()
-                    .title(this.title)
+                    .title(badWordFilterTitle)
                     .category(this.category)
-                    .content(this.content)
+                    .content(badWordFilterContent)
                     .rentalFee(this.rentalFee)
                     .deposit(this.deposit)
                     .location(location)
