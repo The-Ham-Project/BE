@@ -9,6 +9,7 @@ import com.hanghae.theham.domain.member.repository.MemberRepository;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ public class MemberService {
         this.memberRepository = memberRepository;
     }
 
+    @Cacheable(value = "Members", key = "#email", cacheManager = "redisCacheManager")
     public MemberReadResponseDto getMember(String email) {
         Member member = validateMember(email);
         return new MemberReadResponseDto(member);

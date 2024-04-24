@@ -31,6 +31,8 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -92,6 +94,7 @@ public class RentalService {
         this.restTemplate = restTemplate;
     }
 
+    @CacheEvict(cacheNames = "Rentals", allEntries = true)
     @Transactional
     public RentalCreateResponseDto createRental(
             String email,
@@ -128,6 +131,7 @@ public class RentalService {
         return new RentalCreateResponseDto(rental);
     }
 
+    @Cacheable(value = "Rentals", key = "{#email != null ? #email : 'noEmail', #rentalId}", cacheManager = "redisCacheManager")
     public RentalReadResponseDto readRental(String email, Long rentalId) {
         Boolean isChatButton = Boolean.TRUE;
 
@@ -147,6 +151,7 @@ public class RentalService {
         return new RentalReadResponseDto(rental, isChatButton, rentalImageReadResponseDtoList);
     }
 
+    @Cacheable(value = "Rentals", key = "{#email != null ? #email : 'noEmail', #category, #page}", cacheManager = "redisCacheManager")
     public List<RentalCategoryReadResponseDto> readRentalList(String email, CategoryType category, int page, int size) {
         List<Rental> rentalList;
         List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();
@@ -185,6 +190,7 @@ public class RentalService {
         return responseDtoList;
     }
 
+    @Cacheable(value = "Rentals", key = "{#email, #page}", cacheManager = "redisCacheManager")
     public List<RentalMyReadResponseDto> readRentalMyList(String email, int page, int size) {
         Member member = validateMember(email);
 
@@ -207,6 +213,7 @@ public class RentalService {
         return responseDtoList;
     }
 
+    @CacheEvict(cacheNames = "Rentals", allEntries = true)
     @Transactional
     public RentalUpdateResponseDto updateRental(String email, Long rentalId, RentalUpdateRequestDto requestDto, List<MultipartFile> multipartFileList) {
         Member member = validateMember(email);
@@ -260,6 +267,7 @@ public class RentalService {
         return new RentalUpdateResponseDto(rental);
     }
 
+    @CacheEvict(cacheNames = "Rentals", allEntries = true)
     @Transactional
     public void deleteRental(String email, Long rentalId) {
         Member member = validateMember(email);
