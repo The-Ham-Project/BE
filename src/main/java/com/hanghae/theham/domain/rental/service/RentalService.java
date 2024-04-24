@@ -31,7 +31,6 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -76,6 +75,7 @@ public class RentalService {
     private final ChatRoomRepository chatRoomRepository;
     private final S3Config s3Config;
     private final RestTemplate restTemplate;
+    private final RentalCachingService rentalCachingService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -83,7 +83,7 @@ public class RentalService {
     @Value("${kakao.client-id}")
     private String kakaoClientId;
 
-    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, ChatRoomRepository chatRoomRepository, S3Config s3Config, RestTemplate restTemplate) {
+    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, ChatRoomRepository chatRoomRepository, S3Config s3Config, RestTemplate restTemplate, RentalCachingService rentalCachingService) {
         this.rentalRepository = rentalRepository;
         this.rentalDistanceRepository = rentalDistanceRepository;
         this.rentalImageRepository = rentalImageRepository;
@@ -92,9 +92,9 @@ public class RentalService {
         this.chatRoomRepository = chatRoomRepository;
         this.s3Config = s3Config;
         this.restTemplate = restTemplate;
+        this.rentalCachingService = rentalCachingService;
     }
 
-    @CacheEvict(cacheNames = "Rentals", allEntries = true)
     @Transactional
     public RentalCreateResponseDto createRental(
             String email,
@@ -131,7 +131,7 @@ public class RentalService {
         return new RentalCreateResponseDto(rental);
     }
 
-    @Cacheable(value = "Rentals", key = "{#email != null ? #email : 'noEmail', #rentalId}", cacheManager = "redisCacheManager")
+    @Cacheable(value = "Rentals", key = "{#rentalId, #email != null ? #email : 'noEmail'}", cacheManager = "redisCacheManager")
     public RentalReadResponseDto readRental(String email, Long rentalId) {
         Boolean isChatButton = Boolean.TRUE;
 
@@ -151,7 +151,6 @@ public class RentalService {
         return new RentalReadResponseDto(rental, isChatButton, rentalImageReadResponseDtoList);
     }
 
-    @Cacheable(value = "Rentals", key = "{#email != null ? #email : 'noEmail', #category, #page}", cacheManager = "redisCacheManager")
     public List<RentalCategoryReadResponseDto> readRentalList(String email, CategoryType category, int page, int size) {
         List<Rental> rentalList;
         List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();
@@ -190,7 +189,6 @@ public class RentalService {
         return responseDtoList;
     }
 
-    @Cacheable(value = "Rentals", key = "{#email, #page}", cacheManager = "redisCacheManager")
     public List<RentalMyReadResponseDto> readRentalMyList(String email, int page, int size) {
         Member member = validateMember(email);
 
@@ -213,7 +211,6 @@ public class RentalService {
         return responseDtoList;
     }
 
-    @CacheEvict(cacheNames = "Rentals", allEntries = true)
     @Transactional
     public RentalUpdateResponseDto updateRental(String email, Long rentalId, RentalUpdateRequestDto requestDto, List<MultipartFile> multipartFileList) {
         Member member = validateMember(email);
@@ -264,10 +261,11 @@ public class RentalService {
                 rental.getLocation(),
                 rental.getDistrict()
         );
+
+        rentalCachingService.deleteKeys(rentalId);
         return new RentalUpdateResponseDto(rental);
     }
 
-    @CacheEvict(cacheNames = "Rentals", allEntries = true)
     @Transactional
     public void deleteRental(String email, Long rentalId) {
         Member member = validateMember(email);
@@ -280,6 +278,8 @@ public class RentalService {
 
         chatRoomRepository.deleteAllByRental(rental);
         rentalRepository.delete(rental);
+
+        rentalCachingService.deleteKeys(rentalId);
     }
 
     private Member validateMember(String email) {
