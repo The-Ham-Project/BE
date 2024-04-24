@@ -31,6 +31,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -74,6 +75,7 @@ public class RentalService {
     private final ChatRoomRepository chatRoomRepository;
     private final S3Config s3Config;
     private final RestTemplate restTemplate;
+    private final RentalCacheService rentalCacheService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -81,7 +83,7 @@ public class RentalService {
     @Value("${kakao.client-id}")
     private String kakaoClientId;
 
-    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, ChatRoomRepository chatRoomRepository, S3Config s3Config, RestTemplate restTemplate) {
+    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, ChatRoomRepository chatRoomRepository, S3Config s3Config, RestTemplate restTemplate, RentalCacheService rentalCacheService) {
         this.rentalRepository = rentalRepository;
         this.rentalDistanceRepository = rentalDistanceRepository;
         this.rentalImageRepository = rentalImageRepository;
@@ -90,6 +92,7 @@ public class RentalService {
         this.chatRoomRepository = chatRoomRepository;
         this.s3Config = s3Config;
         this.restTemplate = restTemplate;
+        this.rentalCacheService = rentalCacheService;
     }
 
     @Transactional
@@ -128,6 +131,7 @@ public class RentalService {
         return new RentalCreateResponseDto(rental);
     }
 
+    @Cacheable(value = "Rentals", key = "{#rentalId, #email != null ? #email : 'noEmail'}", cacheManager = "redisCacheManager")
     public RentalReadResponseDto readRental(String email, Long rentalId) {
         Boolean isChatButton = Boolean.TRUE;
 
@@ -257,6 +261,10 @@ public class RentalService {
                 rental.getLocation(),
                 rental.getDistrict()
         );
+
+        // 캐시 무효화
+        rentalCacheService.evictAllCachesForRental(rentalId);
+
         return new RentalUpdateResponseDto(rental);
     }
 
@@ -272,6 +280,9 @@ public class RentalService {
 
         chatRoomRepository.deleteAllByRental(rental);
         rentalRepository.delete(rental);
+
+        // 캐시 무효화
+        rentalCacheService.evictAllCachesForRental(rentalId);
     }
 
     private Member validateMember(String email) {

@@ -2,15 +2,17 @@ package com.hanghae.theham.domain.member.dto;
 
 import com.hanghae.theham.domain.member.entity.Member;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class MemberResponseDto {
 
+    @NoArgsConstructor
     @Getter
     public static class MemberReadResponseDto {
 
-        private final String nickname;
-        private final String email;
-        private final String profileUrl;
+        private String nickname;
+        private String email;
+        private String profileUrl;
 
         public MemberReadResponseDto(Member member) {
             this.nickname = member.getNickname();
