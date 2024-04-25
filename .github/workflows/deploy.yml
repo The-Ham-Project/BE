@@ -54,8 +54,8 @@ jobs:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           region: ${{ env.AWS_REGION }}
-          application_name: theham
-          environment_name: Theham-env
+          application_name: Theham2
+          environment_name: Theham2-env
           version_label: github-action-${{steps.current-time.outputs.formattedTime}}
           deployment_package: deploy/deploy.zip
           wait_for_environment_recovery: 180
