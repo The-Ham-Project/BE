@@ -81,6 +81,10 @@ public class TokenProvider {
         return null;
     }
 
+    public String getRefreshTokenFromHeader(HttpServletRequest request) {
+        return request.getHeader(REFRESH_TOKEN_COOKIE);
+    }
+
     public Boolean isExpired(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
