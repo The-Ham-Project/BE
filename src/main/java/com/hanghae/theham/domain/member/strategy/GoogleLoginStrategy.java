@@ -70,7 +70,7 @@ public class GoogleLoginStrategy implements SocialLoginStrategy {
         String refreshToken = tokenProvider.createRefreshToken(googleUser.getEmail(), googleUser.getRole().name());
 
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
-        response.addHeader(TokenProvider.REFRESH_TOKEN_COOKIE, refreshToken);
+        response.addHeader(TokenProvider.REFRESH_TOKEN_HEADER, refreshToken);
 
         forceLogin(googleUser);
         return memberInfoDto;

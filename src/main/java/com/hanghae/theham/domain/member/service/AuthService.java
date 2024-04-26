@@ -52,7 +52,7 @@ public class AuthService {
         String newRefreshToken = tokenProvider.createRefreshToken(email, role);
 
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, newAccessToken);
-        response.addHeader(TokenProvider.REFRESH_TOKEN_COOKIE, newRefreshToken);
+        response.addHeader(TokenProvider.REFRESH_TOKEN_HEADER, newRefreshToken);
     }
 
     @Transactional

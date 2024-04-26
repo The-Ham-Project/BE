@@ -72,7 +72,7 @@ public class KakaoLoginStrategy implements SocialLoginStrategy {
         String refreshToken = tokenProvider.createRefreshToken(member.getEmail(), member.getRole().name());
 
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
-        response.addHeader(TokenProvider.REFRESH_TOKEN_COOKIE, refreshToken);
+        response.addHeader(TokenProvider.REFRESH_TOKEN_HEADER, refreshToken);
 
         forceLogin(member);
         return memberInfoDto;
