@@ -70,7 +70,7 @@ public class NaverLoginStrategy implements SocialLoginStrategy {
         String refreshToken = tokenProvider.createRefreshToken(naverUser.getEmail(), naverUser.getRole().name());
 
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
-        tokenProvider.addRefreshTokenToCookie(refreshToken, response);
+        response.addHeader(TokenProvider.REFRESH_TOKEN_HEADER, refreshToken);
 
         forceLogin(naverUser);
         return memberInfoDto;

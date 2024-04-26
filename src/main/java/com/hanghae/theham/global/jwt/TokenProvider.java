@@ -24,7 +24,7 @@ import java.util.Date;
 public class TokenProvider {
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
-    public static final String REFRESH_TOKEN_COOKIE = "Refresh-Token";
+    public static final String REFRESH_TOKEN_HEADER = "Refresh-Token";
     public static final String BEARER_PREFIX = "Bearer ";
 
     private static final long ACCESS_TOKEN_TIME = 24 * 60 * 60 * 1000L; // 하루(임시)
@@ -81,6 +81,10 @@ public class TokenProvider {
         return null;
     }
 
+    public String getRefreshTokenFromHeader(HttpServletRequest request) {
+        return request.getHeader(REFRESH_TOKEN_HEADER);
+    }
+
     public Boolean isExpired(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
@@ -126,7 +130,7 @@ public class TokenProvider {
         refreshToken = URLEncoder.encode(refreshToken, StandardCharsets.UTF_8)
                 .replaceAll("\\+", "%20");
 
-        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE, refreshToken);
+        Cookie cookie = new Cookie(REFRESH_TOKEN_HEADER, refreshToken);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
@@ -140,7 +144,7 @@ public class TokenProvider {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(REFRESH_TOKEN_COOKIE)) {
+                if (cookie.getName().equals(REFRESH_TOKEN_HEADER)) {
                     return URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8);
                 }
             }

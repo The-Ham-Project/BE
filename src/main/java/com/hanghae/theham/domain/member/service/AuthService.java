@@ -4,7 +4,6 @@ import com.hanghae.theham.domain.member.repository.RefreshTokenRepository;
 import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.exception.TokenException;
 import com.hanghae.theham.global.jwt.TokenProvider;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +25,7 @@ public class AuthService {
 
     @Transactional
     public void reissue(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = tokenProvider.getRefreshTokenFromCookie(request);
+        String refreshToken = tokenProvider.getRefreshTokenFromHeader(request);
 
         if (refreshToken == null) {
             log.error("리프레쉬 토큰을 찾을 수 없습니다.");
@@ -46,18 +45,19 @@ public class AuthService {
 
         String email = tokenProvider.getTokenEmail(refreshToken);
         String role = tokenProvider.getTokenRole(refreshToken);
+
         refreshTokenRepository.deleteById(refreshToken);
 
         String newAccessToken = tokenProvider.createAccessToken(email, role);
         String newRefreshToken = tokenProvider.createRefreshToken(email, role);
 
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, newAccessToken);
-        tokenProvider.addRefreshTokenToCookie(newRefreshToken, response);
+        response.addHeader(TokenProvider.REFRESH_TOKEN_HEADER, newRefreshToken);
     }
 
     @Transactional
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = tokenProvider.getRefreshTokenFromCookie(request);
+        String refreshToken = tokenProvider.getRefreshTokenFromHeader(request);
 
         if (refreshToken == null) {
             log.error("리프레쉬 토큰을 찾을 수 없습니다.");
@@ -76,14 +76,5 @@ public class AuthService {
         }
 
         refreshTokenRepository.deleteById(refreshToken);
-
-        Cookie cookie = new Cookie(TokenProvider.REFRESH_TOKEN_COOKIE, null);
-        cookie.setPath("/");
-        cookie.setHttpOnly(false);
-        cookie.setSecure(true);
-        cookie.setAttribute("SameSite", "None");
-        cookie.setMaxAge(0);
-
-        response.addCookie(cookie);
     }
 }
