@@ -8,10 +8,12 @@ import com.hanghae.theham.domain.chat.repository.ChatRepository;
 import com.hanghae.theham.domain.chat.repository.ChatRoomRepository;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
+import com.hanghae.theham.domain.notification.service.NotificationService;
 import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.websocket.ChatRoomParticipantManager;
 import com.hanghae.theham.global.websocket.exception.WebSocketException;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,21 +21,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class ChatService {
+    private final SimpMessagingTemplate messagingTemplate;
 
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final MemberRepository memberRepository;
+    private final NotificationService notificationService;
     private final ChatRoomParticipantManager chatRoomParticipantManager;
 
-    public ChatService(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, MemberRepository memberRepository, ChatRoomParticipantManager chatRoomParticipantManager) {
+    public ChatService(SimpMessagingTemplate messagingTemplate, ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, MemberRepository memberRepository, NotificationService notificationService, ChatRoomParticipantManager chatRoomParticipantManager) {
+        this.messagingTemplate = messagingTemplate;
         this.chatRepository = chatRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.memberRepository = memberRepository;
+        this.notificationService = notificationService;
         this.chatRoomParticipantManager = chatRoomParticipantManager;
     }
 
     @Transactional
-    public ChatReadResponseDto saveMessage(ChatSendMessageRequestDto requestDto, String email, Long roomId) {
+    public void saveMessage(ChatSendMessageRequestDto requestDto, String email, Long roomId) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new WebSocketException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage(), HttpStatus.BAD_REQUEST)
                 );
@@ -54,6 +60,10 @@ public class ChatService {
         // 채팅방 업데이트
         chatRoom.updateChatRoom(isSender, chat.getMessage(), chat.getCreatedAt(), currentMemberCount);
 
-        return new ChatReadResponseDto(chat);
+        // 구독자 들에게 메세지 전송
+        messagingTemplate.convertAndSend("/sub/chat/chatRoom/" + roomId, new ChatReadResponseDto(chat));
+
+        // 채팅방 알림
+        notificationService.sendNotification(chatRoom, isSender, currentMemberCount);
     }
 }

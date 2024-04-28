@@ -2,14 +2,12 @@ package com.hanghae.theham.domain.chat.controller;
 
 import com.hanghae.theham.domain.chat.controller.docs.ChatControllerDocs;
 import com.hanghae.theham.domain.chat.dto.ChatRequestDto.ChatSendMessageRequestDto;
-import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatReadResponseDto;
 import com.hanghae.theham.domain.chat.service.ChatService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
@@ -18,11 +16,9 @@ import java.security.Principal;
 @RestController
 public class ChatController implements ChatControllerDocs {
 
-    private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
 
-    public ChatController(SimpMessagingTemplate messagingTemplate, ChatService chatService) {
-        this.messagingTemplate = messagingTemplate;
+    public ChatController(ChatService chatService) {
         this.chatService = chatService;
     }
 
@@ -30,7 +26,6 @@ public class ChatController implements ChatControllerDocs {
     public void sendMessage(@Valid @Payload ChatSendMessageRequestDto requestDto,
                             Principal principal,
                             @DestinationVariable Long roomId) {
-        ChatReadResponseDto responseDto = chatService.saveMessage(requestDto, principal.getName(), roomId);
-        messagingTemplate.convertAndSend("/sub/chat/chatRoom/" + roomId, responseDto);
+        chatService.saveMessage(requestDto, principal.getName(), roomId);
     }
 }
