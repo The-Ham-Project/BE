@@ -19,4 +19,9 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     Page<ChatRoom> findChatRoomByMember(Member member, Pageable pageable);
 
     void deleteAllByRental(Rental rental);
+
+    @Query("SELECT COUNT(msg) FROM ChatRoom room JOIN room.chatList msg " +
+            "WHERE (room.sender = :member OR room.receiver = :member) " +
+            "AND msg.sender != :member AND msg.isRead = false")
+    int countUnreadMessagesReceivedByUser(Member member);
 }

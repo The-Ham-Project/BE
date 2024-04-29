@@ -3,7 +3,7 @@ package com.hanghae.theham.domain.chat.service;
 import com.hanghae.theham.domain.chat.dto.ChatResponseDto.ChatReadResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomRequestDto.ChatRoomCreateRequestDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomDetailResponseDto;
-import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomListResponseDto;
+import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomInfoResponseDto;
 import com.hanghae.theham.domain.chat.dto.ChatRoomResponseDto.ChatRoomReadResponseDto;
 import com.hanghae.theham.domain.chat.entity.Chat;
 import com.hanghae.theham.domain.chat.entity.ChatRoom;
@@ -96,11 +96,11 @@ public class ChatRoomService {
         Page<ChatRoom> chatRoomPage = chatRoomRepository.findChatRoomByMember(member, pageRequest);
 
         List<ChatRoom> chatRooms = chatRoomPage.getContent();
-        List<ChatRoomListResponseDto> chatRoomList = chatRooms.stream()
+        List<ChatRoomInfoResponseDto> chatRoomList = chatRooms.stream()
                 .map(chatRoom -> {
                     Member toMember = chatRoom.getSender().equals(member) ? chatRoom.getReceiver() : chatRoom.getSender();
                     int unreadCount = chatRoom.getSender().equals(member) ? chatRoom.getSenderUnreadCount() : chatRoom.getReceiverUnreadCount();
-                    return new ChatRoomListResponseDto(chatRoom, toMember, unreadCount);
+                    return new ChatRoomInfoResponseDto(chatRoom, toMember, unreadCount);
                 })
                 .toList();
         return new ChatRoomReadResponseDto(chatRoomPage, chatRoomList);

@@ -52,9 +52,9 @@ public class ChatRoomResponseDto {
     public static class ChatRoomReadResponseDto {
         private final int totalPage;
         private final int currentPage;
-        private final List<ChatRoomListResponseDto> ChatRoomListResponseDto;
+        private final List<ChatRoomInfoResponseDto> ChatRoomListResponseDto;
 
-        public ChatRoomReadResponseDto(Page<ChatRoom> chatRoomPage, List<ChatRoomListResponseDto> chatRoomListResponseDto) {
+        public ChatRoomReadResponseDto(Page<ChatRoom> chatRoomPage, List<ChatRoomInfoResponseDto> chatRoomListResponseDto) {
             this.totalPage = chatRoomPage.getTotalPages();
             this.currentPage = chatRoomPage.getNumber() + 1;
             ChatRoomListResponseDto = chatRoomListResponseDto;
@@ -62,7 +62,7 @@ public class ChatRoomResponseDto {
     }
 
     @Getter
-    public static class ChatRoomListResponseDto {
+    public static class ChatRoomInfoResponseDto {
         private final Long chatRoomId;
         private final Long toMemberId;
         private final String toMemberNickName;
@@ -72,7 +72,7 @@ public class ChatRoomResponseDto {
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private final LocalDateTime lastMessageTime;
 
-        public ChatRoomListResponseDto(ChatRoom chatRoom,
+        public ChatRoomInfoResponseDto(ChatRoom chatRoom,
                                        Member toMember,
                                        int unreadCount) {
             this.chatRoomId = chatRoom.getId();
