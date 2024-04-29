@@ -4,9 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum NotificationType {
-    CONNECTED("SSE 연결성공"),
-    CHAT("새로운 메세지"),
-    UPDATE_CHATROOM("채팅방 업데이트"),
+    CONNECTED("sse connected"),
+    NEW_CHAT("new chat"),
+    READ_CHATROOM_MESSAGE("read chatRoom message"),
+    UPDATE_CHATROOM("update chatroom"),
     ;
 
     private final String message;
