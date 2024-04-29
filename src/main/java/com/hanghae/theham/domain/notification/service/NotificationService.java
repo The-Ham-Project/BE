@@ -18,12 +18,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j(topic = "NotificationService")
 @Service
 public class NotificationService {
-    private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
     private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60; // 연결시간 1시간 설정
     private final EmitterRepository emitterRepository;
     private final MemberRepository memberRepository;
@@ -45,7 +43,7 @@ public class NotificationService {
 
         NotificationCreateResponseDto responseDto = new NotificationCreateResponseDto(getTotalUnreadMessagesCount(member));
 
-        sendToClient(emitter, emitterId, ResponseDto.success(NotificationType.CONNECTED.getMessage(), responseDto));
+        sendToClient(emitter, emitterId, ResponseDto.success(NotificationType.CONNECTED.name(), responseDto));
 
         return emitter;
     }
@@ -63,19 +61,27 @@ public class NotificationService {
         }
     }
 
+    // 메세지 전송시 알림 전송
     public void sendNotification(ChatRoom chatRoom, boolean isSender, int currentMemberCount) {
         // 채팅방 업데이트가 될 대상 : 채팅방 참여자
         Member sender = chatRoom.getSender();
-        sendChatRoomInformation(sender.getId(), ResponseDto.success(NotificationType.UPDATE_CHATROOM.getMessage(), getChatRoomInfoResponseDto(chatRoom, isSender)));
+        sendChatRoomInformation(sender.getId(), ResponseDto.success(NotificationType.UPDATE_CHATROOM.name(), getChatRoomInfoResponseDto(chatRoom, isSender)));
 
         Member receiver = chatRoom.getReceiver();
-        sendChatRoomInformation(receiver.getId(), ResponseDto.success(NotificationType.UPDATE_CHATROOM.getMessage(), getChatRoomInfoResponseDto(chatRoom, isSender)));
+        sendChatRoomInformation(receiver.getId(), ResponseDto.success(NotificationType.UPDATE_CHATROOM.name(), getChatRoomInfoResponseDto(chatRoom, isSender)));
 
         if (currentMemberCount == 1) {
             int totalUnreadCount = getTotalUnreadMessagesCount(isSender ? receiver : sender);
             NotificationCreateResponseDto responseDto = new NotificationCreateResponseDto(totalUnreadCount);
-            sendTotalUnreadCount(isSender ? receiver.getId() : sender.getId(), ResponseDto.success(NotificationType.CHAT.getMessage(), responseDto));
+            sendTotalUnreadCount(isSender ? receiver.getId() : sender.getId(), ResponseDto.success(NotificationType.NEW_CHAT.getMessage(), responseDto));
         }
+    }
+
+    // 채팅방 안읽은 메세지 읽을 때 알림 전송
+    public void sendNotification(Member member) {
+        int totalUnreadCount = getTotalUnreadMessagesCount(member);
+        NotificationCreateResponseDto responseDto = new NotificationCreateResponseDto(totalUnreadCount);
+        sendTotalUnreadCount(member.getId(), ResponseDto.success(NotificationType.READ_CHATROOM_MESSAGE.name(), responseDto));
     }
 
     private void sendChatRoomInformation(Long memberId, ResponseDto<ChatRoomInfoResponseDto> responseDto) {

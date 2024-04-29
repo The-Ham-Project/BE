@@ -12,6 +12,7 @@ import com.hanghae.theham.domain.chat.repository.ChatRepository;
 import com.hanghae.theham.domain.chat.repository.ChatRoomRepository;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
+import com.hanghae.theham.domain.notification.service.NotificationService;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
@@ -42,14 +43,16 @@ public class ChatRoomService {
     private final ChatRepository chatRepository;
     private final RentalImageRepository rentalImageRepository;
     private final RentalImageThumbnailRepository rentalImageThumbnailRepository;
+    private final NotificationService notificationService;
 
-    public ChatRoomService(ChatRoomRepository chatRoomRepository, MemberRepository memberRepository, RentalRepository rentalRepository, ChatRepository chatRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository) {
+    public ChatRoomService(ChatRoomRepository chatRoomRepository, MemberRepository memberRepository, RentalRepository rentalRepository, ChatRepository chatRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, NotificationService notificationService) {
         this.chatRoomRepository = chatRoomRepository;
         this.memberRepository = memberRepository;
         this.rentalRepository = rentalRepository;
         this.chatRepository = chatRepository;
         this.rentalImageRepository = rentalImageRepository;
         this.rentalImageThumbnailRepository = rentalImageThumbnailRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -122,8 +125,18 @@ public class ChatRoomService {
         // 발신자가 최초 발신자와 동일한지 확인
         boolean isSender = sender.equals(member);
 
-        // 이전 메시지 읽음 처리
-        readPreviousMessages(chatRoom, isSender, sender, receiver).forEach(Chat::updateIsRead);
+
+        List<Chat> chatsToMarkRead = readPreviousMessages(chatRoom, isSender, sender, receiver);
+//        .forEach(Chat::updateIsRead);
+
+        if(!chatsToMarkRead.isEmpty()){
+            // 이전 메시지 읽음 처리
+            chatsToMarkRead.forEach(Chat::updateIsRead);
+
+            // 알림 발송
+            notificationService.sendNotification(member);
+        }
+
 
         // 채팅방 업데이트
         chatRoom.updateChatRoom(isSender);
@@ -191,12 +204,10 @@ public class ChatRoomService {
     private List<Chat> readPreviousMessages(ChatRoom chatRoom, boolean isSender, Member sender, Member receiver) {
         if (isSender) {
             // 현재 사용자가 발신자인 경우, 수신자(receiver)가 보낸 읽지 않은 메시지를 가져온다.
-            List<Chat> unreadChatList = chatRepository.findByChatRoomAndSenderAndIsRead(chatRoom, receiver, false);
-            return unreadChatList;
+            return chatRepository.findByChatRoomAndSenderAndIsRead(chatRoom, receiver, false);
         }
         // 현재 사용자가 수신자인 경우, 발신자(sender)가 보낸 읽지 않은 메시지를 가져온다.
-        List<Chat> unreadChatList = chatRepository.findByChatRoomAndSenderAndIsRead(chatRoom, sender, false);
-        return unreadChatList;
+        return chatRepository.findByChatRoomAndSenderAndIsRead(chatRoom, sender, false);
     }
 
     private Member validateMember(String email) {
