@@ -13,10 +13,7 @@ import com.hanghae.theham.domain.rental.dto.RentalResponseDto.*;
 import com.hanghae.theham.domain.rental.entity.Rental;
 import com.hanghae.theham.domain.rental.entity.RentalImage;
 import com.hanghae.theham.domain.rental.entity.type.CategoryType;
-import com.hanghae.theham.domain.rental.repository.RentalDistanceRepository;
-import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
-import com.hanghae.theham.domain.rental.repository.RentalImageThumbnailRepository;
-import com.hanghae.theham.domain.rental.repository.RentalRepository;
+import com.hanghae.theham.domain.rental.repository.*;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.service.S3Service;
@@ -62,6 +59,7 @@ public class RentalService {
     private final RentalDistanceRepository rentalDistanceRepository;
     private final RentalImageRepository rentalImageRepository;
     private final RentalImageThumbnailRepository rentalImageThumbnailRepository;
+    private final RentalLikeRepository rentalLikeRepository;
     private final MemberRepository memberRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final RestTemplate restTemplate;
@@ -71,11 +69,12 @@ public class RentalService {
     @Value("${kakao.client-id}")
     private String kakaoClientId;
 
-    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, ChatRoomRepository chatRoomRepository, RestTemplate restTemplate, RentalCachingService rentalCachingService, S3Service s3Service) {
+    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, RentalLikeRepository rentalLikeRepository, MemberRepository memberRepository, ChatRoomRepository chatRoomRepository, RestTemplate restTemplate, RentalCachingService rentalCachingService, S3Service s3Service) {
         this.rentalRepository = rentalRepository;
         this.rentalDistanceRepository = rentalDistanceRepository;
         this.rentalImageRepository = rentalImageRepository;
         this.rentalImageThumbnailRepository = rentalImageThumbnailRepository;
+        this.rentalLikeRepository = rentalLikeRepository;
         this.memberRepository = memberRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.restTemplate = restTemplate;
@@ -122,6 +121,7 @@ public class RentalService {
     @Cacheable(value = "Rentals", key = "{#rentalId, #email != null ? #email : 'noEmail'}", cacheManager = "redisCacheManager")
     public RentalReadResponseDto readRental(String email, Long rentalId) {
         Boolean isChatButton = Boolean.TRUE;
+        Boolean isLike = Boolean.FALSE;
 
         Rental rental = validateRental(rentalId);
         if (email != null) {
@@ -130,13 +130,16 @@ public class RentalService {
             if (rental.getMember().equals(member)) {
                 isChatButton = Boolean.FALSE;
             }
+            if (rentalLikeRepository.existsByMemberAndRental(member, rental)) {
+                isLike = Boolean.TRUE;
+            }
         }
 
         List<RentalImageReadResponseDto> rentalImageReadResponseDtoList = rentalImageRepository.findAllByRental(rental).stream()
                 .map(RentalImageReadResponseDto::new)
                 .toList();
 
-        return new RentalReadResponseDto(rental, isChatButton, rentalImageReadResponseDtoList);
+        return new RentalReadResponseDto(rental, isChatButton, isLike, rentalImageReadResponseDtoList);
     }
 
     public List<RentalCategoryReadResponseDto> readRentalList(String email, CategoryType category, int page, int size) {
