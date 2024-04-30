@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.controller.docs.MemberControllerDocs;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdateRequestDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberCheckPositionResponseDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.*;
 import com.hanghae.theham.domain.member.service.AuthService;
 import com.hanghae.theham.domain.member.service.MemberService;
 import com.hanghae.theham.domain.member.service.SocialLoginService;
@@ -89,6 +86,14 @@ public class MemberController implements MemberControllerDocs {
     ) {
         MemberCheckPositionResponseDto responseDto = memberService.checkPosition(userDetails.getUsername());
         return ResponseDto.success("회원 좌표 검사 기능", responseDto);
+    }
+
+    @GetMapping("/check-nickname/{nickname}")
+    public ResponseDto<MemberCheckNicknameResponseDto> checkNickname(
+            @PathVariable String nickname
+    ) {
+        MemberCheckNicknameResponseDto responseDto = memberService.checkNickname(nickname);
+        return ResponseDto.success("회원 닉네임 중복 검사 기능", responseDto);
     }
 
     @GetMapping("/kakao/callback")
