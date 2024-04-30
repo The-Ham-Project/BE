@@ -61,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers("/ping").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/members", "/api/v1/members/check-position", "/api/v1/sse").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/members").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/members/position").authenticated()
                         .requestMatchers("/api/v1/members/**").permitAll()
                         .requestMatchers("/chat/**", "/user/queue/**").permitAll()
