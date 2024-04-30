@@ -81,4 +81,12 @@ public class Member {
         this.latitude = latitude;
         this.longitude = longitude;
     }
+
+    public void updateProfile(String profileUrl) {
+        this.profileUrl = profileUrl;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }

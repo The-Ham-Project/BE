@@ -2,6 +2,7 @@ package com.hanghae.theham.domain.member.controller.docs;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
+import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdateRequestDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberCheckPositionResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
@@ -12,8 +13,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "members", description = "회원 관련 API")
 public interface MemberControllerDocs {
@@ -33,6 +37,13 @@ public interface MemberControllerDocs {
     void logout(
             HttpServletRequest request,
             HttpServletResponse response
+    );
+
+    @Operation(summary = "회원 정보 수정 기능", description = "회원 정보를 수정할 수 있는 API")
+    void updateProfile(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestPart @Valid MemberUpdateRequestDto requestDto,
+            @RequestPart(required = false) MultipartFile profileImage
     );
 
     @Operation(summary = "회원 좌표 갱신 기능", description = "회원 좌표를 갱신할 수 있는 API")
