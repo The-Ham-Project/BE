@@ -22,11 +22,13 @@ public class RentalLikeService {
     private final RentalLikeRepository rentalLikeRepository;
     private final MemberRepository memberRepository;
     private final RentalRepository rentalRepository;
+    private final RentalCachingService rentalCachingService;
 
-    public RentalLikeService(RentalLikeRepository rentalLikeRepository, MemberRepository memberRepository, RentalRepository rentalRepository) {
+    public RentalLikeService(RentalLikeRepository rentalLikeRepository, MemberRepository memberRepository, RentalRepository rentalRepository, RentalCachingService rentalCachingService) {
         this.rentalLikeRepository = rentalLikeRepository;
         this.memberRepository = memberRepository;
         this.rentalRepository = rentalRepository;
+        this.rentalCachingService = rentalCachingService;
     }
 
     @Transactional
@@ -43,6 +45,7 @@ public class RentalLikeService {
                 .rental(rental)
                 .build());
 
+        rentalCachingService.deleteKeys(rentalId);
         return new RentalLikeCreateResponseDto(rentalLike);
     }
 
@@ -54,6 +57,7 @@ public class RentalLikeService {
         RentalLike rentalLike = rentalLikeRepository.findByMemberAndRental(member, rental).orElseThrow(() ->
                 new BadRequestException(ErrorCode.NOT_FOUND_LIKE_ID.getMessage()));
 
+        rentalCachingService.deleteKeys(rentalId);
         rentalLikeRepository.delete(rentalLike);
     }
 
