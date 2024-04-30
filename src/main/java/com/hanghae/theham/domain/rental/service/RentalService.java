@@ -1,9 +1,5 @@
 package com.hanghae.theham.domain.rental.service;
 
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,10 +17,9 @@ import com.hanghae.theham.domain.rental.repository.RentalDistanceRepository;
 import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
 import com.hanghae.theham.domain.rental.repository.RentalImageThumbnailRepository;
 import com.hanghae.theham.domain.rental.repository.RentalRepository;
-import com.hanghae.theham.global.config.S3Config;
-import com.hanghae.theham.global.exception.AwsS3Exception;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
+import com.hanghae.theham.global.service.S3Service;
 import com.hanghae.theham.global.util.BadWordFilteringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
@@ -44,14 +39,10 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -73,26 +64,23 @@ public class RentalService {
     private final RentalImageThumbnailRepository rentalImageThumbnailRepository;
     private final MemberRepository memberRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final S3Config s3Config;
     private final RestTemplate restTemplate;
     private final RentalCachingService rentalCachingService;
-
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
+    private final S3Service s3Service;
 
     @Value("${kakao.client-id}")
     private String kakaoClientId;
 
-    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, ChatRoomRepository chatRoomRepository, S3Config s3Config, RestTemplate restTemplate, RentalCachingService rentalCachingService) {
+    public RentalService(RentalRepository rentalRepository, RentalDistanceRepository rentalDistanceRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, MemberRepository memberRepository, ChatRoomRepository chatRoomRepository, RestTemplate restTemplate, RentalCachingService rentalCachingService, S3Service s3Service) {
         this.rentalRepository = rentalRepository;
         this.rentalDistanceRepository = rentalDistanceRepository;
         this.rentalImageRepository = rentalImageRepository;
         this.rentalImageThumbnailRepository = rentalImageThumbnailRepository;
         this.memberRepository = memberRepository;
         this.chatRoomRepository = chatRoomRepository;
-        this.s3Config = s3Config;
         this.restTemplate = restTemplate;
         this.rentalCachingService = rentalCachingService;
+        this.s3Service = s3Service;
     }
 
     @Transactional
@@ -124,7 +112,7 @@ public class RentalService {
 
             // 파일 업로드 및 이미지 정보 저장
             multipartFileList.forEach(file -> {
-                String imageUrl = uploadFileToS3(file);
+                String imageUrl = s3Service.uploadFileToS3(S3_UPLOAD_FOLDER, file);
                 saveRentalImage(rental, imageUrl);
             });
         }
@@ -235,7 +223,7 @@ public class RentalService {
 
         // 삭제 처리 하기
         deletedImageList.forEach(deletedImageUrl -> {
-            deleteFileFromS3(deletedImageUrl);
+            s3Service.deleteFileFromS3(deletedImageUrl);
             rentalImageRepository.deleteByImageUrl(deletedImageUrl);
         });
 
@@ -244,7 +232,7 @@ public class RentalService {
             validateFiles(multipartFileList);
 
             multipartFileList.forEach(file -> {
-                String imageUrl = uploadFileToS3(file);
+                String imageUrl = s3Service.uploadFileToS3(S3_UPLOAD_FOLDER, file);
                 saveRentalImage(rental, imageUrl);
             });
         }
@@ -310,34 +298,6 @@ public class RentalService {
         }
     }
 
-    private String uploadFileToS3(MultipartFile file) {
-        try {
-            // 파일 메타데이터 설정
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType(file.getContentType());
-            metadata.setContentLength(file.getSize());
-
-            // 새로운 파일명 생성 (UUID 사용)
-            String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
-            String newFilename = UUID.randomUUID() + extension;
-            String key = S3_UPLOAD_FOLDER + newFilename;
-
-            // S3 업로드 요청 생성
-            PutObjectRequest request = new PutObjectRequest(bucket, key, file.getInputStream(), metadata)
-                    .withCannedAcl(CannedAccessControlList.PublicRead);
-
-            // S3에 파일 업로드
-            s3Config.amazonS3Client().putObject(request);
-
-            // 업로드된 파일의 URL 생성 및 반환
-            return s3Config.amazonS3Client().getUrl(bucket, key).toString();
-        } catch (IOException e) {
-            log.error("파일 업로드 중 오류가 발생했습니다.", e);
-            throw new AwsS3Exception(ErrorCode.S3_UPLOAD_UNKNOWN_ERROR.getMessage());
-        }
-    }
-
     private void saveRentalImage(Rental rental, String imageUrl) {
         RentalImage rentalImage = RentalImage.builder()
                 .rental(rental)
@@ -345,17 +305,6 @@ public class RentalService {
                 .build();
 
         rentalImageRepository.save(rentalImage);
-    }
-
-    private void deleteFileFromS3(String imageUrl) {
-        try {
-            URL url = new URL(imageUrl);
-            String key = url.getPath().substring(1); // URL에서 객체 키 추출
-            s3Config.amazonS3Client().deleteObject(new DeleteObjectRequest(bucket, key));
-        } catch (MalformedURLException e) {
-            log.error("S3에서 파일을 삭제하는 도중 오류가 발생했습니다.", e);
-            throw new AwsS3Exception(ErrorCode.S3_DELETE_UNKNOWN_ERROR.getMessage());
-        }
     }
 
     private String getDistrictFromKakaoAPI(double latitude, double longitude) {

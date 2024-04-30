@@ -18,6 +18,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByNickname(String nickname);
 
+    boolean existsByNickname(String nickname);
+
     @Query("SELECT MAX(CAST(SUBSTRING(m.nickname, 4) AS int)) FROM Member m WHERE m.nickname LIKE '더함이%'")
     Integer findMaxNicknameSequence();
 }

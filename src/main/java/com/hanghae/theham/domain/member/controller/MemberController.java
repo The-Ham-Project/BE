@@ -3,6 +3,7 @@ package com.hanghae.theham.domain.member.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.controller.docs.MemberControllerDocs;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
+import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdateRequestDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberCheckPositionResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
@@ -14,10 +15,13 @@ import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RequestMapping("/api/v1/members")
@@ -58,6 +62,16 @@ public class MemberController implements MemberControllerDocs {
             HttpServletResponse response
     ) {
         authService.logout(request, response);
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PutMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public void updateProfile(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestPart @Valid MemberUpdateRequestDto requestDto,
+            @RequestPart(required = false) MultipartFile profileImage
+    ) {
+        memberService.updateProfile(userDetails.getUsername(), requestDto, profileImage);
     }
 
     @PatchMapping("/position")
