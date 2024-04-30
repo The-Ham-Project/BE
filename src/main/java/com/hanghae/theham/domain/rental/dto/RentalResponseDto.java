@@ -39,9 +39,10 @@ public class RentalResponseDto {
         private long deposit;
         private String district;
         private Boolean isChatButton;
+        private Boolean isLike;
         private List<RentalImageReadResponseDto> rentalImageList;
 
-        public RentalReadResponseDto(Rental rental, Boolean isChatButton, List<RentalImageReadResponseDto> rentalImageList) {
+        public RentalReadResponseDto(Rental rental, Boolean isChatButton, Boolean isLike, List<RentalImageReadResponseDto> rentalImageList) {
             this.rentalId = rental.getId();
             this.nickname = rental.getMember().getNickname();
             this.profileUrl = rental.getMember().getProfileUrl();
@@ -52,6 +53,7 @@ public class RentalResponseDto {
             this.deposit = rental.getDeposit();
             this.district = rental.getDistrict();
             this.isChatButton = isChatButton;
+            this.isLike = isLike;
             this.rentalImageList = rentalImageList;
         }
     }

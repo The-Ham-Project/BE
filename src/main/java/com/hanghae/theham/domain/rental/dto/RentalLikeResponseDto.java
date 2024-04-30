@@ -34,10 +34,10 @@ public class RentalLikeResponseDto {
     @Getter
     public static class RentalLikeCheckResponseDto {
 
-        private final Boolean isChecked;
+        private final Boolean isLike;
 
-        public RentalLikeCheckResponseDto(Boolean isChecked) {
-            this.isChecked = isChecked;
+        public RentalLikeCheckResponseDto(Boolean isLike) {
+            this.isLike = isLike;
         }
     }
 }
