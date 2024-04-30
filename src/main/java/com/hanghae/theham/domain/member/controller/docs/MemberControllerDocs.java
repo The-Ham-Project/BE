@@ -3,6 +3,7 @@ package com.hanghae.theham.domain.member.controller.docs;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdateRequestDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberCheckPositionResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,6 +57,11 @@ public interface MemberControllerDocs {
     @Operation(summary = "회원 좌표 검사 기능", description = "회원 좌표를 검사할 수 있는 API")
     ResponseDto<MemberCheckPositionResponseDto> checkPosition(
             @AuthenticationPrincipal UserDetailsImpl userDetails
+    );
+
+    @Operation(summary = "회원 닉네임 중복 검사 기능", description = "회원 닉네임을 중복 검사할 수 있는 API")
+    ResponseDto<MemberResponseDto.MemberCheckNicknameResponseDto> checkNickname(
+            @PathVariable String nickname
     );
 
     @Operation(summary = "카카오 로그인 기능", description = "카카오 로그인할 수 있는 API")

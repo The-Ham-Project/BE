@@ -56,4 +56,14 @@ public class MemberResponseDto {
             this.isCheck = isCheck;
         }
     }
+
+    @Getter
+    public static class MemberCheckNicknameResponseDto {
+
+        private final Boolean isCheck;
+
+        public MemberCheckNicknameResponseDto(Boolean isCheck) {
+            this.isCheck = isCheck;
+        }
+    }
 }

@@ -2,6 +2,7 @@ package com.hanghae.theham.domain.member.service;
 
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdateRequestDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberCheckNicknameResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberCheckPositionResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
@@ -79,6 +80,13 @@ public class MemberService {
             return new MemberCheckPositionResponseDto(false);
         }
         return new MemberCheckPositionResponseDto(true);
+    }
+
+    public MemberCheckNicknameResponseDto checkNickname(String nickname) {
+        if (memberRepository.existsByNickname(nickname)) {
+            return new MemberCheckNicknameResponseDto(true);
+        }
+        return new MemberCheckNicknameResponseDto(false);
     }
 
     private Member validateMember(String email) {
