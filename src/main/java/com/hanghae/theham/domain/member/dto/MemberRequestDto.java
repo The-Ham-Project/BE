@@ -9,6 +9,7 @@ public class MemberRequestDto {
     @Getter
     public static class MemberUpdateRequestDto {
 
+        @Schema(description = "닉네임을 입력해주세요.")
         @Pattern(regexp = "^[가-힣A-Za-z0-9]{3,10}$", message = "부적절한 닉네임입니다.")
         private String nickname;
     }
