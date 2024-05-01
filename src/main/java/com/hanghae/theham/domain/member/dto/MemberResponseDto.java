@@ -13,11 +13,13 @@ public class MemberResponseDto {
         private String nickname;
         private String email;
         private String profileUrl;
+        private String district;
 
-        public MemberReadResponseDto(Member member) {
+        public MemberReadResponseDto(Member member, String district) {
             this.nickname = member.getNickname();
             this.email = member.getEmail();
             this.profileUrl = member.getProfileUrl();
+            this.district = district;
         }
     }
 
