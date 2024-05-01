@@ -71,8 +71,9 @@ public class RentalResponseDto {
         private long deposit;
         private String firstThumbnailUrl;
         private String district;
+        private Boolean isLike;
 
-        public RentalCategoryReadResponseDto(Rental rental, String firstThumbnailUrl) {
+        public RentalCategoryReadResponseDto(Rental rental, String firstThumbnailUrl, Boolean isLike) {
             this.rentalId = rental.getId();
             this.nickname = rental.getMember().getNickname();
             this.profileUrl = rental.getMember().getProfileUrl();
@@ -82,6 +83,7 @@ public class RentalResponseDto {
             this.deposit = rental.getDeposit();
             this.firstThumbnailUrl = firstThumbnailUrl;
             this.district = rental.getDistrict();
+            this.isLike = isLike;
         }
     }
 
