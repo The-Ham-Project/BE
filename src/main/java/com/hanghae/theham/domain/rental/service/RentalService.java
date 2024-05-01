@@ -147,15 +147,18 @@ public class RentalService {
         List<RentalCategoryReadResponseDto> responseDtoList = new ArrayList<>();
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
 
-        if (email == null) {
+        Member member = null;
+        if (email != null) {
+            member = memberRepository.findByEmail(email).orElseThrow(() ->
+                    new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage())
+            );
+        }
+
+        if (member == null) {
             rentalList = category == CategoryType.ALL ?
                     rentalRepository.findAll(pageRequest).getContent() :
                     rentalRepository.findAllByCategory(category, pageRequest).getContent();
         } else {
-            Member member = memberRepository.findByEmail(email).orElseThrow(() ->
-                    new BadRequestException(ErrorCode.NOT_FOUND_MEMBER.getMessage())
-            );
-
             GeometryFactory geometryFactory = new GeometryFactory();
             Point memberLocation = geometryFactory.createPoint(new Coordinate(member.getLongitude(), member.getLatitude()));
             memberLocation.setSRID(4326);
@@ -175,7 +178,10 @@ public class RentalService {
                         rentalImageThumbnail -> firstThumbnail.set(rentalImageThumbnail.getThumbnailPath())
                 );
             }
-            responseDtoList.add(new RentalCategoryReadResponseDto(rental, firstThumbnail.get()));
+
+            Boolean isLike = member != null && rentalLikeRepository.existsByMemberAndRental(member, rental);
+
+            responseDtoList.add(new RentalCategoryReadResponseDto(rental, firstThumbnail.get(), isLike));
         }
         return responseDtoList;
     }
