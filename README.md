@@ -175,7 +175,7 @@ private LocalDateTime createdAt;
 </details>
 
 <details>
-<summary>AWS Lambda를 이용한 썸네일 처리 과정에서 발생하는 2~3초의 공백 문제 </summary>
+<summary>AWS Lambda를 이용한 썸네일 처리 과정에서 발생하는 2~3초의 공백 문제</summary>
 
 `문제사항`
 
@@ -192,6 +192,89 @@ private LocalDateTime createdAt;
 - 사용자가 게시글을 조회할 때, 테이블에서 원본 이미지 경로를 먼저 확인합니다.
 - 원본 이미지 경로가 존재하면, 연결된 썸네일 이미지 경로를 불러옵니다.
 - 만약 썸네일 이미지 경로가 존재하지 않는 경우, 게시글에 저장된 원본 이미지 경로를 사용합니다.
+
+</details>
+
+<details>
+<summary>채팅방 나가기 영속성 컨텍스트 불일치 문제</summary>
+
+`문제사항`
+
+- 채팅방에 A와 B 두 사용자가 있을 때, A가 채팅방에서 나간 상태에서 B가 나가기를 시도할 경우, B의 나가기 기능이 작동하지 않는 문제가 발생하였습니다.
+
+`문제원인`
+
+- chatRoom.getSenderIsDeleted() 또는 chatRoom.getReceiverIsDeleted()의 결과가 참이면 chatRoomRepository.delete(chatRoom)을 호출하여 채팅방을 삭제하지만, 해당 트랜잭션 내에서 chatRoom.disableChatRoom(isSender)로 채팅방 상태를 비활성화하는 변경 사항이 데이터베이스에 반영되기 전에 트랜잭션이 종료됩니다.
+- 따라서 영속성 컨텍스트 내의 1차 캐시와 데이터베이스의 상태 사이에 불일치가 발생합니다.
+
+```java
+@Transactional
+public void leaveChatRoom(String email, Long chatRoomId) {
+    ChatRoom chatRoom = findChatRoomById(chatRoomId); // 채팅방 존재여부
+    Member member = findMemberByEmail(email); // 존재하는 회원여부
+    boolean isSender = chatRoom.getSender().equals(member);
+
+    checkValidChatRoomParticipant(chatRoom, member);
+
+    // 1. 한명 이미 나간상태 -> 채팅방, 해당 메세지 완전 삭제 진행
+    if (chatRoom.getSenderIsDeleted() || chatRoom.getReceiverIsDeleted()) {
+        List<Chat> chats = chatRoom.getChatList();
+        chatRoomRepository.delete(chatRoom);
+        return;
+    }
+
+    // 2. 두명 다 채팅방에 있는 상태
+    List<Chat> deleteChatList = chatRepository.findByChatRoomAndVisible(chatRoom, isSender ? VisibleType.ONLY_SENDER : VisibleType.ONLY_RECEIVER);
+    chatRepository.deleteAll(deleteChatList);
+    List<Chat> chatList = chatRepository.findByChatRoomAndVisible(chatRoom, VisibleType.BOTH);
+    chatList.forEach(chat -> {
+        chat.updateChatVisible(isSender ? VisibleType.ONLY_RECEIVER : VisibleType.ONLY_SENDER);
+    });
+    chatRoom.disableChatRoom(isSender);
+}
+```
+
+`해결방법`
+
+- chatRoom.disableChatRoom(isSender) 호출을 통해 채팅방 상태를 변경한 후, chatRoomRepository.save(chatRoom)를 호출하여 변경 사항을 데이터베이스에 즉시 반영하고, 영속성 컨텍스트와 데이터베이스의 상태를 동기화합니다.
+- 이로 인해 어떤 사용자가 나가기를 시도하더라도, 채팅방 상태의 변경이 올바르게 데이터베이스에 저장되어, 다음 요청이 들어왔을 때 일관된 상태를 유지할 수 있습니다.
+
+```java
+
+@Transactional
+public void leaveChatRoom(String email, Long chatRoomId) {
+    ChatRoom chatRoom = validateChatRoom(chatRoomId);
+    Member member = validateMember(email);
+    boolean isSender = chatRoom.getSender().equals(member);
+    
+    // ...중간생략...
+
+    chatRoom.disableChatRoom(isSender);
+    chatRoomRepository.save(chatRoom);
+}
+
+```
+
+</details>
+
+<details>
+<summary>실시간 채팅방 목록 업데이트 문제</summary>
+
+`문제사항`
+
+- 사용자가 직접 새로고침을 해야만 최신의 채팅방 목록을 확인할 수 있는 문제가 있었습니다. 
+
+`문제원인`
+
+- 클라이언트가 서버에 GET 요청을 보내 채팅방 목록을 받아오고, 단순 클라이언트의 요청이 있일때만 서버에서는 갱신된 채팅방 목록을 보내주기 때문에 새로고침하지 않으면, 채팅방에 새로운 활동이 있어도 사용자는 그 정보를 실시간으로 받아볼 수 없습니다.
+
+`해결방법`
+
+- 서버가 새로운 채팅방 정보가 있을 때마다 클라이언트에게 자동으로 푸시할 수 있도록 SSE를 구현함으로써 실시간으로 채팅방 목록을 업데이트 할 수 있게 되었습니다. 
+- 이 방법은 클라이언트가 서버로부터 데이터를 주기적으로 요청하지 않아도 되므로, 서버와 클라이언트 간의 네트워크 트래픽을 줄이고, 사용자 경험을 향상시킬 수 있습니다.
+  - 채팅 메세지 전송시 SSE 이벤트 발생, 업데이트가 발생한 채팅방 정보를 채팅방 참여 멤버에게 전송합니다.
+  - 클라이언트는 실시간으로 업데이트가 일어난 채팅방 정보를 받을 수 있습니다.
+![Untitled](https://github.com/The-Ham-Project/BE/assets/150704638/9a9cab56-9541-4d3d-92d0-76cada7d4ee7)
 
 </details>
 
