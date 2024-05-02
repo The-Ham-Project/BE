@@ -204,8 +204,7 @@ private LocalDateTime createdAt;
 
 `문제원인`
 
-- chatRoom.getSenderIsDeleted() 또는 chatRoom.getReceiverIsDeleted()의 결과가 참이면 chatRoomRepository.delete(chatRoom)을 호출하여 채팅방을 삭제하지만, 해당 트랜잭션 내에서 chatRoom.disableChatRoom(isSender)로 채팅방 상태를 비활성화하는 변경 사항이 데이터베이스에 반영되기 전에 트랜잭션이 종료됩니다.
-- 따라서 영속성 컨텍스트 내의 1차 캐시와 데이터베이스의 상태 사이에 불일치가 발생합니다.
+- 트랜잭션이 서로 다른 시점에 시작되어, 첫 번째 트랜잭션의 결과가 반영되지 않은 채로 두 번째 트랜잭션이 실행되었습니다. 이로 인해 1차 캐시가 최신 상태를 반영하지 못하고, 올드 데이터를 참조하여 B의 나가기 로직이 예상대로 수행되지 않았습니다.
 
 ```java
 @Transactional
@@ -236,8 +235,7 @@ public void leaveChatRoom(String email, Long chatRoomId) {
 
 `해결방법`
 
-- chatRoom.disableChatRoom(isSender) 호출을 통해 채팅방 상태를 변경한 후, chatRoomRepository.save(chatRoom)를 호출하여 변경 사항을 데이터베이스에 즉시 반영하고, 영속성 컨텍스트와 데이터베이스의 상태를 동기화합니다.
-- 이로 인해 어떤 사용자가 나가기를 시도하더라도, 채팅방 상태의 변경이 올바르게 데이터베이스에 저장되어, 다음 요청이 들어왔을 때 일관된 상태를 유지할 수 있습니다.
+- chatRoom.disableChatRoom(isSender)를 호출하여 통해 채팅방 상태를 변경한 후, chatRoomRepository.save(chatRoom)를 통해 변경 사항을 데이터베이스에 즉시 반영하며 1차 캐시에도 이를 반영하도록 하였습니다. 이 변경으로 인해, 트랜잭션이 어떤 순서로 실행되든 간에 채팅방의 상태가 일관되게 유지되어, 모든 사용자가 정상적으로 채팅방을 나갈 수 있게 되었습니다.
 
 ```java
 
