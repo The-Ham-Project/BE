@@ -65,10 +65,10 @@ public class NotificationService {
     public void sendNotification(ChatRoom chatRoom, boolean isSender, int currentMemberCount) {
         // 채팅방 업데이트가 될 대상 : 채팅방 참여자
         Member sender = chatRoom.getSender();
-        sendChatRoomInformation(sender.getId(), ResponseDto.success(NotificationType.UPDATE_CHATROOM.name(), getChatRoomInfoResponseDto(chatRoom, isSender)));
+        sendChatRoomInformation(sender.getId(), ResponseDto.success(NotificationType.UPDATE_CHATROOM.name(), getChatRoomInfoResponseDto(chatRoom, sender)));
 
         Member receiver = chatRoom.getReceiver();
-        sendChatRoomInformation(receiver.getId(), ResponseDto.success(NotificationType.UPDATE_CHATROOM.name(), getChatRoomInfoResponseDto(chatRoom, isSender)));
+        sendChatRoomInformation(receiver.getId(), ResponseDto.success(NotificationType.UPDATE_CHATROOM.name(), getChatRoomInfoResponseDto(chatRoom, receiver)));
 
         if (currentMemberCount == 1) {
             int totalUnreadCount = getTotalUnreadMessagesCount(isSender ? receiver : sender);
@@ -101,7 +101,8 @@ public class NotificationService {
         );
     }
 
-    private ChatRoomInfoResponseDto getChatRoomInfoResponseDto(ChatRoom chatRoom, boolean isSender) {
+    private ChatRoomInfoResponseDto getChatRoomInfoResponseDto(ChatRoom chatRoom, Member member) {
+        boolean isSender = member.equals(chatRoom.getSender());
         Member toMember = isSender ? chatRoom.getReceiver() : chatRoom.getSender();
         int unreadCount = isSender ? chatRoom.getSenderUnreadCount() : chatRoom.getReceiverUnreadCount();
         return new ChatRoomInfoResponseDto(chatRoom, toMember, unreadCount);
