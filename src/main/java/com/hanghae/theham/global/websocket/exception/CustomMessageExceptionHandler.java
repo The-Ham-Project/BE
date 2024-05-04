@@ -2,9 +2,9 @@ package com.hanghae.theham.global.websocket.exception;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.websocket.dto.MessageErrorResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -36,7 +36,7 @@ public class CustomMessageExceptionHandler {
         accessor.setContentType(MimeTypeUtils.APPLICATION_JSON);
 
         // 응답 메세지 커스텀
-        MessageErrorResponse messageErrorResponse = MessageErrorResponse.response(e.getStatus().value(), e.getMessage());
+        MessageErrorResponse messageErrorResponse = MessageErrorResponse.response(e.getCode());
 
         // JSON 변환
         ObjectMapper objectMapper = new ObjectMapper();
@@ -62,7 +62,7 @@ public class CustomMessageExceptionHandler {
             errorMap.put(error.getField(), error.getDefaultMessage());
         }
 
-        MessageErrorResponse response = MessageErrorResponse.response(HttpStatus.BAD_REQUEST.value(), "유효성 검사 실패", errorMap);
+        MessageErrorResponse response = MessageErrorResponse.response(ErrorCode.INVALID_INPUT_VALUE, errorMap);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String messageErrorResponseJSON = objectMapper.writeValueAsString(response);

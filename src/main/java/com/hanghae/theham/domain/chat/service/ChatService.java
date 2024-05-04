@@ -12,7 +12,6 @@ import com.hanghae.theham.domain.notification.service.NotificationService;
 import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.websocket.ChatRoomParticipantManager;
 import com.hanghae.theham.global.websocket.exception.WebSocketException;
-import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ChatService {
     private final SimpMessagingTemplate messagingTemplate;
-
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final MemberRepository memberRepository;
@@ -41,10 +39,10 @@ public class ChatService {
     @Transactional
     public void saveMessage(ChatSendMessageRequestDto requestDto, String email, Long roomId) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new WebSocketException(ErrorCode.NOT_FOUND_CHAT_ROOM.getMessage(), HttpStatus.BAD_REQUEST)
+                .orElseThrow(() -> new WebSocketException(ErrorCode.NOT_FOUND_CHAT_ROOM)
                 );
         Member sender = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new WebSocketException(ErrorCode.NOT_FOUND_MEMBER.getMessage(), HttpStatus.BAD_REQUEST)
+                .orElseThrow(() -> new WebSocketException(ErrorCode.NOT_FOUND_MEMBER)
                 );
         boolean isSender = chatRoom.getSender().equals(sender);
 

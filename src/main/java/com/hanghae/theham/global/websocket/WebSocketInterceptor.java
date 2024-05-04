@@ -8,7 +8,6 @@ import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -48,7 +47,7 @@ public class WebSocketInterceptor implements ChannelInterceptor {
         String bearerToken = accessor.getFirstNativeHeader(TokenProvider.AUTHORIZATION_HEADER);
 
         if (bearerToken == null || !(StringUtils.hasText(bearerToken) && bearerToken.startsWith(TokenProvider.BEARER_PREFIX))) {
-            throw new WebSocketException(ErrorCode.MEMBER_NOT_LOGIN.getMessage(), HttpStatus.FORBIDDEN);
+            throw new WebSocketException(ErrorCode.MEMBER_NOT_LOGIN);
         }
 
         String accessToken = bearerToken.substring(TokenProvider.BEARER_PREFIX.length());
@@ -76,10 +75,10 @@ public class WebSocketInterceptor implements ChannelInterceptor {
         try {
             tokenProvider.isExpired(accessToken);
         } catch (ExpiredJwtException e) {
-            throw new WebSocketException(ErrorCode.EXPIRED_ACCESS_TOKEN.getMessage(), HttpStatus.UNAUTHORIZED);
+            throw new WebSocketException(ErrorCode.EXPIRED_ACCESS_TOKEN);
         }
         if (!tokenProvider.getTokenType(accessToken).equals("access")) {
-            throw new WebSocketException(ErrorCode.INVALID_ACCESS_TOKEN.getMessage(), HttpStatus.UNAUTHORIZED);
+            throw new WebSocketException(ErrorCode.INVALID_ACCESS_TOKEN);
         }
     }
 }

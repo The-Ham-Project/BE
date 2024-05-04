@@ -3,29 +3,29 @@ package com.hanghae.theham.global.websocket.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.Getter;
 
 @Getter
 public class MessageErrorResponse<T> {
     private final boolean status;
-    private final int code;
+    private final String code;
     private final String message;
     @JsonInclude(Include.NON_EMPTY)
     private final T data;
 
-    public MessageErrorResponse(boolean status, int code, String message, T data) {
+    public MessageErrorResponse(boolean status, ErrorCode errorCode, T data) {
         this.status = status;
-        this.code = code;
-        this.message = message;
+        this.code = errorCode.name();
+        this.message = errorCode.getMessage();
         this.data = data;
     }
 
-    public static <T> MessageErrorResponse<T> response(int code, String message, T data) {
-        return new MessageErrorResponse<>(false, code, message, data);
+    public static <T> MessageErrorResponse<T> response(ErrorCode errorCode, T data) {
+        return new MessageErrorResponse<>(false, errorCode, data);
     }
 
-    public static <T> MessageErrorResponse<T> response(int code, String message) {
-        return new MessageErrorResponse<>(false, code, message, null);
+    public static <T> MessageErrorResponse<T> response(ErrorCode errorCode) {
+        return new MessageErrorResponse<>(false, errorCode, null);
     }
 }
-

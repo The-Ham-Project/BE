@@ -2,9 +2,9 @@ package com.hanghae.theham.global.websocket.exception;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.websocket.dto.MessageErrorResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -34,7 +34,8 @@ public class WebSocketExceptionHandler extends StompSubProtocolErrorHandler {
         final Throwable exception = converterTrowException(ex);
 
         if (exception != null) {
-            return handleWebSocketException(clientMessage, exception);
+            final ErrorCode errorCode = ((WebSocketException) exception).getCode();
+            return handleWebSocketException(clientMessage, errorCode);
         }
         return super.handleClientMessageProcessingError(clientMessage, ex);
     }
@@ -46,13 +47,13 @@ public class WebSocketExceptionHandler extends StompSubProtocolErrorHandler {
         return exception;
     }
 
-    private Message<byte[]> handleWebSocketException(Message<byte[]> clientMessage, Throwable ex) {
-        return prepareErrorMessage(clientMessage, ex.getMessage(), ((WebSocketException) ex).getStatus());
+    private Message<byte[]> handleWebSocketException(Message<byte[]> clientMessage, ErrorCode errorCode) {
+        return prepareErrorMessage(clientMessage, errorCode);
     }
 
-    private Message<byte[]> prepareErrorMessage(Message<byte[]> clientMessage, String errorMessage, HttpStatus status) {
+    private Message<byte[]> prepareErrorMessage(Message<byte[]> clientMessage, ErrorCode errorCode) {
         // SET response Dto
-        MessageErrorResponse messageErrorResponse = MessageErrorResponse.response(status.value(), errorMessage);
+        MessageErrorResponse messageErrorResponse = MessageErrorResponse.response(errorCode);
 
         // SET Header
         StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.ERROR);
