@@ -150,7 +150,6 @@ public class RentalResponseDto {
         private String profileUrl;
         private String category;
         private String title;
-        private String content;
         private long rentalFee;
         private long deposit;
         private String district;
@@ -162,7 +161,6 @@ public class RentalResponseDto {
             this.profileUrl = rental.getMember().getProfileUrl();
             this.category = rental.getCategory().getValue();
             this.title = rental.getTitle();
-            this.content = rental.getContent();
             this.rentalFee = rental.getRentalFee();
             this.deposit = rental.getDeposit();
             this.district = rental.getDistrict();
