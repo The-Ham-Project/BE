@@ -3,11 +3,8 @@ package com.hanghae.theham.domain.member.controller.docs;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdatePositionRequestDto;
 import com.hanghae.theham.domain.member.dto.MemberRequestDto.MemberUpdateRequestDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberCheckPositionResponseDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberInfoDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponseDto;
-import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
+import com.hanghae.theham.domain.member.dto.MemberResponseDto.*;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +17,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Tag(name = "members", description = "회원 관련 API")
 public interface MemberControllerDocs {
@@ -54,13 +53,20 @@ public interface MemberControllerDocs {
             MemberUpdatePositionRequestDto requestDto
     );
 
+    @Operation(summary = "좋아요 누른 게시글 조회 기능", description = "내가 좋아요 누른 게시글을 조회할 수 있는 API")
+    ResponseDto<List<RentalResponseDto.RentalMyReadResponseDto>> readRentalLikeList(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "6", required = false) int size
+    );
+
     @Operation(summary = "회원 좌표 검사 기능", description = "회원 좌표를 검사할 수 있는 API")
     ResponseDto<MemberCheckPositionResponseDto> checkPosition(
             @AuthenticationPrincipal UserDetailsImpl userDetails
     );
 
     @Operation(summary = "회원 닉네임 중복 검사 기능", description = "회원 닉네임을 중복 검사할 수 있는 API")
-    ResponseDto<MemberResponseDto.MemberCheckNicknameResponseDto> checkNickname(
+    ResponseDto<MemberCheckNicknameResponseDto> checkNickname(
             @PathVariable String nickname
     );
 

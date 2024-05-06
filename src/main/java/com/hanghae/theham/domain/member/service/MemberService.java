@@ -11,6 +11,13 @@ import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberReadResponse
 import com.hanghae.theham.domain.member.dto.MemberResponseDto.MemberUpdatePositionResponseDto;
 import com.hanghae.theham.domain.member.entity.Member;
 import com.hanghae.theham.domain.member.repository.MemberRepository;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalMyReadResponseDto;
+import com.hanghae.theham.domain.rental.entity.Rental;
+import com.hanghae.theham.domain.rental.entity.RentalImage;
+import com.hanghae.theham.domain.rental.entity.RentalLike;
+import com.hanghae.theham.domain.rental.repository.RentalImageRepository;
+import com.hanghae.theham.domain.rental.repository.RentalImageThumbnailRepository;
+import com.hanghae.theham.domain.rental.repository.RentalLikeRepository;
 import com.hanghae.theham.global.exception.BadRequestException;
 import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.service.S3Service;
@@ -18,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +38,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Transactional(readOnly = true)
@@ -43,14 +55,20 @@ public class MemberService {
     private static final String S3_UPLOAD_FOLDER = "profiles/";
 
     private final MemberRepository memberRepository;
+    private final RentalLikeRepository rentalLikeRepository;
+    private final RentalImageRepository rentalImageRepository;
+    private final RentalImageThumbnailRepository rentalImageThumbnailRepository;
     private final S3Service s3Service;
     private final RestTemplate restTemplate;
 
     @Value("${kakao.client-id}")
     private String kakaoClientId;
 
-    public MemberService(MemberRepository memberRepository, S3Service s3Service, RestTemplate restTemplate) {
+    public MemberService(MemberRepository memberRepository, RentalLikeRepository rentalLikeRepository, RentalImageRepository rentalImageRepository, RentalImageThumbnailRepository rentalImageThumbnailRepository, S3Service s3Service, RestTemplate restTemplate) {
         this.memberRepository = memberRepository;
+        this.rentalLikeRepository = rentalLikeRepository;
+        this.rentalImageRepository = rentalImageRepository;
+        this.rentalImageThumbnailRepository = rentalImageThumbnailRepository;
         this.s3Service = s3Service;
         this.restTemplate = restTemplate;
     }
@@ -88,6 +106,30 @@ public class MemberService {
         }
 
         member.updateNickname(requestDto.getNickname());
+    }
+
+    public List<RentalMyReadResponseDto> readRentalLikeList(String email, int page, int size) {
+        Member member = validateMember(email);
+
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.Direction.DESC, "createdAt");
+        Page<RentalLike> rentalLikePage = rentalLikeRepository.findByMember(member, pageRequest);
+
+        List<RentalMyReadResponseDto> responseDtoList = new ArrayList<>();
+        for (RentalLike rentalLike : rentalLikePage) {
+            Rental rental = rentalLike.getRental();
+
+            AtomicReference<String> firstThumbnail = new AtomicReference<>(rentalImageRepository.findFirstByRental(rental)
+                    .map(RentalImage::getImageUrl)
+                    .orElse(null));
+
+            if (firstThumbnail.get() != null) {
+                rentalImageThumbnailRepository.findByImagePath(firstThumbnail.get()).ifPresent(
+                        rentalImageThumbnail -> firstThumbnail.set(rentalImageThumbnail.getThumbnailPath())
+                );
+            }
+            responseDtoList.add(new RentalMyReadResponseDto(rental, firstThumbnail.get()));
+        }
+        return responseDtoList;
     }
 
     public MemberCheckPositionResponseDto checkPosition(String email) {
