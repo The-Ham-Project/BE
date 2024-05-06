@@ -8,6 +8,7 @@ import com.hanghae.theham.domain.member.dto.MemberResponseDto.*;
 import com.hanghae.theham.domain.member.service.AuthService;
 import com.hanghae.theham.domain.member.service.MemberService;
 import com.hanghae.theham.domain.member.service.SocialLoginService;
+import com.hanghae.theham.domain.rental.dto.RentalResponseDto.RentalMyReadResponseDto;
 import com.hanghae.theham.global.dto.ResponseDto;
 import com.hanghae.theham.global.security.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Slf4j
 @RequestMapping("/api/v1/members")
@@ -71,13 +74,14 @@ public class MemberController implements MemberControllerDocs {
         memberService.updateProfile(userDetails.getUsername(), requestDto, profileImage);
     }
 
-    @PatchMapping("/position")
-    public ResponseDto<MemberUpdatePositionResponseDto> updatePosition(
+    @GetMapping("/posts/likes")
+    public ResponseDto<List<RentalMyReadResponseDto>> readRentalLikeList(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody MemberUpdatePositionRequestDto requestDto
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "6", required = false) int size
     ) {
-        MemberUpdatePositionResponseDto responseDto = memberService.updatePosition(userDetails.getUsername(), requestDto);
-        return ResponseDto.success("회원 좌표 갱신 기능", responseDto);
+        List<RentalMyReadResponseDto> responseDtoList = memberService.readRentalLikeList(userDetails.getUsername(), page, size);
+        return ResponseDto.success("함께쓰기 내가 좋아요 누른 게시글 조회 기능", responseDtoList);
     }
 
     @GetMapping("/check-position")
@@ -94,6 +98,15 @@ public class MemberController implements MemberControllerDocs {
     ) {
         MemberCheckNicknameResponseDto responseDto = memberService.checkNickname(nickname);
         return ResponseDto.success("회원 닉네임 중복 검사 기능", responseDto);
+    }
+
+    @PatchMapping("/position")
+    public ResponseDto<MemberUpdatePositionResponseDto> updatePosition(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestBody MemberUpdatePositionRequestDto requestDto
+    ) {
+        MemberUpdatePositionResponseDto responseDto = memberService.updatePosition(userDetails.getUsername(), requestDto);
+        return ResponseDto.success("회원 좌표 갱신 기능", responseDto);
     }
 
     @GetMapping("/kakao/callback")

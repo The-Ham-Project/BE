@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/v1/rentals")
 @RestController
-public class RentalRentalLikeController implements RentalLikeControllerDocs {
+public class RentalLikeController implements RentalLikeControllerDocs {
 
     private final RentalLikeService rentalLikeService;
 
-    public RentalRentalLikeController(RentalLikeService rentalLikeService) {
+    public RentalLikeController(RentalLikeService rentalLikeService) {
         this.rentalLikeService = rentalLikeService;
     }
 
