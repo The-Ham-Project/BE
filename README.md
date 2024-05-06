@@ -107,6 +107,7 @@
 | `OAuth2.0`                     | 사용자가 별도의 회원가입 절차 없이도 소셜 미디어 계정과 같은 외부 시스템을 이용해 로그인할 수 있게 해줍니다.                                                                                                       |
 | `Spring Security`              | JWT를 통한 보안 및 인증 절차를 관리했습니다. 세션 상태를 서버에 저장할 필요 없이 클라이언트 측에서 토큰을 관리할 수 있게 해, 확장성과 성능을 개선시켰습니다.                                                                         |
 | `WebSocket`, `Stomp`, `sockJs` | 낮은 지연시간을 보장하며, 풀 더플레스 통신을 지원 서버와 클라이언트 사이에 소켓 커넥션을 유지하면서 양방향 통신이 가능합니다., WebSocket Emulation 기술을 제공하는 SockJS 라이브러리를 함게 사용하여 WebSocket을 지원하지 않는 브라우저에 대응할 수 있게 하였습니다. |
+| `SSE` |  단반향 데이터 스트림: 클라이언트에서 서버로 데이터를 전송할 필요 없이 서버에서 클라이언트로만 데이터를 전송하기 때문에 리소스 소모가 줄어든다 <br>실시간 업데이트: 서버에서 새로운 데이터가 발생하면 즉시 클라이언트에 전달되므로 실시간 업데이트에 최적화되어 있음<br>채팅방 목록의 경우, 클라이언트가 서버로부터 정보를 받아오는 단방향 통신만으로 충분하고 위와 같은 SSE의 장점이 우리 프로젝트에 적합하다고 판단하여 SSE를 선택하여 구현하기로 결정하였습니다. |
 | `Redis`                        | Redis를 도입하여 리프레쉬 토큰 관리와 자주 사용되는 데이터를 캐싱함으로써 응답 속도를 개선하고 데이터베이스 부하를 줄였습니다.                                                                                            |
 | `AWS Lambda`                   | 서버리스 아키텍처를 도입하여 특정 기능의 처리를 간소화하고 비용 효율성을 높였습니다. 사용자가 업로드한 이미지를 자동으로 리사이징하는 기능을 처리하는 데 사용되었습니다. 이로 인해 서버의 리소스 부담을 줄일 수 있었습니다.                                         |
 | `AWS CloudWatch`, `Slack`      | EC2와 RDS의 CPU 사용률을 주요 지표로 설정하여 지속적으로 관찰했으며, 경보가 발생하면 Slack을 통해 즉각적인 알림을 받아 이슈에 빠르게 대응할 수 있었습니다.                                                                      |
@@ -253,6 +254,44 @@ public void leaveChatRoom(String email, Long chatRoomId) {
 
 ```
 
+</details>
+
+<details>
+<summary>채팅방 참가자의 현재 접속중인 인원 수 관리 문제</summary>
+
+`문제사항`
+- 채팅방 사용자가 동일한 채팅방에 여러 세션(예: 다중 탭이나 윈도우)을 통해 접속할 경우, 참가자 수가 중복으로 계산되어 실제 인원수보다 많이 카운트되는 문제가 발생하였습니다.
+
+`문제원인`
+- 기존의 시스템은 각 사용자를 고유의 세션 ID로 식별하고 관리했습니다. 사용자가 동일한 브라우저의 다른 탭이나 창에서 채팅방에 접속할 경우, 새로운 세션 ID가 생성되어 같은 사용자임에도 불구하고 다른 사용자로 인식되어 참가자 수가 중복으로 count 되었습니다.
+```java
+@Component
+public class ChatRoomParticipantManager { // 채팅방 참가자 수 관리
+    // 채팅방 id, 소켓 세션 매핑하여 저장
+    private final Map<Long, Set<String>> roomMemberCount = new ConcurrentHashMap<>();
+
+    // 채팅방에 사용자가 접속할 때 호출_sessionId를 통한 관리
+    public void addMemberToRoom(Long roomId, String sessionId) {
+        roomMemberCount.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(email);
+    }
+}
+```
+
+`해결방법`
+- 해결 방법으로 세션 ID를 사용하는 대신 사용자의 이메일 주소를 기반으로 사용자를 식별하고 관리하는 방식으로 시스템을 수정하였습니다.
+- 이메일 주소는 사용자가 다중 세션을 통해 접속하더라도 고유하게 유지되므로, 같은 사용자가 여러 세션으로 접속해도 참가자 수가 중복으로 증가하는 문제를 방지할 수 있습니다.
+- 이 변경으로 채팅방의 실제 참가자 수를 정확히 파악하고, 관련 기능(예: 메시지 읽음 처리)이 정확히 동작할 수 있게 되었습니다.
+```java
+@Component
+public class ChatRoomParticipantManager { // 채팅방 참가자 수 관리
+    // 채팅방 id, 접속자 수 매핑하여 저장
+    private final Map<Long, Set<String>> roomMemberCount = new ConcurrentHashMap<>();
+
+    // 채팅방에 사용자가 접속할 때 호출
+    public void addMemberToRoom(Long roomId, String email) {
+        roomMemberCount.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(email);
+    }
+```
 </details>
 
 <details>
