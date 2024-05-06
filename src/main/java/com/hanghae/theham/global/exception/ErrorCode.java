@@ -25,6 +25,7 @@ public enum ErrorCode {
     INVALID_RENTAL_CATEGORY("카테고리가 올바르지 않습니다."),
     MEMBER_NOT_LOGIN("로그인 하지 않은 유저입니다."),
     ALREADY_EXIST_NICKNAME("이미 존재하는 닉네임입니다."),
+    INVALID_INPUT_VALUE("유효성 검사 실패"),
 
     // chat
     CHAT_ROOM_ALREADY_EXISTS("채팅방이 이미 존재합니다."),

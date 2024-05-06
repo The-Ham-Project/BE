@@ -1,14 +1,14 @@
 package com.hanghae.theham.global.websocket.exception;
 
+import com.hanghae.theham.global.exception.ErrorCode;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 public class WebSocketException extends RuntimeException {
-    private final HttpStatus status;
+    private final ErrorCode code;
 
-    public WebSocketException(String message, HttpStatus status) {
-        super(message);
-        this.status = status;
+    public WebSocketException(ErrorCode code) {
+        super(code.getMessage());
+        this.code = code;
     }
 }
