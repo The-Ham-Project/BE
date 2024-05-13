@@ -1,7 +1,6 @@
 package com.hanghae.theham.domain.member.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 
 public class MemberRequestDto {
@@ -9,8 +8,7 @@ public class MemberRequestDto {
     @Getter
     public static class MemberUpdateRequestDto {
 
-        @Schema(description = "닉네임을 입력해주세요.")
-        @Pattern(regexp = "^[가-힣A-Za-z0-9]{3,10}$", message = "부적절한 닉네임입니다.")
+        @Schema(description = "닉네임을 입력해주세요.", example = "더함이")
         private String nickname;
     }
 

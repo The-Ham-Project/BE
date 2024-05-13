@@ -93,8 +93,11 @@ public class MemberService {
     @Transactional
     public void updateProfile(String email, MemberUpdateRequestDto requestDto, MultipartFile profileImage) {
         Member member = validateMember(email);
+        String nickname = requestDto.getNickname();
 
-        if (memberRepository.existsByNickname(requestDto.getNickname())) {
+        if (nickname.isBlank()) {
+            nickname = member.getNickname();
+        } else if (memberRepository.existsByNickname(nickname)) {
             throw new BadRequestException(ErrorCode.ALREADY_EXIST_NICKNAME.getMessage());
         }
 
@@ -105,7 +108,7 @@ public class MemberService {
             member.updateProfile(profileUrl);
         }
 
-        member.updateNickname(requestDto.getNickname());
+        member.updateNickname(nickname);
     }
 
     public List<RentalMyReadResponseDto> readRentalLikeList(String email, int page, int size) {
