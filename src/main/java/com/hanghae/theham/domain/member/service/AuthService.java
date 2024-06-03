@@ -1,6 +1,7 @@
 package com.hanghae.theham.domain.member.service;
 
 import com.hanghae.theham.domain.member.repository.RefreshTokenRepository;
+import com.hanghae.theham.global.dto.MemberInfo;
 import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.exception.TokenException;
 import com.hanghae.theham.global.jwt.TokenProvider;
@@ -32,7 +33,9 @@ public class AuthService {
             throw new TokenException(ErrorCode.NOT_FOUND_REFRESH_TOKEN.getMessage());
         }
 
-        String type = tokenProvider.getTokenType(refreshToken);
+        MemberInfo memberInfo = tokenProvider.getMemberInfoFromToken(refreshToken);
+
+        String type = memberInfo.getType();
         if (!type.equals("refresh")) {
             log.error("사용할 수 없는 리프레쉬 토큰입니다.");
             throw new TokenException(ErrorCode.INVALID_REFRESH_TOKEN.getMessage());
@@ -43,8 +46,8 @@ public class AuthService {
             throw new TokenException(ErrorCode.NOT_FOUND_REFRESH_TOKEN.getMessage());
         }
 
-        String email = tokenProvider.getTokenEmail(refreshToken);
-        String role = tokenProvider.getTokenRole(refreshToken);
+        String email = memberInfo.getEmail();
+        String role = memberInfo.getRole();
 
         refreshTokenRepository.deleteById(refreshToken);
 
@@ -64,7 +67,9 @@ public class AuthService {
             throw new TokenException(ErrorCode.NOT_FOUND_REFRESH_TOKEN.getMessage());
         }
 
-        String type = tokenProvider.getTokenType(refreshToken);
+        MemberInfo memberInfo = tokenProvider.getMemberInfoFromToken(refreshToken);
+
+        String type = memberInfo.getType();
         if (!type.equals("refresh")) {
             log.error("사용할 수 없는 리프레쉬 토큰입니다.");
             throw new TokenException(ErrorCode.INVALID_REFRESH_TOKEN.getMessage());

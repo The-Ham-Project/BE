@@ -1,5 +1,6 @@
 package com.hanghae.theham.global.websocket;
 
+import com.hanghae.theham.global.dto.MemberInfo;
 import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.jwt.TokenProvider;
 import com.hanghae.theham.global.security.UserDetailsServiceImpl;
@@ -53,7 +54,14 @@ public class WebSocketInterceptor implements ChannelInterceptor {
         String accessToken = bearerToken.substring(TokenProvider.BEARER_PREFIX.length());
         validateToken(accessToken);
 
-        String memberEmail = tokenProvider.getTokenEmail(accessToken);
+        MemberInfo memberInfo = tokenProvider.getMemberInfoFromToken(accessToken);
+        String memberInfoType = memberInfo.getType();
+
+        if (!memberInfoType.equals("access")) {
+            throw new WebSocketException(ErrorCode.INVALID_ACCESS_TOKEN);
+        }
+
+        String memberEmail = memberInfo.getEmail();
         log.info("소켓 CONNECT 시도, 유저 이메일 : {}", memberEmail);
 
         Authentication authentication = createAuthentication(memberEmail);
@@ -76,9 +84,6 @@ public class WebSocketInterceptor implements ChannelInterceptor {
             tokenProvider.isExpired(accessToken);
         } catch (ExpiredJwtException e) {
             throw new WebSocketException(ErrorCode.EXPIRED_ACCESS_TOKEN);
-        }
-        if (!tokenProvider.getTokenType(accessToken).equals("access")) {
-            throw new WebSocketException(ErrorCode.INVALID_ACCESS_TOKEN);
         }
     }
 }

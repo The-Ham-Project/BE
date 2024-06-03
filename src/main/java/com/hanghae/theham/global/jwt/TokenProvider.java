@@ -2,6 +2,7 @@ package com.hanghae.theham.global.jwt;
 
 import com.hanghae.theham.domain.member.entity.RefreshToken;
 import com.hanghae.theham.domain.member.repository.RefreshTokenRepository;
+import com.hanghae.theham.global.dto.MemberInfo;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.Cookie;
@@ -38,39 +39,18 @@ public class TokenProvider {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
-    public String getTokenType(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("type", String.class);
-    }
-
-    public String getTokenEmail(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("email", String.class);
-    }
-
-    public String getTokenRole(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("role", String.class);
-    }
-
-    public Claims getMemberInfoFromToken(String token) {
-        return Jwts.parser()
+    public MemberInfo getMemberInfoFromToken(String token) {
+        Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+
+        String type = claims.get("type", String.class);
+        String email = claims.get("email", String.class);
+        String role = claims.get("role", String.class);
+
+        return new MemberInfo(type, email, role);
     }
 
     public String getAccessTokenFromHeader(HttpServletRequest request) {

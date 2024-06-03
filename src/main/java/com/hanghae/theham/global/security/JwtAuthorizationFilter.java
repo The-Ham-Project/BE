@@ -1,9 +1,9 @@
 package com.hanghae.theham.global.security;
 
+import com.hanghae.theham.global.dto.MemberInfo;
 import com.hanghae.theham.global.exception.ErrorCode;
 import com.hanghae.theham.global.jwt.TokenProvider;
 import com.hanghae.theham.global.util.CustomResponseUtil;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -47,16 +47,17 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String tokenType = tokenProvider.getTokenType(accessToken);
-        if (!tokenType.equals("access")) {
+        MemberInfo memberInfo = tokenProvider.getMemberInfoFromToken(accessToken);
+        String memberInfoType = memberInfo.getType();
+
+        if (!memberInfoType.equals("access")) {
             CustomResponseUtil.fail(response, ErrorCode.INVALID_ACCESS_TOKEN.getMessage(), HttpStatus.UNAUTHORIZED);
             return;
         }
 
-        Claims claims = tokenProvider.getMemberInfoFromToken(accessToken);
 
         try {
-            setAuthentication(claims.get("email").toString());
+            setAuthentication(memberInfo.getEmail());
         } catch (Exception e) {
             log.error(e.getMessage());
             return;
