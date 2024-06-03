@@ -50,7 +50,7 @@ public class MemberService {
 
     private static final int MAX_IMAGE_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
     private static final List<String> LIMIT_IMAGE_TYPE_LIST = Arrays.asList(
-            "image/jpeg", "image/jpg", "image/png", "image/gif"
+            "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
     );
     private static final String S3_UPLOAD_FOLDER = "profiles/";
 
