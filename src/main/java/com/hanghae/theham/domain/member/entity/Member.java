@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
@@ -48,8 +50,11 @@ public class Member {
     @Column
     private String naverId;
 
+    @Column
+    private LocalDateTime lastLoginAt;
+
     @Builder
-    public Member(String email, String password, String nickname, String profileUrl, RoleType role, double latitude, double longitude, String kakaoId, String googleId, String naverId) {
+    public Member(String email, String password, String nickname, String profileUrl, RoleType role, double latitude, double longitude, String kakaoId, String googleId, String naverId, LocalDateTime lastLoginAt) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
@@ -60,6 +65,7 @@ public class Member {
         this.kakaoId = kakaoId;
         this.googleId = googleId;
         this.naverId = naverId;
+        this.lastLoginAt = lastLoginAt;
     }
 
     public Member kakaoIdUpdate(String kakaoId) {
@@ -80,6 +86,10 @@ public class Member {
     public void updatePosition(double latitude, double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    public void updateLastLoginAt(LocalDateTime lastLoginAt) {
+        this.lastLoginAt = lastLoginAt;
     }
 
     public void updateProfile(String profileUrl) {

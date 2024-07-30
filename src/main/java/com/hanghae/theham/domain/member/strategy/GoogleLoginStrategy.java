@@ -27,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -71,6 +72,8 @@ public class GoogleLoginStrategy implements SocialLoginStrategy {
 
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
         response.addHeader(TokenProvider.REFRESH_TOKEN_HEADER, refreshToken);
+
+        googleUser.updateLastLoginAt(LocalDateTime.now());
 
         forceLogin(googleUser);
         return memberInfoDto;

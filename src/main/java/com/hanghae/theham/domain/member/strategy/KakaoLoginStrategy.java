@@ -27,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -70,6 +71,8 @@ public class KakaoLoginStrategy implements SocialLoginStrategy {
         // 4. 로그인 성공
         String accessToken = tokenProvider.createAccessToken(member.getEmail(), member.getRole().name());
         String refreshToken = tokenProvider.createRefreshToken(member.getEmail(), member.getRole().name());
+
+        member.updateLastLoginAt(LocalDateTime.now());
 
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
         response.addHeader(TokenProvider.REFRESH_TOKEN_HEADER, refreshToken);

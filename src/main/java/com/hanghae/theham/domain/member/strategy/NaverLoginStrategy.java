@@ -27,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -71,6 +72,8 @@ public class NaverLoginStrategy implements SocialLoginStrategy {
 
         response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
         response.addHeader(TokenProvider.REFRESH_TOKEN_HEADER, refreshToken);
+
+        naverUser.updateLastLoginAt(LocalDateTime.now());
 
         forceLogin(naverUser);
         return memberInfoDto;
