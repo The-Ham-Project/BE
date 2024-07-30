@@ -38,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -86,6 +87,7 @@ public class MemberService {
         Member member = validateMember(email);
 
         member.updatePosition(requestDto.getLatitude(), requestDto.getLongitude());
+        member.updateLastLoginAt(LocalDateTime.now());
         return new MemberUpdatePositionResponseDto(member);
     }
 
